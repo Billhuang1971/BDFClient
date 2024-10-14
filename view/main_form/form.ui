@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1171</width>
+    <height>893</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="9,0">
+    <item>
+     <widget class="QWidget" name="widget" native="true"/>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,2,2,6">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>当前位置：</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>当前用户：</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>当前身份：</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1171</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_1">
+    <property name="title">
+     <string>系统功能</string>
+    </property>
+    <addaction name="action_1"/>
+    <addaction name="action_2"/>
+    <addaction name="action_3"/>
+    <addaction name="action_4"/>
+    <addaction name="action_5"/>
+    <addaction name="action_6"/>
+    <addaction name="action_7"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>基本信息</string>
+    </property>
+    <addaction name="action_8"/>
+    <addaction name="action_9"/>
+    <addaction name="action_10"/>
+    <addaction name="action_11"/>
+    <addaction name="action_12"/>
+    <addaction name="action_13"/>
+   </widget>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>标注</string>
+    </property>
+    <addaction name="action_14"/>
+    <addaction name="action_15"/>
+    <addaction name="action_16"/>
+    <addaction name="action_17"/>
+    <addaction name="action_18"/>
+    <addaction name="action_20"/>
+   </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>数据集合</string>
+    </property>
+    <addaction name="action_21"/>
+    <addaction name="action"/>
+    <addaction name="action_22"/>
+   </widget>
+   <widget class="QMenu" name="menu_4">
+    <property name="title">
+     <string>模型研究</string>
+    </property>
+    <addaction name="action_23"/>
+    <addaction name="action_24"/>
+    <addaction name="action_25"/>
+    <addaction name="action_26"/>
+   </widget>
+   <addaction name="menu_1"/>
+   <addaction name="menu_2"/>
+   <addaction name="menu"/>
+   <addaction name="menu_3"/>
+   <addaction name="menu_4"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_1">
+   <property name="text">
+    <string>用户管理</string>
+   </property>
+  </action>
+  <action name="action_2">
+   <property name="text">
+    <string>密码修改</string>
+   </property>
+  </action>
+  <action name="action_3">
+   <property name="text">
+    <string>标注类型</string>
+   </property>
+  </action>
+  <action name="action_4">
+   <property name="text">
+    <string>基本设置</string>
+   </property>
+  </action>
+  <action name="action_5">
+   <property name="text">
+    <string>导联配置</string>
+   </property>
+  </action>
+  <action name="action_6">
+   <property name="text">
+    <string>切换用户</string>
+   </property>
+  </action>
+  <action name="action_7">
+   <property name="text">
+    <string>退出</string>
+   </property>
+  </action>
+  <action name="action_8">
+   <property name="text">
+    <string>新增病人</string>
+   </property>
+  </action>
+  <action name="action_9">
+   <property name="text">
+    <string>导出病人</string>
+   </property>
+  </action>
+  <action name="action_10">
+   <property name="text">
+    <string>导入病人</string>
+   </property>
+  </action>
+  <action name="action_11">
+   <property name="text">
+    <string>病人信息</string>
+   </property>
+  </action>
+  <action name="action_12">
+   <property name="text">
+    <string>诊断信息</string>
+   </property>
+  </action>
+  <action name="action_13">
+   <property name="text">
+    <string>数据导入</string>
+   </property>
+  </action>
+  <action name="action_14">
+   <property name="text">
+    <string>初始标注</string>
+   </property>
+  </action>
+  <action name="action_15">
+   <property name="text">
+    <string>自动标注</string>
+   </property>
+  </action>
+  <action name="action_16">
+   <property name="text">
+    <string>评估标注</string>
+   </property>
+  </action>
+  <action name="action_17">
+   <property name="text">
+    <string>清理标注</string>
+   </property>
+  </action>
+  <action name="action_18">
+   <property name="text">
+    <string>导出标注</string>
+   </property>
+  </action>
+  <action name="action_20">
+   <property name="text">
+    <string>导入标注</string>
+   </property>
+   <property name="autoRepeat">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="action_21">
+   <property name="text">
+    <string>样本统计</string>
+   </property>
+  </action>
+  <action name="action">
+   <property name="text">
+    <string>构建集合</string>
+   </property>
+  </action>
+  <action name="action_22">
+   <property name="text">
+    <string>集合清理</string>
+   </property>
+  </action>
+  <action name="action_23">
+   <property name="text">
+    <string>算法管理</string>
+   </property>
+  </action>
+  <action name="action_24">
+   <property name="text">
+    <string>模型管理</string>
+   </property>
+  </action>
+  <action name="action_25">
+   <property name="text">
+    <string>模型训练</string>
+   </property>
+  </action>
+  <action name="action_26">
+   <property name="text">
+    <string>模型测试</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
