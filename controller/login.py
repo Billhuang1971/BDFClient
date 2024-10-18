@@ -22,6 +22,9 @@ class loginController(QWidget, QObject):
         self.client = client
         self.client.loginResSig.connect(self.loginRes)
         self.view.ui.pushButton.clicked.connect(self.login)
+        self.line_1.returnPressed.connect(self.login)
+        self.line_2.returnPressed.connect(self.login)
+
         self.view.show()
 
     # 登录

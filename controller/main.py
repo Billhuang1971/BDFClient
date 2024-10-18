@@ -86,6 +86,9 @@ class MainController(QWidget):
             self.view.enabel_function_button()
             self.view.setUserPermission(self.client)
             self.view.setPosition(m_name=None, b_name=None)
+
+            self.sub_view = InitView()
+            self.view.verticalLayout_1.addWidget(self.sub_view)
             # self.sub_view = InitView()
             # while self.view.verticalLayout_1.count() > 1:
             #     witem = self.view.verticalLayout_1.itemAt(self.view.verticalLayout_1.count() - 1)
