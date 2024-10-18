@@ -26,7 +26,7 @@ class classifierController(QWidget):
         self.algorithm = None
         self.curPageIndex_al = 1  #
         self.curPageMax_al = 1  #
-        self.progressDialog = None
+        #self.progressDialog = None
         self.progressBarView = None# 进度条对象
         self.data_blocks=[]
         self.is_search = False #标记是否处于搜索状态
@@ -61,7 +61,7 @@ class classifierController(QWidget):
         self.algorithm_set=None
         self.search_alg_page_info=None
         self.tempt_alg_CurpageIndex=None
-        self.current_clicked=False
+        #self.current_clicked=False
         self._clicked_connections = {}  # 存储已有的连接
         self.configID=None
         self.EEG_lead=['AF3','FP1','FPz','FP2','AF4',
@@ -176,7 +176,7 @@ class classifierController(QWidget):
 
         except Exception as e:
             print('userPagingRes', e)
-    def clear_layout(self, layout, num=0, count=-1):
+    def clear_layout(self, layout, num=0, count=-1):#清理布局
         item_list = list(range(layout.count()))
         item_list.reverse()
         # print(item_list)
@@ -209,31 +209,31 @@ class classifierController(QWidget):
         for i in range(len(self.field)):
             self.view.ui.comboCond.addItem(self.header[i], self.field[i])
 
-    def on_tableWidget_cellDoubleClicked(self, row, col):#无用
-        self.view.ui.tableWidget.repaint()
-        # 当无其他行正在编辑时设置除当前单元格外其他单元格不可编辑
-        if self.update == -1 or self.insert == -1:
-            self.disable_tableWidgetItem(row)
-
-        col = self.view.ui.tableWidget.columnCount()
-        # 如果还未显示按钮,增加一列显示
-        if col == self.col:
-            self.update = row
-            # 增加一列按钮
-            self.view.ui.tableWidget.insertColumn(self.col)
-            header_item = QTableWidgetItem('修改')
-            font = header_item.font()
-            font.setPointSize(16)
-            header_item.setFont(font)
-            header_item.setForeground(QBrush(Qt.black))  # 前景色，即文字颜色
-            self.view.ui.tableWidget.setHorizontalHeaderItem(self.col, header_item)
-            self.question = Question()
-            self.question.ui.btnOK.clicked.connect(
-                lambda: self.on_btnConfirmUpdate_clicked(row))
-            # self.controller.on_btnOKUpdate_clicked)
-            self.question.ui.btnCancel.clicked.connect(
-                lambda: self.on_btnCancelUpdate_clicked(row))
-            self.view.ui.tableWidget.setCellWidget(row, self.col, self.question)
+    # def on_tableWidget_cellDoubleClicked(self, row, col):#无用
+    #     self.view.ui.tableWidget.repaint()
+    #     # 当无其他行正在编辑时设置除当前单元格外其他单元格不可编辑
+    #     if self.update == -1 or self.insert == -1:
+    #         self.disable_tableWidgetItem(row)
+    #
+    #     col = self.view.ui.tableWidget.columnCount()
+    #     # 如果还未显示按钮,增加一列显示
+    #     if col == self.col:
+    #         self.update = row
+    #         # 增加一列按钮
+    #         self.view.ui.tableWidget.insertColumn(self.col)
+    #         header_item = QTableWidgetItem('修改')
+    #         font = header_item.font()
+    #         font.setPointSize(16)
+    #         header_item.setFont(font)
+    #         header_item.setForeground(QBrush(Qt.black))  # 前景色，即文字颜色
+    #         self.view.ui.tableWidget.setHorizontalHeaderItem(self.col, header_item)
+    #         self.question = Question()
+    #         self.question.ui.btnOK.clicked.connect(
+    #             lambda: self.on_btnConfirmUpdate_clicked(row))
+    #         # self.controller.on_btnOKUpdate_clicked)
+    #         self.question.ui.btnCancel.clicked.connect(
+    #             lambda: self.on_btnCancelUpdate_clicked(row))
+    #         self.view.ui.tableWidget.setCellWidget(row, self.col, self.question)
 
     # 查询只能查出等于的情况，不支持其他大于小于之类的查询
     def on_clicked_select_classifier(self,pageIndex):
@@ -616,6 +616,9 @@ class classifierController(QWidget):
 
                 self.algorithmSelectView.show()
                 self.import_view.ui.pushButton_algorithm_select.setEnabled(True)
+            elif REPData[0] =='2':
+                QMessageBox.information(self, '提示', '没有对应的算法', QMessageBox.Ok)
+                self.import_view.ui.pushButton_algorithm_select.setEnabled(True)
             else:
                 QMessageBox.information(self, '提示', '获取算法信息失败,请重试', QMessageBox.Ok)
         except Exception as e:
@@ -689,7 +692,7 @@ class classifierController(QWidget):
         try:
             if REPData[0] == '1':
                 if REPData[2][1]!=[]:
-                    QMessageBox.information(self, '提示', '查询模型信息成功', QMessageBox.Ok)
+                    QMessageBox.information(self, '提示', '查询算法信息成功', QMessageBox.Ok)
                 else:
                     QMessageBox.information(self, '提示', '没有匹配的算法，请点击取消查询重新搜索', QMessageBox.Ok)
                 self.search_alg_info = REPData[2][1]
@@ -873,70 +876,70 @@ class classifierController(QWidget):
             print('delClassifierInfoRes', e)
 
 
-    def on_btnCancelUpdate_clicked(self, row):
-        data = self.classifier_alg_set_name[row]
-        for i in range(len(data)):
-            self.view.ui.tableWidget.item(row, i).setText(str(data[i]))
-        self.view.ui.tableWidget.removeColumn(len(self.field))
-
-        self.update = -1
-        #   按字段长度进行填充
-        self.view.ui.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-
-        self.enable_tableWidgetItem(row)
-        self.view.ui.tableWidget.clear()
-        self.init_table(self.classifier_alg_set_name)
+    # def on_btnCancelUpdate_clicked(self, row):
+    #     data = self.classifier_alg_set_name[row]
+    #     for i in range(len(data)):
+    #         self.view.ui.tableWidget.item(row, i).setText(str(data[i]))
+    #     self.view.ui.tableWidget.removeColumn(len(self.field))
+    #
+    #     self.update = -1
+    #     #   按字段长度进行填充
+    #     self.view.ui.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+    #
+    #     self.enable_tableWidgetItem(row)
+    #     self.view.ui.tableWidget.clear()
+    #     self.init_table(self.classifier_alg_set_name)
 
     # 禁用除了activate_row以外的其他行
-    def disable_tableWidgetItem(self, active_row):
-        row = self.view.ui.tableWidget.rowCount()
-        col = self.view.ui.tableWidget.columnCount()
-        for r in range(row):
-            if r != active_row:
-                self.disable_tableWidgetItem_row_col([r], range(col))
-
-    # 禁用disable_row行disable_col列的表格项，disable_col和disable_row都为[]，如[1,2]
-    def disable_tableWidgetItem_row_col(self, disable_row, disable_col):
-        for r in disable_row:
-            for c in disable_col:
-                item = self.view.ui.tableWidget.item(r, c)
-                if item == None:
-                    cellWidget = self.view.ui.tableWidget.cellWidget(r, c)
-                    if cellWidget == None:
-                        return
-                    else:
-                        cellWidget.setEnabled(False)
-                else:
-                    item.setFlags(item.flags() & (~Qt.ItemIsEnabled))
+    # def disable_tableWidgetItem(self, active_row):
+    #     row = self.view.ui.tableWidget.rowCount()
+    #     col = self.view.ui.tableWidget.columnCount()
+    #     for r in range(row):
+    #         if r != active_row:
+    #             self.disable_tableWidgetItem_row_col([r], range(col))
+    #
+    # # 禁用disable_row行disable_col列的表格项，disable_col和disable_row都为[]，如[1,2]
+    # def disable_tableWidgetItem_row_col(self, disable_row, disable_col):
+    #     for r in disable_row:
+    #         for c in disable_col:
+    #             item = self.view.ui.tableWidget.item(r, c)
+    #             if item == None:
+    #                 cellWidget = self.view.ui.tableWidget.cellWidget(r, c)
+    #                 if cellWidget == None:
+    #                     return
+    #                 else:
+    #                     cellWidget.setEnabled(False)
+    #             else:
+    #                 item.setFlags(item.flags() & (~Qt.ItemIsEnabled))
 
     # 启用除了activate_row以外的其他行
-    def enable_tableWidgetItem(self, active_row):
-        row = self.view.ui.tableWidget.rowCount()
-        col = self.view.ui.tableWidget.columnCount()
-        for r in range(row):
-            if r != active_row:
-                for c in range(col):
-                    item = self.view.ui.tableWidget.item(r, c)
-                    if item == None:
-                        cellWidget = self.view.ui.tableWidget.cellWidget(r, c)
-                        if cellWidget == None:
-                            continue
-                        else:
-                            cellWidget.setEnabled(True)
-                    else:
-                        item.setFlags(Qt.ItemIsEnabled |
-                                      Qt.ItemIsEditable | Qt.ItemIsSelectable)
+    # def enable_tableWidgetItem(self, active_row):
+    #     row = self.view.ui.tableWidget.rowCount()
+    #     col = self.view.ui.tableWidget.columnCount()
+    #     for r in range(row):
+    #         if r != active_row:
+    #             for c in range(col):
+    #                 item = self.view.ui.tableWidget.item(r, c)
+    #                 if item == None:
+    #                     cellWidget = self.view.ui.tableWidget.cellWidget(r, c)
+    #                     if cellWidget == None:
+    #                         continue
+    #                     else:
+    #                         cellWidget.setEnabled(True)
+    #                 else:
+    #                     item.setFlags(Qt.ItemIsEnabled |
+    #                                   Qt.ItemIsEditable | Qt.ItemIsSelectable)
 
     # 保存选中行的数据
-    def save_row_data(self, row):
-        value = []
-        for i in range(len(self.field)):
-            if self.view.ui.tableWidget.item(row, i):
-                temp = self.view.ui.tableWidget.item(row, i).text()
-            else:
-                temp = ''
-            value.append(temp)
-        return value
+    # def save_row_data(self, row):
+    #     value = []
+    #     for i in range(len(self.field)):
+    #         if self.view.ui.tableWidget.item(row, i):
+    #             temp = self.view.ui.tableWidget.item(row, i).text()
+    #         else:
+    #             temp = ''
+    #         value.append(temp)
+    #     return value
     def set_selectRow(self, item):
         print(f'set_selectRow: {item.row()}')
         self.select_row = item.row()
