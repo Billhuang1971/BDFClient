@@ -29,9 +29,9 @@ class setBulidView(QWidget):
         item = QStandardItem()
         item.setText("Random Select")
         list_view_model.appendRow(item)
-        item = QStandardItem()
-        item.setText("State Neg Model 1")
-        list_view_model.appendRow(item)
+        # item = QStandardItem()
+        # item.setText("State Neg Model 1")
+        # list_view_model.appendRow(item)
 
         # TODO 这边先注释掉
         for rs in rs_list:
@@ -67,7 +67,7 @@ class setBulidView(QWidget):
                 self.ui.tableWidget_2.setRowHeight(i, 55)
 
             # 设置列头
-            col_label = ['类型', '标注用户', '病人名称', '文件单号']
+            col_label = ['类型', '标注用户', '病人名称', '文件']
             # col_label = ['Type', 'Label User', 'Patient Name', 'File ID']
 
             self.ui.tableWidget_2.setHorizontalHeaderLabels(col_label)
@@ -249,12 +249,12 @@ class setBulidView(QWidget):
             self.ui.comboBox_3.setCurrentText("")
 
             intValidator = QIntValidator(self)
-            intValidator.setRange(1, 99)
+            intValidator.setRange(1, 100)
             self.ui.lineEdit.setValidator(intValidator)
             self.ui.lineEdit.textChanged.connect(self.set_train_test_ratio)
             montage_lineEdit = QLineEdit()
             self.ui.comboBox_5.addItems(montage_name)
-            self.set_check_search(self.ui.comboBox_5, montage_lineEdit, montage_name)
+            # self.set_check_search(self.ui.comboBox_5, montage_lineEdit, montage_name)
             self.set_check_tooltip(self.ui.comboBox_5, montage_name)
 
             self.ui.tableWidget.setContextMenuPolicy(Qt.CustomContextMenu)

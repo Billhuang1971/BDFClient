@@ -65,6 +65,28 @@ class clientAppUtil():
             print('readEEG', e)
         return data
 
+    # 按字节读取文件
+    def readByte(self, file_path, block_size, block_id):
+        try:
+            print(f'readFile file_path: {file_path}, block_size:{block_size}, block_id: {block_id}')
+            with open(file_path, 'rb') as f:
+                received_size = (block_id - 1) * block_size
+                f.seek(received_size)
+                data = f.read(block_size)
+                if not data:
+                    return
+        except Exception as e:
+            print('readFile', e)
+        return data
+
+    # 写文件功能
+    def writeByte(self, savePath, data):
+        try:
+            with open(savePath, 'ab') as f:
+                f.write(data)
+        except Exception as e:
+            print('writeByte', e)
+
     # 写文件功能
     def writeEEG(self, savePath, data):
         try:
