@@ -4,7 +4,7 @@ import os
 from view.setBuild import setBulidView
 from view.setBulid_form.pgb_form.form import pgbView
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from view.setBulid_form.secTable_form.form import SectableView
 from PyQt5.Qt import *
 import re
 import warnings
@@ -39,10 +39,6 @@ class setBuildController(QWidget):
             self.isType = True
             # 是否为第一次选择状态或者标注
             self.first_select = True
-            # 重建集合失败标签，默认成功
-            self.rebuild_failed = False
-            # 是否处在集合重建中，默认否
-            self.on_rebuild = False
             # 反例构建方案,默认Random Select
             self.reverse_scheme = 'Random Select'
             # 主题信息
@@ -77,6 +73,7 @@ class setBuildController(QWidget):
             self.client.buildSetCancelSig.connect(self.buildSetCancelRes)
             self.client.getSetSig.connect(self.getSetRes)
             self.client.getSetSearchSig.connect(self.setSearchRes)
+            self.client.getSetDescribeSig.connect(self.showDescribeRes)
             self.view.set_page_control_signal.connect(self.rg_paging)
             # 数据初始化
             self.init_data()
@@ -102,6 +99,7 @@ class setBuildController(QWidget):
         self.client.getSetSig.disconnect()
         self.view.set_page_control_signal.disconnect()
         self.client.getSetSearchSig.disconnect()
+        self.client.getSetDescribeSig.disconnect()
 
     # 数据初始化
     def init_data(self):
@@ -182,7 +180,7 @@ class setBuildController(QWidget):
             self.curPageIndex = int(pp)
             self.view.ui.curPage.setText(str(self.curPageIndex))
         if self.issearch:
-            key_value = self.view.ui.lineEdit30.text()
+            key_value= self.view.ui.lineEdit30.text()
             self.client.getSetSearch([self.curPageIndex, self.pageRows, 'home', key_value])
         else:
             msg = [self.curPageIndex, self.pageRows, page_to[0]]
@@ -591,14 +589,16 @@ class setBuildController(QWidget):
 
             # 判断user_ids是否全选
             selected_user_ids = tempInfo[5] if tempIndex[1] == -1 else [tempInfo[5][tempIndex[1]]]
-
+            print(f'selected_user_ids: {selected_user_ids}')
             # 判断patient_ids是否全选
             if tempIndex[2] == -1:
+                print(f'quanxuan')
                 selected_patient_ids = tempInfo[1]
                 selected_file_names = {pid: file_names[pid] for pid in tempInfo[1]}
             else:
                 selected_patient_ids = [tempInfo[1][tempIndex[2]]]
-                selected_file_names = {tempInfo[1][tempIndex[2]]: file_names[tempInfo[1][tempIndex[2]]]}
+                selected_file_names = {tempInfo[1][tempIndex[2]]: [file_names[tempInfo[1][tempIndex[2]]][tempIndex[3]]]}
+            print(f'selected_patient_ids: {selected_patient_ids}')
             print(f'selected_file_names: {selected_file_names}')
 
             # 生成所有可能的组合
@@ -610,23 +610,24 @@ class setBuildController(QWidget):
 
         print(self.finalContent)
 
-        msg = {'type': type,
-               'sampleRate': self.sampling_rate,
-               'span': self.span,
-               'nChannel': nChannel,
-               'channels': channels,
-               'source': source,
-               'themeID': [item[0] for item in self.selectedTheme],
-               'minSpan': self.minSpan,
-               'ratio': self.ratio,
-               'trainRatio': self.train_ratio,
-               'scheme': self.reverse_scheme,
-               'extension': self.extension,
-               'content': self.finalContent}
+        self.msg = {'type': type,
+                    'sampleRate': self.sampling_rate,
+                    'span': self.span,
+                    'nChannel': nChannel,
+                    'channels': channels,
+                    'source': source,
+                    'themeID': [item[0] for item in self.selectedTheme],
+                    'minSpan': self.minSpan,
+                    'ratio': self.ratio,
+                    'trainRatio': self.train_ratio,
+                    'scheme': self.reverse_scheme,
+                    'extension': self.extension,
+                    'content': self.finalContent}
 
-        msgJson = json.dumps(msg)
+        msgJson = json.dumps(self.msg)
         print(msgJson)
 
+        self.view.ui.pushButton.setEnabled(False)
         self.client.buildSet([setName, msgJson, self.client.tUser[12], type])
 
     # 构建前的检查,如果存在不符合的条件则弹出提示
@@ -696,6 +697,7 @@ class setBuildController(QWidget):
             # 每隔5秒联系一次服务器
             self.timer.start(3000)
         else:
+            self.view.ui.pushButton.setEnabled(True)
             QMessageBox.information(self, "提示", data[0])
 
     # 联系服务器获取当前进度
@@ -711,9 +713,11 @@ class setBuildController(QWidget):
                 print(f'buildSetGetPgRes OK')
                 self.timer.stop()
                 QMessageBox.information(self, "提示", "构建数据集成功")
+                self.view.ui.pushButton.setEnabled(True)
                 # 刷新数据集列表
                 self.client.getSet([1, self.pageRows, 'home'])
         else:
+            self.view.ui.pushButton.setEnabled(True)
             self.timer.stop()
             self.isBuildDone = True
             self.progressBarView.close()
@@ -758,7 +762,7 @@ class setBuildController(QWidget):
         item3 = menu.addAction(u"删除集合")
         action = menu.exec_(self.view.ui.tableWidget.mapToGlobal(pos))
         # if action == item1:
-        #     self.set_describe(set_name, set_type)
+        #     self.showDescribe(self.set_info[row_num])
         # elif action == item2:
         #     self.setRebuild(set_name, set_type)
         if action == item3:
@@ -768,9 +772,26 @@ class setBuildController(QWidget):
         elif action == item5:
             self.set_export(set_id, set_type='test')
 
-    def showDescribe(self, rowIndex):
-        print('showDescribe')
+    def showDescribe(self, setInfo):
+        print(f'showDescribe setInfo: {setInfo}')
+        self.selectedSetDesc = setInfo
+        self.client.getSetDescribe(self.selectedSetDesc.copy())
 
+    def showDescribeRes(self, setDesc):
+        print(f'showDescribeRes setDesc: {setDesc}')
+        description = json.loads(self.selectedSetDesc[6])
+        if description['type'] == 'wave':
+            self.id_to_info = dict(zip(self.type_ids + [0], self.type_info + ['负例']))
+        else:
+            self.id_to_info = dict(zip(self.state_ids + [0], self.state_info + ['负例']))
+
+        trainSetInfo = {self.id_to_info[int(k)]: v for k, v in setDesc[1][0].items() if int(k) in self.id_to_info}
+        testSetInfo = {self.id_to_info[int(k)]: v for k, v in setDesc[1][1].items() if int(k) in self.id_to_info}
+
+        print(f'trainSetInfo: {trainSetInfo}, testSetInfo: {testSetInfo}')
+
+        self.secView = SectableView(description=description, trainSetInfo=trainSetInfo, testSetInfo=testSetInfo)
+        self.secView.show()
 
     # 集合删除(连同npz文件一起删除)
     def delSet(self, set_id, rowIndex):
@@ -896,6 +917,7 @@ class setBuildController(QWidget):
 
     def buildSetCancel(self):
         print('buildSetCancel: ')
+        self.view.ui.pushButton.setEnabled(True)
         if not self.isBuildDone:
             self.timer.stop()
             self.isBuildDone = True
@@ -932,7 +954,7 @@ class setExportThread(QThread):
 
     def getSetExportDataRes(self, data):
         try:
-            self.cAppUtil.writeEEG(self.savePath, data[1])
+            self.cAppUtil.writeByte(self.savePath, data[1])
             self.curBlockID = int(data[0].split('=')[1])
             print(f'self.curBlockID: {self.curBlockID}')
             file_path = 'download/downloading.txt'

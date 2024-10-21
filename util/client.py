@@ -253,6 +253,7 @@ class client(QObject, socketClient):
     buildSetCancelSig = pyqtSignal(list)
     getSetSig = pyqtSignal(list)
     getSetSearchSig = pyqtSignal(list)
+    getSetDescribeSig = pyqtSignal(list)
 
     # 创建课堂
     # 回调获取课堂信息的信号
@@ -2158,17 +2159,14 @@ class client(QObject, socketClient):
     def delSetRes(self, REPData):
         self.delSetResSig.emit([REPData[3][0], REPData[3][3]])
 
-
     # 根据过滤器获取信息
     def getSetBuildFltData(self, REQmsg):
         REQmsg.insert(0, self.macAddr)
         msg = ["setBuild", 3, self.tUser[0], REQmsg]
         self.sendRequest(msg)
 
-
     def getSetBuildFltDataRes(self, REPData):
         self.getSetBuildFltDataResSig.emit([REPData[3][0], REPData[3][3]])
-
 
     # 获取数据导出初始信息
     def getSetExportInitData(self, REQmsg):
@@ -2178,7 +2176,6 @@ class client(QObject, socketClient):
 
     def getSetExportInitDataRes(self, REPData):
         self.getSetExportInitDataResSig.emit(list(REPData[3][3]))
-
 
     # 根据block id来获取集合数据
     def getSetExportData(self, REQmsg):
@@ -2235,6 +2232,14 @@ class client(QObject, socketClient):
 
     def getSetSearchRes(self, REPData):
         self.getSetSearchSig.emit([REPData[3][0], REPData[3][3]])
+
+    def getSetDescribe(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["setBuild", 11, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    def getSetDescribeRes(self, REPData):
+        self.getSetDescribeSig.emit([REPData[3][0], REPData[3][3]])
 
 
     # 标注类型模块
@@ -4218,6 +4223,8 @@ class client(QObject, socketClient):
             self.buildSetCancelRes(REQmsg)
         elif REQmsg[0] == 'setBuild' and REQmsg[1] == 10:
             self.getSetSearchRes(REQmsg)
+        elif REQmsg[0] == 'setBuild' and REQmsg[1] == 11:
+            self.getSetDescribeRes(REQmsg)
 
         # 模型训练
         elif REQmsg[0] == 'modelTrain' and REQmsg[1] == 1:

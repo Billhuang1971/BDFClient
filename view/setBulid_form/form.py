@@ -78,7 +78,7 @@ class Ui_Form(object):
 
         self.label_31 = QtWidgets.QLabel(self.groupBox_3)
         self.label_31.setObjectName("label_31")
-        self.label_31.setMaximumWidth(50)
+        self.label_31.setMaximumWidth(65)
         self.label_31.setVisible(False)
         self.horizontalLayout_2.addWidget(self.label_31)
         self.themeBox = QComboCheckBox(['Default'], default_check=False)
@@ -119,6 +119,7 @@ class Ui_Form(object):
         self.horizontalLayout_13.addWidget(self.label_13)
         self.comboBox_5 = QtWidgets.QComboBox(self.groupBox_3)
         self.comboBox_5.setObjectName("comboBox_5")
+        self.comboBox_5.setMinimumWidth(200)
         self.label_13.setVisible(False)
         self.comboBox_5.setVisible(False)
         self.horizontalLayout_13.addWidget(self.comboBox_5)
@@ -181,6 +182,7 @@ class Ui_Form(object):
         self.counter_ratio = QtWidgets.QComboBox(self.groupBox_3)
         self.counter_ratio.addItems([str(i) for i in range(0, 11)])
         self.re_scheme = QtWidgets.QComboBox(self.groupBox_3)
+        self.re_scheme.setFixedWidth(300)
         # item_widget = QtWidgets.QHBoxLayout()
         # self.re_scheme.addItems(['Random Select'])
         # self.re_scheme.addItem(item_widget)
@@ -251,7 +253,7 @@ class Ui_Form(object):
         self.label_2.setObjectName("label_2")
         self.horizontalLayout_3.addWidget(self.label_2)
         self.lineEdit = QtWidgets.QLineEdit(self.groupBox_3)
-        self.lineEdit.setMaximumSize(QtCore.QSize(35, 16777215))
+        self.lineEdit.setMaximumSize(QtCore.QSize(40, 16777215))
         self.lineEdit.setObjectName("lineEdit")
         self.horizontalLayout_3.addWidget(self.lineEdit)
         self.label_3 = QtWidgets.QLabel(self.groupBox_3)
@@ -586,13 +588,13 @@ class Ui_Form(object):
         self.label_19.setText(_translate("Form", ":"))
         self.label_20.setText(_translate("Form", " 反例选择方案："))
         self.label_21.setText(_translate("Form", "（单位：秒）"))
-        self.label_30.setText(_translate("Form", "参考导联："))
+        self.label_30.setText(_translate("Form", "导联选取："))
         self.label_31.setText(_translate("Form", "主题："))
         self.label_32.setText(_translate("Form", "数据类型："))
 
         self.label_24.setText(_translate("Form", "标注用户: "))
         self.label_25.setText(_translate("Form", "病人: "))
-        self.label_26.setText(_translate("Form", "文件单号: "))
+        self.label_26.setText(_translate("Form", "文件: "))
         self.pushButton_3.setText(_translate("Form", "添加筛选"))
 
         self.pushButton.setText(_translate("Form", "构建数据集"))
@@ -626,6 +628,7 @@ class CheckableComboBox(QComboBox):
         self.setMinimumWidth(200)
         self.setEditable(True)  # Make the combo box editable
         self.lineEdit().setReadOnly(True)  # Make the line edit read-only
+
 
     def eventFilter(self, source, event):
         # if event.type() == event.MouseButtonRelease:
