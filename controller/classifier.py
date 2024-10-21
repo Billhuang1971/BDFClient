@@ -27,7 +27,7 @@ class classifierController(QWidget):
         self.curPageIndex_al = 1  #
         self.curPageMax_al = 1  #
         #self.progressDialog = None
-        self.progressBarView = None# 进度条对象
+        self.ProgressBarView = None# 进度条对象
         self.data_blocks=[]
         self.is_search = False #标记是否处于搜索状态
         self.tableWidget = None #存储表格
@@ -449,8 +449,8 @@ class classifierController(QWidget):
                     for index in selected_index:
                         file_txt.write(str(REPData[2][2][index])+ " ") #REP=start, classifier_id, filename, block_id,本机mac地址
                 totalDataSize = len(self.data_blocks)  # 总块数
-                self.progressBarView = ProgressBarView(window_title="模型文件传输中", hasStopBtn=False,maximum=totalDataSize)
-                self.progressBarView.show()
+                self.ProgressBarView = ProgressBarView(window_title="模型文件传输中", hasStopBtn=False,maximum=totalDataSize)
+                self.ProgressBarView.show()
                 #self.progressDialog = QProgressDialog("传输中……", "Cancel", 0, 100)
                 #self.progressDialog.setWindowModality(Qt.ApplicationModal)
                 #self.progressDialog.show()
@@ -460,24 +460,24 @@ class classifierController(QWidget):
                 #第一组数据即0，故-1
             elif REPData[2][1]> len(self.data_blocks):#判断block_id>blockN
                 # 传输完成后关闭进度
-                self.progressBarView.close()
+                self.ProgressBarView.close()
                 #self.progressDialog.cancel()
                 #file_model.close()
                 self.client.model_transmit_message(['uploaded',REPData[2][2][1],REPData[2][2][2],REPData[2][2][3]])#“uploaded,classifier_id,filename,block_id和本机mac地址”
             elif REPData[2][1] > 1 :
                 totalDataSize = len(self.data_blocks)
                 # 更新进度条
-                if self.progressBarView==None:
-                    self.progressBarView = ProgressBarView(window_title="模型文件传输中", hasStopBtn=False,maximum=totalDataSize)
-                    self.progressBarView.show()
+                if self.ProgressBarView==None:
+                    self.ProgressBarView = ProgressBarView(window_title="模型文件传输中", hasStopBtn=False,maximum=totalDataSize)
+                    self.PogressBarView.show()
                 tempt_value=REPData[2][1]-1
-                self.progressBarView.updateProgressBar(tempt_value)
+                self.ProgressBarView.updateProgressBar(tempt_value)
                 #self.progressDialog.setValue(int((tempt_value / totalDataSize)*100))
                 self.client.model_transmit_message(['uploading', REPData[2][2][1], REPData[2][2][2], REPData[2][1],
                                                     self.data_blocks[(REPData[2][1] - 1)]])
         elif REPData[2][0] == 'uploaded':#6.3
             #self.progressDialog.cancel()
-            self.progressBarView.close()
+            self.ProgressBarView.close()
             files = os.listdir(self.model_path)
             for file in files:
                 file_path1 = os.path.join(self.model_path, file)
@@ -499,7 +499,7 @@ class classifierController(QWidget):
                     shutil.rmtree(file_path1)
             QMessageBox.information(self, '提示', '出现错误，传输失败', QMessageBox.Ok)
             #self.progressDialog.cancel()
-            self.progressBarView.close()
+            self.ProgressBarView.close()
         elif REPData[2][0] == 'recover':  # 6.4
             file_path2 = os.path.join(self.model_path, "uploading.txt")
             if os.path.exists(file_path2):
@@ -508,7 +508,7 @@ class classifierController(QWidget):
                 selected_index = [1, 2, 4]
                 for index in selected_index:
                     file_txt.write(str(REPData[2][index])+ " ")
-            self.progressBarView.updateProgressBar(0)
+            self.ProgressBarView.updateProgressBar(0)
             #self.progressDialog.setValue(0)
             self.client.model_transmit_message(['continue', REPData[2][1],REPData[2][2]])
 

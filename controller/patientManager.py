@@ -189,7 +189,7 @@ class patientManagerController(QWidget):
             if self.curPageIndex == int(signal[1]):
                 QMessageBox.information(self, "提示", "当前已显示该页面", QMessageBox.Yes)
                 return
-            if self.curPageMax < int(signal[1]) or int(signal[1]) < 0:
+            if self.curPageMax < int(signal[1]) or int(signal[1]) <= 0:
                 QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
                 return
             self.curPageIndex = int(signal[1])
