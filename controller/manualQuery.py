@@ -129,6 +129,7 @@ class manualQueryController(QWidget):
         self.client.mq_load_dataDynamicalResSig.disconnect()
         self.client.mq_init_SampleListResSig.disconnect()
         self.client.mq_get_diagResSig.disconnect()
+        self.client.mq_pagingResSig.disconnect()
 
     # 初始化信息选择界面（选择病人-测量日期-文件）
     def init_prentryView(self):
