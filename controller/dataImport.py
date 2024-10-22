@@ -1076,9 +1076,90 @@ class dataImportController(QWidget):
             self.view.ui.processButton.setEnabled(True)
 
     # 将EDF文件转化为BDF文件
+    # def convert_edf_to_bdf(self):
+    #     try:
+    #         # 读取EDF文件
+    #         with pyedflib.EdfReader(self.from_filepath) as edf_reader:
+    #             n_channels = edf_reader.signals_in_file
+    #
+    #             # 获取EDF文件的信号头信息
+    #             signal_headers = edf_reader.getSignalHeaders()
+    #             headers = edf_reader.getHeader()
+    #
+    #             # 为每个通道创建新的信号头信息，用于BDF文件
+    #             for i in range(n_channels):
+    #                 signal_headers[i]['digital_min'] = -8388608  # BDF 24位数字最小值
+    #                 signal_headers[i]['digital_max'] = 8388607  # BDF 24位数字最大值
+    #                 signal_headers[i]['physical_min'] = edf_reader.getPhysicalMinimum(i)  # 保留物理范围
+    #                 signal_headers[i]['physical_max'] = edf_reader.getPhysicalMaximum(i)  # 保留物理范围
+    #                 signal_headers[i]['prefilter'] = edf_reader.getPrefilter(i)  # 获取预处理信息
+    #
+    #             # 生成转换后的 BDF 文件名
+    #             directory, filename = os.path.split(self.from_filepath)
+    #             filename_without_extension = os.path.splitext(filename)[0]
+    #             new_filename = f"{filename_without_extension}.bdf"
+    #             self.convert_filepath = os.path.join(directory, new_filename)
+    #
+    #             # 创建BDF头文件
+    #             bdf_header = pyedflib.highlevel.make_header(
+    #                 patientname=headers['patientname'],
+    #                 # recording=headers['recording'],
+    #                 startdate=headers['startdate']
+    #             )
+    #
+    #             # 写入BDF文件
+    #             with pyedflib.EdfWriter(self.convert_filepath, file_type=pyedflib.FILETYPE_BDF,
+    #                                     n_channels=n_channels) as bdf_writer:
+    #                 # 设置信号头文件
+    #                 bdf_writer.setSignalHeaders(signal_headers)
+    #                 bdf_writer.setHeader(bdf_header)
+    #
+    #                 # 读取每个通道的数据并将其组织成列表
+    #                 all_channel_data = []
+    #                 for i in range(n_channels):
+    #                     signal_data = edf_reader.readSignal(i)
+    #                     all_channel_data.append(signal_data)  # 将每个通道的数据加入到列表中
+    #
+    #                 # 检查数据是否与通道数匹配
+    #                 if len(all_channel_data) != n_channels:
+    #                     raise pyedflib.WrongInputSize(
+    #                         f"Number of channels ({n_channels}) unequal to length of data ({len(all_channel_data)})")
+    #
+    #                 # 写入所有通道的数据
+    #                 bdf_writer.writeSamples(all_channel_data)
+    #
+    #         print(f"EDF文件 {self.from_filepath} 已成功转换为BDF文件 {self.convert_filepath}")
+    #
+    #
+    #     except Exception as e:
+    #         print('Error during EDF to BDF conversion:', e)
+
     def convert_edf_to_bdf(self):
         try:
-            # 读取EDF文件
+            # 使用MNE读取EDF文件并提取注释
+            raw = mne.io.read_raw_edf(self.from_filepath, preload=True)
+            annotations = raw.annotations  # 提取注释（事件信息）
+            print(f"Annotations: {annotations}")  # 打印注释信息
+
+            # 通道筛选与重命名
+            # 选择所有以EEG开头的通道
+            include_channel = mne.pick_channels_regexp(raw.info['ch_names'], '^EEG')
+            # 获取筛选后的通道名称
+            channels = mne.pick_info(raw.info, include_channel)['ch_names']
+
+            # 通道名映射，去除前缀（‘EEG F3-REF' -> 'F3-REF'）
+            dict_ch = {}
+            re_channels = []
+            for ch in channels:
+                temp = ch.split(' ')[-1]  # 去除前缀，只保留 'F3-REF' 等通道名
+                re_channels.append(temp)
+                dict_ch[ch] = temp
+
+            # 重命名通道
+            raw.rename_channels(dict_ch)
+            raw.pick(picks=re_channels)  # 仅保留变换后的通道
+
+            # 使用pyedflib读取EDF文件
             with pyedflib.EdfReader(self.from_filepath) as edf_reader:
                 n_channels = edf_reader.signals_in_file
 
@@ -1086,13 +1167,21 @@ class dataImportController(QWidget):
                 signal_headers = edf_reader.getSignalHeaders()
                 headers = edf_reader.getHeader()
 
-                # 为每个通道创建新的信号头信息，用于BDF文件
-                for i in range(n_channels):
-                    signal_headers[i]['digital_min'] = -8388608  # BDF 24位数字最小值
-                    signal_headers[i]['digital_max'] = 8388607  # BDF 24位数字最大值
-                    signal_headers[i]['physical_min'] = edf_reader.getPhysicalMinimum(i)  # 保留物理范围
-                    signal_headers[i]['physical_max'] = edf_reader.getPhysicalMaximum(i)  # 保留物理范围
-                    signal_headers[i]['prefilter'] = edf_reader.getPrefilter(i)  # 获取预处理信息
+                # 过滤出以重新命名后的通道
+                index_channels = mne.pick_channels(raw.info['ch_names'], include=re_channels)
+
+                # 仅处理EEG通道的信号头信息，用于BDF文件
+                filtered_signal_headers = []
+                for i in index_channels:
+                    filtered_signal_headers.append({
+                        'label': signal_headers[i]['label'],
+                        'digital_min': -8388608,  # BDF 24位数字最小值
+                        'digital_max': 8388607,  # BDF 24位数字最大值
+                        'physical_min': edf_reader.getPhysicalMinimum(i),  # 保留物理范围
+                        'physical_max': edf_reader.getPhysicalMaximum(i),  # 保留物理范围
+                        'prefilter': edf_reader.getPrefilter(i),  # 获取预处理信息
+                        'sample_frequency': edf_reader.getSampleFrequency(i)
+                    })
 
                 # 生成转换后的 BDF 文件名
                 directory, filename = os.path.split(self.from_filepath)
@@ -1103,33 +1192,44 @@ class dataImportController(QWidget):
                 # 创建BDF头文件
                 bdf_header = pyedflib.highlevel.make_header(
                     patientname=headers['patientname'],
-                    # recording=headers['recording'],
                     startdate=headers['startdate']
                 )
 
-                # 写入BDF文件
-                with pyedflib.EdfWriter(self.convert_filepath, file_type=pyedflib.FILETYPE_BDF,
-                                        n_channels=n_channels) as bdf_writer:
+                # 写入BDF+文件
+                with pyedflib.EdfWriter(self.convert_filepath, file_type=pyedflib.FILETYPE_BDFPLUS,
+                                        n_channels=len(filtered_signal_headers)) as bdf_writer:
                     # 设置信号头文件
-                    bdf_writer.setSignalHeaders(signal_headers)
+                    bdf_writer.setSignalHeaders(filtered_signal_headers)
                     bdf_writer.setHeader(bdf_header)
 
-                    # 读取每个通道的数据并将其组织成列表
+                    # 读取EEG通道的数据并将其组织成列表
                     all_channel_data = []
-                    for i in range(n_channels):
+                    for i in index_channels:
                         signal_data = edf_reader.readSignal(i)
                         all_channel_data.append(signal_data)  # 将每个通道的数据加入到列表中
 
                     # 检查数据是否与通道数匹配
-                    if len(all_channel_data) != n_channels:
+                    if len(all_channel_data) != len(filtered_signal_headers):
                         raise pyedflib.WrongInputSize(
-                            f"Number of channels ({n_channels}) unequal to length of data ({len(all_channel_data)})")
+                            f"Number of channels ({len(filtered_signal_headers)}) unequal to length of data ({len(all_channel_data)})")
 
-                    # 写入所有通道的数据
+                    # 写入所有EEG通道的数据
                     bdf_writer.writeSamples(all_channel_data)
 
-            print(f"EDF文件 {self.from_filepath} 已成功转换为BDF文件 {self.convert_filepath}")
+                    # 将注释信息（事件信息）写入BDF文件，确保空描述也被写入
+                    for annotation in annotations:
+                        onset = annotation['onset']  # 注释的开始时间
+                        duration = annotation['duration']  # 注释的持续时间
+                        description = annotation['description']  # 注释的描述
 
+                        # 如果description为空或全是空白字符，使用占位符
+                        if not description.strip():
+                            description = "empty"  # 使用占位符字符串
+
+                        # 写入注释
+                        bdf_writer.writeAnnotation(onset, duration, description)
+
+            print(f"EDF文件 {self.from_filepath} 已成功转换为BDF文件 {self.convert_filepath}")
 
         except Exception as e:
             print('Error during EDF to BDF conversion:', e)
@@ -1236,138 +1336,136 @@ class dataImportController(QWidget):
         processFilename = filename + str('.bdf')
         self.file_path = os.path.join(self.dir_path, processFilename)
 
-    # 处理.bdf文件
-    def process_bdf(self, userConfig_info, filename):
-        try:
-            # 读取BDF文件
-            with open(self.from_filepath, 'rb') as bdf_file:
-                bdf_content = bdf_file.read()
-                # 打开目标文件路径进行二进制写入
-            with open(self.file_path, 'wb') as output_file:
-                output_file.write(bdf_content)
-        except Exception as e:
-            print('Error processing BDF file:', e)
-            self.upload_failed.emit()  # 发出上传失败信号
-            return
-
-        # 处理完成后发出上传信号
-        self.uploadFileSig.emit()
+    # # 处理.bdf文件
+    # def process_bdf(self, userConfig_info, filename):
+    #     try:
+    #         # 读取BDF文件
+    #         with open(self.from_filepath, 'rb') as bdf_file:
+    #             bdf_content = bdf_file.read()
+    #             # 打开目标文件路径进行二进制写入
+    #         with open(self.file_path, 'wb') as output_file:
+    #             output_file.write(bdf_content)
+    #     except Exception as e:
+    #         print('Error processing BDF file:', e)
+    #         self.upload_failed.emit()  # 发出上传失败信号
+    #         return
+    #
+    #     # 处理完成后发出上传信号
+    #     self.uploadFileSig.emit()
 
     # TODO:加入预处理后上传BDF文件，待实验
-    # def process_bdf(self, userConfig_info, filename):
-    #     # sampling_rate = userConfig_info[0]
-    #     # notch = userConfig_info[1]
-    #     # low_pass = userConfig_info[2]
-    #     # high_pass = userConfig_info[3]
-    #
-    #     try:
-    #         raw = mne.io.read_raw_bdf(self.from_filepath)
-    #         with pyedflib.EdfReader(self.from_filepath) as f:
-    #             n_channels = f.signals_in_file  # 获取通道数
-    #             physical_mins = []
-    #             physical_maxs = []
-    #             prefilter_info = []  # 用于存储每个通道的预处理信息
-    #
-    #             # 遍历每个通道，获取 physical_min 和 physical_max
-    #             for i in range(n_channels):
-    #                 physical_min = f.getPhysicalMinimum(i)
-    #                 physical_max = f.getPhysicalMaximum(i)
-    #                 prefilter = f.getPrefilter(i)  # 获取每个通道的预处理信息（如 HP, LP, N）
-    #                 physical_mins.append(physical_min)
-    #                 physical_maxs.append(physical_max)
-    #                 prefilter_info.append(prefilter)
-    #                 print(f"Channel {i}: Physical Min = {physical_min}, Physical Max = {physical_max}")
-    #             # TODO: 在这里要从列表里把最大值和最小值拎出来
-    #             Physical_Min = min(physical_mins)
-    #             Physical_Max = max(physical_maxs)
-    #     except Exception as e:
-    #         print('raw read error', e)
-    #         return
-    #     try:
-    #         freq = raw.info['sfreq']
-    #         duration = int(raw.n_times // freq)
-    #         meas_date = raw.info['meas_date']
-    #         if isinstance(meas_date, tuple):
-    #             meas_date = datetime.datetime.fromtimestamp(meas_date)
-    #
-    #         # 选择包含 'EEG' 前缀的通道
-    #         include_channel = mne.pick_channels_regexp(raw.info['ch_names'], '^sfgre')
-    #         if not include_channel:  # 如果没有 'EEG' 前缀的通道，则不进行重映射
-    #             channels = raw.ch_names
-    #         else:
-    #             # 通道名称
-    #             channels = mne.pick_info(raw.info, include_channel)['ch_names']
-    #             # 通道名映射，去除前缀（‘EEG F3-REF' -> 'F3-REF')
-    #             dict_ch = {ch: ch.split(' ')[-1] for ch in channels}
-    #             raw.rename_channels(dict_ch)
-    #             channels = [dict_ch[ch] for ch in channels]
-    #
-    #         raw.pick_channels(channels)
-    #         index_channels = mne.pick_channels(raw.info['ch_names'], include=channels)
-    #
-    #         stack_size = 3600
-    #         turn = math.ceil(duration / stack_size)
-    #         #
-    #         # highpass = raw.info['highpass'] if raw.info['highpass'] is not None else 0.0
-    #         # lowpass = raw.info['lowpass'] if raw.info['lowpass'] is not None else 0.0
-    #         # prefilter = f"HP:{highpass:.1f}Hz LP:{lowpass:.1f}Hz N:0.0"
-    #         # print('prefilter:',prefilter)
-    #
-    #         # prefilter = f"HP:{raw.info['highpass']}Hz LP:{raw.info['lowpass']}Hz"
-    #         # prefilter = ('HP:{}Hz LP:{}Hz N:NoneHz'.format(high_pass, low_pass))
-    #
-    #         signal_headers = pyedflib.highlevel.make_signal_headers(channels,
-    #                                                                 physical_min=Physical_Min,
-    #                                                                 physical_max=Physical_Max,
-    #                                                                 digital_min=-8388608,  # 24位格式的数字最小值
-    #                                                                 digital_max=8388607,  # 24位格式的数字最大值
-    #                                                                 # physical_max=6368.439, physical_min=-6337.78
-    #                                                                 # sample_rate=sampling_rate,
-    #                                                                 sample_rate=freq,
-    #                                                                 # sample_frequency=sampling_rate,
-    #                                                                 prefiler=prefilter_info[0]
-    #                                                                 )
-    #         header = pyedflib.highlevel.make_header(startdate=meas_date)
-    #         with pyedflib.EdfWriter(self.file_path, file_type=pyedflib.FILETYPE_BDF, n_channels=len(channels)) as f:
-    #             f.setSignalHeaders(signal_headers)
-    #             f.setHeader(header)
-    #             for i in range(turn):
-    #                 raw_copy = raw.copy()
-    #                 start = i * stack_size
-    #                 if i == turn - 1:
-    #                     t_raw = raw_copy.crop(tmin=start, include_tmax=True)
-    #                 else:
-    #                     end = start + stack_size
-    #                     t_raw = raw_copy.crop(tmin=start, tmax=end, include_tmax=True)
-    #                 t_raw.load_data()
-    #                 # t_raw.filter(l_freq=high_pass, h_freq=low_pass)  # 带通滤波
-    #                 # t_raw.notch_filter(freqs=notch)
-    #                 # t_raw.resample(sampling_rate, npad='auto')
-    #                 t_signals, t_times = t_raw[index_channels, :]
-    #                 del t_raw
-    #                 # 取消或调整缩放
-    #                 # t_signals = t_signals * (pow(10, 4))  # 确保缩放因子正确
-    #
-    #                 t_signals = t_signals * (pow(10, 6))
-    #                 f.writeSamples(t_signals)
-    #                 del t_signals
-    #
-    #                 temp = math.ceil(20 / turn)
-    #                 if self.progress_value + temp < 20:
-    #                     self.progress_value += temp
-    #                 else:
-    #                     self.progress_value = 20
-    #                 QApplication.processEvents()
-    #
-    #             # with open(self.file_path, 'r+b') as f:
-    #             #     f.seek(0xC0)  # 移动到0x000000C0位置
-    #             #     f.write(b'BDF    ')  # 写入"BDF"，并用空格填充剩余的部分
-    #
-    #             self.uploadFileSig.emit()
-    #     except Exception as e:
-    #         print('process_bdf', e)
-    #         return
-    #     return
+    def process_bdf(self, userConfig_info, filename):
+        # sampling_rate = userConfig_info[0]
+        # notch = userConfig_info[1]
+        # low_pass = userConfig_info[2]
+        # high_pass = userConfig_info[3]
+
+        try:
+            raw = mne.io.read_raw_bdf(self.from_filepath)
+            with pyedflib.EdfReader(self.from_filepath) as f:
+                n_channels = f.signals_in_file  # 获取通道数
+                physical_mins = []
+                physical_maxs = []
+                prefilter_info = []  # 用于存储每个通道的预处理信息
+
+                # 遍历每个通道，获取 physical_min 和 physical_max
+                for i in range(n_channels):
+                    physical_min = f.getPhysicalMinimum(i)
+                    physical_max = f.getPhysicalMaximum(i)
+                    prefilter = f.getPrefilter(i)  # 获取每个通道的预处理信息（如 HP, LP, N）
+                    physical_mins.append(physical_min)
+                    physical_maxs.append(physical_max)
+                    prefilter_info.append(prefilter)
+                    print(f"Channel {i}: Physical Min = {physical_min}, Physical Max = {physical_max}")
+                # TODO: 在这里要从列表里把最大值和最小值拎出来
+                Physical_Min = min(physical_mins)
+                Physical_Max = max(physical_maxs)
+        except Exception as e:
+            print('raw read error', e)
+            return
+        try:
+            freq = raw.info['sfreq']
+            duration = int(raw.n_times // freq)
+            meas_date = raw.info['meas_date']
+            if isinstance(meas_date, tuple):
+                meas_date = datetime.datetime.fromtimestamp(meas_date)
+
+            # 选择包含 'EEG' 前缀的通道
+            include_channel = mne.pick_channels_regexp(raw.info['ch_names'], '^sfgre')
+            if not include_channel:  # 如果没有 'EEG' 前缀的通道，则不进行重映射
+                channels = raw.ch_names
+            else:
+                # 通道名称
+                channels = mne.pick_info(raw.info, include_channel)['ch_names']
+                # 通道名映射，去除前缀（‘EEG F3-REF' -> 'F3-REF')
+                dict_ch = {ch: ch.split(' ')[-1] for ch in channels}
+                raw.rename_channels(dict_ch)
+                channels = [dict_ch[ch] for ch in channels]
+
+            raw.pick_channels(channels)
+            index_channels = mne.pick_channels(raw.info['ch_names'], include=channels)
+
+            stack_size = 3600
+            turn = math.ceil(duration / stack_size)
+            #
+            # highpass = raw.info['highpass'] if raw.info['highpass'] is not None else 0.0
+            # lowpass = raw.info['lowpass'] if raw.info['lowpass'] is not None else 0.0
+            # prefilter = f"HP:{highpass:.1f}Hz LP:{lowpass:.1f}Hz N:0.0"
+            # print('prefilter:',prefilter)
+
+            # prefilter = f"HP:{raw.info['highpass']}Hz LP:{raw.info['lowpass']}Hz"
+            # prefilter = ('HP:{}Hz LP:{}Hz N:NoneHz'.format(high_pass, low_pass))
+
+            signal_headers = pyedflib.highlevel.make_signal_headers(channels,
+                                                                    physical_min=Physical_Min,
+                                                                    physical_max=Physical_Max,
+                                                                    digital_min=-8388608,  # 24位格式的数字最小值
+                                                                    digital_max=8388607,  # 24位格式的数字最大值
+                                                                    # physical_max=6368.439, physical_min=-6337.78
+                                                                    # sample_rate=sampling_rate,
+                                                                    sample_rate=freq,
+                                                                    # sample_frequency=sampling_rate,
+                                                                    prefiler=prefilter_info[0]
+                                                                    )
+            header = pyedflib.highlevel.make_header(startdate=meas_date)
+            with pyedflib.EdfWriter(self.file_path, file_type=pyedflib.FILETYPE_BDF, n_channels=len(channels)) as f:
+                f.setSignalHeaders(signal_headers)
+                f.setHeader(header)
+                for i in range(turn):
+                    raw_copy = raw.copy()
+                    start = i * stack_size
+                    if i == turn - 1:
+                        t_raw = raw_copy.crop(tmin=start, include_tmax=True)
+                    else:
+                        end = start + stack_size
+                        t_raw = raw_copy.crop(tmin=start, tmax=end, include_tmax=True)
+                    t_raw.load_data()
+                    # t_raw.filter(l_freq=high_pass, h_freq=low_pass)  # 带通滤波
+                    # t_raw.notch_filter(freqs=notch)
+                    # t_raw.resample(sampling_rate, npad='auto')
+                    t_signals, t_times = t_raw[index_channels, :]
+                    del t_raw
+
+                    t_signals = t_signals * (pow(10, 6))
+                    f.writeSamples(t_signals)
+                    del t_signals
+
+                    temp = math.ceil(20 / turn)
+                    if self.progress_value + temp < 20:
+                        self.progress_value += temp
+                    else:
+                        self.progress_value = 20
+                    QApplication.processEvents()
+
+                # with open(self.file_path, 'r+b') as f:
+                #     f.seek(0xC0)  # 移动到0x000000C0位置
+                #     f.write(b'BDF    ')  # 写入"BDF"，并用空格填充剩余的部分
+
+                self.uploadFileSig.emit()
+        except Exception as e:
+            print('process_bdf', e)
+            return
+        return
 
     # 脑电文件上传
     def on_btnUpload_clicked(self):
