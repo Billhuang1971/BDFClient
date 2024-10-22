@@ -443,6 +443,7 @@ class client(QObject, socketClient):
         self.s_port = s_port
         self.cAppUtil = cAppUtil
         self.macAddr = self.cAppUtil.getMacAddress()
+        # self.sockOpenConn(self.s_ip, self.s_port)
     ## dsj [ ===
 
     # 学习评估/提取课程学习测试内容

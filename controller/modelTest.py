@@ -80,6 +80,7 @@ class modelTestController(QWidget):
     # 模型测试结果处理
     def getResultRes(self, REPData):
         try:
+            print(REPData)
             if REPData[0] == '0':
                 QMessageBox.information(self.view, '提示', '读取进度信息失败', QMessageBox.Yes)
                 self.timer.stop()
@@ -92,6 +93,8 @@ class modelTestController(QWidget):
                         self.view.output_info(temp)
                 if REPData[2] == False:
                     self.timer.stop()
+                    self.progressBarView.updateProgressBar(100)
+                    self.progressBarView.close()
                     if REPData[5] != 'True':
                         self.view.output_info("测试结束")
                         self.view.output_info('算法运行失败')
@@ -99,13 +102,17 @@ class modelTestController(QWidget):
                     else:
                         self.view.output_info("测试结束")
                         self.view.output_info('算法运行成功')
-                        self.progressBarView.close()
                         cur_classifier_name = REPData[4]
                         self.view.output_info(
                             '提示:' + '{}模型已测试完成，可通过模型管理功能查看模型信息'.format(cur_classifier_name))
                         QMessageBox.information(self.view, '提示', '算法运行成功', QMessageBox.Yes)
                     self.view.view_unlock()
                     self.client.getClassifierInfo(self.pageSize, self.page, None)
+                else:
+                    scan_num = int(REPData[4])
+                    total_scan_num = int(REPData[5])
+                    print(scan_num, total_scan_num)
+                    self.progressBarView.updateProgressBar(100 * scan_num / total_scan_num)
         except Exception as e:
             print('getResultRes', e)
 
@@ -118,7 +125,7 @@ class modelTestController(QWidget):
                 QMessageBox.information(self.view, '提示', '当前服务器正在进行其他模型测试', QMessageBox.Yes)
                 return
             else:
-                self.progressBarView = ProgressBarView(window_title="测试中", hasStopBtn=False)
+                self.progressBarView = ProgressBarView(window_title="测试中", hasStopBtn=False, maximum=100)
                 self.progressBarView.show()
                 self.timer = QTimer()
                 self.timer.start(5000)
