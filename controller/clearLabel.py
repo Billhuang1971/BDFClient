@@ -307,7 +307,7 @@ class clearLabelController(QWidget):
                     self.view.ui.lineValue.clear()
                     self.init_table(self.label_info)
                     return
-                self.file_name = "{:>03}.edf".format(self.file_id)
+                self.file_name = "{:>03}.bdf".format(self.file_id)
                 self.view.ui.btnDel.setVisible(True)
                 self.view.ui.btnDelAll.setVisible(True)
                 self.view.ui.btnReset.setVisible(True)
@@ -351,7 +351,7 @@ class clearLabelController(QWidget):
                 print('start')
                 index = REPData[3]
                 self.search_label_info = REPData[2]
-                self.file_name = "{:>03}.edf".format(self.file_id)
+                self.file_name = "{:>03}.bdf".format(self.file_id)
                 self.view.ui.tableWidget.setSelectionMode(QAbstractItemView.MultiSelection)
                 self.init_table(self.search_label_info)
                 self.view.ui.comboCond.setCurrentIndex(index)

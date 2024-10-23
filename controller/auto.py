@@ -691,6 +691,7 @@ class autoController(QWidget):
                 # 每3秒查询一次
                 self.timer.start(3000)
                 self.timer.timeout.connect(self.getScanProgress)
+                self.progressBar.exec_()
                 # self.process_barView.exec_()
         except Exception as e:
             print('runProcessForScanRes', e)
@@ -717,10 +718,7 @@ class autoController(QWidget):
         self.view.ui.save_file_montage_setting_pushButton.setEnabled(False)
 
     def getScanProgress(self):
-        try:
-            self.client.getScanProgress([self.client.tUser[0]])
-        except Exception as e:
-            print('getScanProgress', e)
+        self.client.getScanProgress([self.client.tUser[0]])
 
     # def init_process_barView(self):
     #     # 总进度条视图
@@ -736,10 +734,11 @@ class autoController(QWidget):
 
     def process_bar_view_pv_update(self, scan_num, total_scan_num):
         # 查看当前扫描进度并更新进度条
-        self.pv += (scan_num / total_scan_num) * 100
-        # 进度条超过初始值在更新self.pv的值
-        self.pv = max(self.pv, self.apv)
-        self.total_process_value.emit(self.pv)
+        if total_scan_num != 0:
+            self.pv = (scan_num / total_scan_num) * 100
+            # 进度条超过初始值在更新self.pv的值
+            self.pv = max(self.pv, self.apv)
+            self.total_process_value.emit(self.pv)
 
     # 输出信息到页面
     def output_info(self, msg):
@@ -874,6 +873,8 @@ class autoController(QWidget):
                 return
             else:
                 include_channels_in_file = REPData[2]
+                for i in range(len(include_channels_in_file)):
+                    include_channels_in_file[i] = include_channels_in_file[i] + '-REF'
                 file_name = REPData[3]
                 selected_file_info = REPData[5]
                 self.view.set_selected_filename(file_name)
@@ -996,7 +997,6 @@ class autoController(QWidget):
                                             QMessageBox.Yes)
                 else:
                     QMessageBox.information(self.view, '提示', '分类器脑电文件匹配失败', QMessageBox.Yes)
-                self.view.ui.pushButton.setEnabled(True)
             else:
                 self.custom_msg_box = CustomMessageBox()
                 self.timer_2 = QTimer()
@@ -1047,8 +1047,7 @@ class autoController(QWidget):
                 else:
                     scan_num = REPData[4]
                     total_scan_num = REPData[5]
-                    if total_scan_num != 0:
-                        self.process_bar_view_pv_update(scan_num, total_scan_num)
+                    self.process_bar_view_pv_update(scan_num, total_scan_num)
                     # if total_scan_num != 0:
                     #     self.pv += (scan_num / total_scan_num) * 100
                     #     # 进度条超过初始值在更新self.pv的值
