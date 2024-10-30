@@ -246,11 +246,11 @@ class MainController(QWidget):
                                                 "当前正在[诊断学习]中，请先单击[诊断学习]窗口右边的”返回,再切换菜单项。",
                                                 QMessageBox.Yes)
                 return
-        elif self.previous_controller == 'dataImportController':
-            if self.controller.file_loading == 1:
-                QMessageBox.information(self, "脑电文件上传", f"上传文件：{self.controller.file_path}进行中，请先[暂停]文件上传。",
-                                        QMessageBox.Yes)
-                return
+        # elif self.previous_controller == 'dataImportController':
+        #     if self.controller.file_loading == 1:
+        #         QMessageBox.information(self, "脑电文件上传", f"上传文件：{self.controller.file_path}进行中，请先[暂停]文件上传。",
+        #                                 QMessageBox.Yes)
+        #         return
 
         if self.sub_view is not None:
             self.sub_view.close()
