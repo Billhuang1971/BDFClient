@@ -80,6 +80,8 @@ class dataImportController(QWidget):
         self.block_num = None
         # 存放选中需要转换的脑电文件路径
         self.from_filepath = None
+        # 存放传感器字段修复后的edf文件名
+        self.repair_filepath = None
         # 增加bdf文件转化为edf文件后的新文件名
         self.convert_filepath = None
         # 存放返回的脑电文件名字
@@ -1075,64 +1077,48 @@ class dataImportController(QWidget):
                 f'当前选中第{str(self.row + 1)}行!\n选中的病人是{self.patientCheck_info[self.row][self.view.field.index("pname") + 4]}检测日期是{self.patientCheck_info[self.row][self.view.field.index("measure_date") + 4]}\n当前选中需要转换的文件路径为{self.from_filepath}')
             self.view.ui.processButton.setEnabled(True)
 
-    # 将EDF文件转化为BDF文件
-    # def convert_edf_to_bdf(self):
-    #     try:
-    #         # 读取EDF文件
-    #         with pyedflib.EdfReader(self.from_filepath) as edf_reader:
-    #             n_channels = edf_reader.signals_in_file
-    #
-    #             # 获取EDF文件的信号头信息
-    #             signal_headers = edf_reader.getSignalHeaders()
-    #             headers = edf_reader.getHeader()
-    #
-    #             # 为每个通道创建新的信号头信息，用于BDF文件
-    #             for i in range(n_channels):
-    #                 signal_headers[i]['digital_min'] = -8388608  # BDF 24位数字最小值
-    #                 signal_headers[i]['digital_max'] = 8388607  # BDF 24位数字最大值
-    #                 signal_headers[i]['physical_min'] = edf_reader.getPhysicalMinimum(i)  # 保留物理范围
-    #                 signal_headers[i]['physical_max'] = edf_reader.getPhysicalMaximum(i)  # 保留物理范围
-    #                 signal_headers[i]['prefilter'] = edf_reader.getPrefilter(i)  # 获取预处理信息
-    #
-    #             # 生成转换后的 BDF 文件名
-    #             directory, filename = os.path.split(self.from_filepath)
-    #             filename_without_extension = os.path.splitext(filename)[0]
-    #             new_filename = f"{filename_without_extension}.bdf"
-    #             self.convert_filepath = os.path.join(directory, new_filename)
-    #
-    #             # 创建BDF头文件
-    #             bdf_header = pyedflib.highlevel.make_header(
-    #                 patientname=headers['patientname'],
-    #                 # recording=headers['recording'],
-    #                 startdate=headers['startdate']
-    #             )
-    #
-    #             # 写入BDF文件
-    #             with pyedflib.EdfWriter(self.convert_filepath, file_type=pyedflib.FILETYPE_BDF,
-    #                                     n_channels=n_channels) as bdf_writer:
-    #                 # 设置信号头文件
-    #                 bdf_writer.setSignalHeaders(signal_headers)
-    #                 bdf_writer.setHeader(bdf_header)
-    #
-    #                 # 读取每个通道的数据并将其组织成列表
-    #                 all_channel_data = []
-    #                 for i in range(n_channels):
-    #                     signal_data = edf_reader.readSignal(i)
-    #                     all_channel_data.append(signal_data)  # 将每个通道的数据加入到列表中
-    #
-    #                 # 检查数据是否与通道数匹配
-    #                 if len(all_channel_data) != n_channels:
-    #                     raise pyedflib.WrongInputSize(
-    #                         f"Number of channels ({n_channels}) unequal to length of data ({len(all_channel_data)})")
-    #
-    #                 # 写入所有通道的数据
-    #                 bdf_writer.writeSamples(all_channel_data)
-    #
-    #         print(f"EDF文件 {self.from_filepath} 已成功转换为BDF文件 {self.convert_filepath}")
-    #
-    #
-    #     except Exception as e:
-    #         print('Error during EDF to BDF conversion:', e)
+    def repair_transducer_binary(self):
+        try:
+            with open(self.from_filepath, 'rb') as file:
+                data = bytearray(file.read())
+
+            # 获取通道数
+            num_channels = int(data[252:256].decode('ascii').strip())
+            print(f"总通道数: {num_channels}")
+
+            step_size = 80
+            transducer_offset_within_channel = 16  # 在每个通道头内的相对偏移量
+            header_size = 256 * 3
+
+            # 修复每个通道的 transducer 字段
+            for i in range(num_channels - 1):
+                start = header_size + i * step_size + transducer_offset_within_channel
+                end = start + 80  # `transducer` 字段的长度为 80 字节
+                transducer_field = data[start:end]
+                print(f"通道 {i + 1} 的原始 transducer 字段内容: {data[start:end].decode('ascii', errors='ignore')}")
+
+                # 检查并替换非 ASCII 字符
+                if any(b != 'Unknown' for b in transducer_field):
+                    print(f"修复通道 {i + 1} 的 transducer 字段")
+                    replacement = 'Unknown'.ljust(80).encode('ascii')
+                    data[start:end] = replacement
+                else:
+                    print(f"通道 {i + 1} 的 transducer 字段无须修复")
+
+            # 生成修复后的 EDF 文件名
+            directory, filename = os.path.split(self.from_filepath)
+            filename_without_extension = os.path.splitext(filename)[0]
+            new_filename = f"{filename_without_extension}_repaired.edf"
+            self.repair_filepath = os.path.join(directory, new_filename)
+
+            # 保存修复后的文件
+            with open(self.repair_filepath, 'wb') as file:
+                file.write(data)
+
+            print(f"Repaired EDF file saved at: {self.repair_filepath}")
+        except Exception as e:
+            print(f"Error during binary repair: {e}")
+            return None
 
     def convert_edf_to_bdf(self):
         try:
@@ -1159,10 +1145,11 @@ class dataImportController(QWidget):
             raw.rename_channels(dict_ch)
             raw.pick(picks=re_channels)  # 仅保留变换后的通道
 
-            # 使用pyedflib读取EDF文件
-            with pyedflib.EdfReader(self.from_filepath) as edf_reader:
-                n_channels = edf_reader.signals_in_file
+            # 检查和修复 transducer 字段
+            self.repair_transducer_binary()
 
+            # 使用pyedflib读取EDF文件
+            with pyedflib.EdfReader(self.repair_filepath) as edf_reader:
                 # 获取EDF文件的信号头信息
                 signal_headers = edf_reader.getSignalHeaders()
                 headers = edf_reader.getHeader()
@@ -1236,8 +1223,9 @@ class dataImportController(QWidget):
 
     # 处理脑电文件
     def on_btnProcess_clicked(self):
+        # # 防止客户端多次点击产生多个处理进程，禁用
+        self.view.ui.processButton.setEnabled(False)
         # 判断
-
         try:
             raw = mne.io.read_raw_bdf(self.from_filepath)
             self.duration = raw.n_times/raw.info['sfreq']
