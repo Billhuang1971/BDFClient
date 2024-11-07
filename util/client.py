@@ -388,6 +388,9 @@ class client(QObject, socketClient):
     classifierPaging_alResSig=pyqtSignal(list)
     inquiryCls_alg_InfoRessig=pyqtSignal(list)
     getClassifier_configRessig=pyqtSignal(list)
+    getSelectSetInfoResSig =pyqtSignal(list)
+    inquiryCls_set_InfoResSig=pyqtSignal(list)
+    classifierPaging_setResSig=pyqtSignal(list)
 
 
     # 模型测试
@@ -3152,6 +3155,24 @@ class client(QObject, socketClient):
         self.sendRequest(msg)
     def getClassifier_configRes(self,REPData):
         self.getClassifier_configRessig.emit(list(REPData[3][3]))
+    def getSelectSetInfo(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["classifier", 14, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+    def getSelectSetInfoRes(self, REPData):
+        self.getSelectSetInfoResSig.emit(list(REPData[3]))
+    def inquiryCls_set_Info(self,REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["classifier", 15, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+    def inquiryCls_set_InfoRes(self, REPData):
+        self.inquiryCls_set_InfoResSig.emit(list(REPData[3]))
+    def classifierPaging_set(self,REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["classifier", 16, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+    def classifierPaging_setRes(self,REPData):
+        self.classifierPaging_setResSig.emit(list(REPData[3]))
 
     # 脑电扫描
     # 向服务器发送获取脑电扫描界面信息请求
@@ -4278,6 +4299,12 @@ class client(QObject, socketClient):
             self.inquiryCls_alg_InfoRes(REQmsg)
         elif REQmsg[0] == 'classifier' and REQmsg[1] == 13:
             self.getClassifier_configRes(REQmsg)
+        elif REQmsg[0] == 'classifier' and REQmsg[1] == 14:
+            self.getSelectSetInfoRes(REQmsg)
+        elif REQmsg[0] == 'classifier' and REQmsg[1] == 15:
+            self.inquiryCls_set_InfoRes(REQmsg)
+        elif REQmsg[0] == 'classifier' and REQmsg[1] == 16:
+            self.classifierPaging_setRes(REQmsg)
 
 
         # 模型测试
