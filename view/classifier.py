@@ -5,6 +5,7 @@ from view.classifer_form.Parameter import Ui_model_import
 from view.classifer_form.algorithm_table import Ui_algorithm_table
 from view.classifer_form.label_select import Ui_label_select
 from view.classifer_form.prentry import Ui_Prentry
+from view.classifer_form.Set_select import Ui_Set_Select
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import pyqtSignal
 
@@ -276,8 +277,8 @@ class LabelSelectVew(QWidget):
             self.EEG_names.append(name)
         self.init_view()
         self.ui.pushButton_save.clicked.connect(self.onClicked_pushButton_save)
-        self.ui.labelType_listWidget.itemDoubleClicked.connect(self.itemDoubleClicked_EEG_listWidget)
-        self.ui.selected_listWidget.itemDoubleClicked.connect(self.itemDoubleClicked_selected_listWidget)
+        self.ui.labelType_listWidget.itemDoubleClicked.connect(self.itemDoubleClicked_EEG_listWidget)  # 标签列表
+        self.ui.selected_listWidget.itemDoubleClicked.connect(self.itemDoubleClicked_selected_listWidget)  # 选中表格
         self.show()
 
     def init_view(self):
@@ -346,7 +347,68 @@ class PrentryView(QWidget):
         super().__init__(parent)
         self.ui = Ui_Prentry()
         self.ui.setupUi(self)
-
+class SetSelectView(QWidget):
+    control_signal_set = pyqtSignal(list)
+    def __init__(self,current_page, parent=None):
+        super().__init__(parent)
+        self.ui = Ui_Set_Select()
+        self.ui.setupUi(self)
+        self.cur_page=current_page
+        self.control_layout_tempt=None
+    def updatepage(self,current_page):
+        self.cur_page=current_page
+    def setPageController_set(self, page):
+        """自定义页码控制器"""
+        control_layout = QHBoxLayout()
+        homePage = QPushButton("首页")
+        prePage = QPushButton("<上一页")
+        self.curPage = QLabel(str(self.cur_page))
+        nextPage = QPushButton("下一页>")
+        finalPage = QPushButton("尾页")
+        self.totalPage = QLabel("共" + str(page) + "页")
+        skipLable_0 = QLabel("跳到")
+        self.skipPage = QLineEdit()
+        skipLabel_1 = QLabel("页")
+        confirmSkip = QPushButton("确定")
+        homePage.clicked.connect(self.__home_page_set)
+        prePage.clicked.connect(self.__pre_page_set)
+        nextPage.clicked.connect(self.__next_page_set)
+        finalPage.clicked.connect(self.__final_page_set)
+        confirmSkip.clicked.connect(self.__confirm_skip_set)
+        control_layout.addStretch(1)
+        control_layout.addWidget(homePage)
+        control_layout.addWidget(prePage)
+        control_layout.addWidget(self.curPage)
+        control_layout.addWidget(nextPage)
+        control_layout.addWidget(finalPage)
+        control_layout.addWidget(self.totalPage)
+        control_layout.addWidget(skipLable_0)
+        control_layout.addWidget(self.skipPage)
+        control_layout.addWidget(skipLabel_1)
+        control_layout.addWidget(confirmSkip)
+        control_layout.addStretch(1)
+        self.control_layout_tempt=control_layout
+        self.ui.verticalLayout.addLayout(control_layout)
+        # self.__layout.setStretch(0, 12)
+        # self.__layout.setStretch(1, 1)
+    def __home_page_set(self):
+        """点击首页信号"""
+        self.control_signal_set.emit(["home", self.curPage.text()])
+    def __pre_page_set(self):
+        """点击上一页信号"""
+        self.control_signal_set.emit(["pre", self.curPage.text()])
+    def __next_page_set(self):
+        """点击下一页信号"""
+        self.control_signal_set.emit(["next", self.curPage.text()])
+    def __final_page_set(self):
+        """尾页点击信号"""
+        self.control_signal_set.emit(["final", self.curPage.text()])
+    def __confirm_skip_set(self):
+        """跳转页码确定"""
+        self.control_signal_set.emit(["confirm", self.skipPage.text()])
+    def showTotalPage_set(self):
+        """返回当前总页数"""
+        return int(self.totalPage.text()[1:-1])
 
 if __name__ == '__main__':
     pass

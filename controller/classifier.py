@@ -1,7 +1,9 @@
-from view.classifier import ClassifierView, ImportView, AlgorithmSelectView, LabelSelectVew,TableWidget,PrentryView
+from view.classifier import ClassifierView, ImportView, AlgorithmSelectView, LabelSelectVew,TableWidget,PrentryView,SetSelectView
 from view.classifer_form.question.question import Question
 from util.clientAppUtil import clientAppUtil
 
+import json
+import math
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import Qt
@@ -24,8 +26,11 @@ class classifierController(QWidget):
         self.model_path=cAppUtil.model_path
         self.file_model = None
         self.algorithm = None
+        self.set=None
         self.curPageIndex_al = 1  #
         self.curPageMax_al = 1  #
+        self.curPageIndex_set=1
+        self.curPageMax_set=1
         #self.progressDialog = None
         self.ProgressBarView = None# 进度条对象
         self.data_blocks=[]
@@ -35,7 +40,8 @@ class classifierController(QWidget):
         self.pageRows = 12  # 每页12个
         self.curPageMax = 1  #当前最大页数
         self.select_row = None #被选中的行
-        self.alg_is_search=False
+        self.alg_is_search=False #算法选择界面是否属于搜索状态
+        self.set_is_search = False#数据集选择界面是否属于搜索状态
         self.root_path = os.path.join(os.path.dirname(__file__))[:-10]
         self.view.ui.btn_import.clicked.connect(self.on_btn_import_clicked)
         self.view.ui.btnDel.clicked.connect(self.on_btnDel_clicked)
@@ -58,9 +64,12 @@ class classifierController(QWidget):
         self.classifier_alg_set_name = None
         self.search_classifier_page_info=None
         self.tempt_CurPageIndex=None
-        self.algorithm_set=None
+        self.algorithm_set=None #存放服务器传回的算法信息
+        self.dataSet=None #存放服务器传回的数据集信息
         self.search_alg_page_info=None
+        self.search_set_page_info=None
         self.tempt_alg_CurpageIndex=None
+        self.tempt_set_CurpageIndex = None
         #self.current_clicked=False
         self._clicked_connections = {}  # 存储已有的连接
         self.configID=None
@@ -89,7 +98,9 @@ class classifierController(QWidget):
         self.client.classifierPaging_alResSig.connect(self.classifierPaging_alRes)
         self.client.inquiryCls_alg_InfoRessig.connect(self.inquiryCls_alg_InfoRes)
         self.client.getClassifier_configRessig.connect(self.getClassifier_configRes)
-
+        self.client.getSelectSetInfoResSig.connect(self.getSelectSetInfoRes)
+        self.client.inquiryCls_set_InfoResSig.connect(self.inquiryCls_set_InfoRes)
+        self.client.classifierPaging_setResSig.connect(self.classifierPaging_setRes)
 
 
         # self.client.checkNegAlgResSig.connect(self.checkNegAlgRes)
@@ -152,9 +163,13 @@ class classifierController(QWidget):
             if self.curPageIndex == int(signal[1]):
                 QMessageBox.information(self, "提示", "当前已显示该页面", QMessageBox.Yes)
                 return
-            if self.curPageMax < int(signal[1]) or int(signal[1]) < 0 or self.search_classifier_page_info < int(signal[1]):
+            if self.curPageMax < int(signal[1]) or int(signal[1]) <= 0:
                 QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
                 return
+            if self.view.ui.lineValue.text() != '' and self.view.ui.btnSelect.text() == "取消查询":
+                if self.search_classifier_page_info < int(signal[1]) or int(signal[1]) <= 0:
+                    QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
+                    return
             self.curPageIndex = int(signal[1])
             self.tableWidget.curPage.setText(signal[1])
 
@@ -308,6 +323,7 @@ class classifierController(QWidget):
         self.import_view.ui.pushButton_model_select.clicked.connect(self.on_clicked_pushButton_model_select)
         self.import_view.ui.pushButton_save.clicked.connect(self.onClicked_pushButton_save)
         self.import_view.ui.pushButton_algorithm_select.clicked.connect(self.on_clicked_pushButton_algorithm_select)
+        self.import_view.ui.pushButton_set_select.clicked.connect(self.on_clicked_pushButton_set_select)
         self.import_view.ui.pushButton_label_select.clicked.connect(self.on_clicked_pushButton_label_select)
         self.import_view.ui.pushButton_configOptions_select.clicked.connect(self.on_clicked_configOptions_select)
         self.import_view.ui.checkbox1.stateChanged.connect(self.clear_path)
@@ -351,7 +367,16 @@ class classifierController(QWidget):
 
     def onClicked_pushButton_save(self):#点击保存 （开始上传①）
          model_name = self.import_view.ui.lineEdit_model_name.text()
-         self.client.checkClassifierInfo(['filename',model_name])#检查是否已存在该模型
+         if os.listdir(self.model_path):  # 步骤七
+             QMessageBox.information(self.import_view, '提示', '系统正在处理未完成的上传任务，完成后请重新上传任务',
+                                     QMessageBox.Yes)
+             # 存在未完成任务，进入分支①处理
+             self.step_seven()
+         else:
+             if not model_name:
+                 QMessageBox.information(self.import_view, '提示', '请输入模型名称', QMessageBox.Yes)
+                 return
+             self.client.checkClassifierInfo(['filename',model_name])#检查是否已存在该模型
 
     def checkClassifierInfoRes(self,REPData): #检查模型同名返回，若无同名则继续（开始上传②）
             model_name = self.import_view.ui.lineEdit_model_name.text()
@@ -377,7 +402,9 @@ class classifierController(QWidget):
             if not configID:
                 QMessageBox.information(self.import_view, '提示', '请选择配置信息', QMessageBox.Yes)
                 return
-
+            if not self.set:
+                QMessageBox.information(self.import_view, '提示', '尚未选择模型的数据集', QMessageBox.Yes)
+                return
             model_file_type = self.file_model[0].split('/')[-1].split('.')[-1]
             #shutil.copyfile(self.file_model[0],
                             #self.model_path + model_name + '.' + model_file_type)  # 把上传文件复制到文件夹中
@@ -390,18 +417,13 @@ class classifierController(QWidget):
                         first = False
                     else:
                         label_names += "|{}".format(str(label_name))
-                if os.listdir(self.model_path):#步骤七
-                    QMessageBox.information(self.import_view, '提示', '系统正在处理未完成的上传任务，完成后请重新上传任务', QMessageBox.Yes)
-                    #存在未完成任务，进入分支①处理
-                    self.step_seven()
-                    return
                 model_hash_right=self.check_file_hash(self.file_model[0])
                 self.configID=None
-                content_label=''
+                content_label='' #所选的状态通道
                 for item in self.import_view.saved_EEG_names:
                     content_label += item + '/'
                 #（开启上传③）
-                self.client.add_import_classifierInfo([model_name, self.algorithm[0],
+                self.client.add_import_classifierInfo([model_name, self.algorithm[0],self.set[0],
                                                       model_name + '.' + model_file_type,
                                                       epoch_len,model_hash_right,configID,content_label])#向服务器数据库添加信息(hash值存在第四个)
              # self.DbUtil.update_alg_relate_model_info(filename=model_name + '.' + model_file_type,
@@ -414,6 +436,8 @@ class classifierController(QWidget):
         try: #（上传③返回）
             if REPData[0] == '1':
                 QMessageBox.information(self.import_view, '提示', "导入成功", QMessageBox.Yes)
+                self.set=None
+                self.algorithm=None
                 self.import_view.close()
                 #（开始上传④）
                 self.client.checkstate([REPData[2]])#步骤2
@@ -657,9 +681,13 @@ class classifierController(QWidget):
             if self.curPageIndex_al == int(signal[1]):
                 QMessageBox.information(self, "提示", "当前已显示该页面", QMessageBox.Yes)
                 return
-            if self.curPageMax_al < int(signal[1]) or int(signal[1]) < 0 or self.search_alg_page_info < int(signal[1]):
+            if self.curPageMax_al < int(signal[1]) or int(signal[1]) <= 0:
                 QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
                 return
+            if self.algorithmSelectView.ui.lineValue.text() != '' and self.algorithmSelectView.ui.btnSelect1.text() =='取消查询':
+                if self.search_alg_page_info < int(signal[1]) or int(signal[1]) <= 0:
+                    QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
+                    return
             self.curPageIndex_al = int(signal[1])
             self.algorithmSelectView.curPage.setText(signal[1])
 
@@ -747,8 +775,108 @@ class classifierController(QWidget):
         except Exception as e:
             print('on_clicked_select_classifier', e)
 
+    def on_clicked_pushButton_set_select(self):
+        if self.import_view.ui.checkbox1.isChecked() or self.import_view.ui.checkbox2.isChecked():
+            self.search_set_page_info = None
+            self.import_view.ui.pushButton_set_select.setEnabled(False)
+            self.SetSelectView = SetSelectView(self.curPageIndex_al)
+            self.SetSelectView.ui.tableWidget_set.setSelectionBehavior(QAbstractItemView.SelectRows)
+            self.SetSelectView.ui.btnSelect1.clicked.connect(lambda: self.on_clicked_select_set(pageIndex=1))
+            if self.import_view.ui.checkbox1.isChecked():
+                self.client.getSelectSetInfo([self.curPageIndex_set, self.pageRows,'state'])
+            else:
+                self.client.getSelectSetInfo([self.curPageIndex_set, self.pageRows,'wave'])
+        # self.init_algorithm_table(self.DbUtil.get_algorithmInfo(), self.algorithmSelectView.ui.tableWidget_algorithm,
+        #                           self.import_view.ui.label_algorithm_name)
+        # self.algorithmSelectView.show()
+        else:
+            QMessageBox.information(self, '提示', '请选择分类：状态或波形', QMessageBox.Ok)
+        return
+    def on_clicked_select_set(self,pageIndex):
+        try:
+            if self.tempt_set_CurpageIndex ==None:
+                self.tempt_set_CurpageIndex=self.curPageIndex_set
+            self.curPageIndex_set=pageIndex
+            key_value = self.SetSelectView.ui.lineValue.text()
+            if key_value == '':
+                QMessageBox.information(self, '提示', '请输入要搜索的数据集信息', QMessageBox.Ok)
+                return
+            if self.import_view.ui.checkbox1.isChecked():
+                REQmsg = [key_value,pageIndex,self.pageRows,'state']
+            else:
+                REQmsg = [key_value, pageIndex, self.pageRows,'wave']
+            if self.SetSelectView.ui.btnSelect1.text() == "查询":
+                self.SetSelectView.ui.btnSelect1.setText("取消查询")
+                self.client.inquiryCls_set_Info(REQmsg)
+            elif self.set_is_search==True:
+                self.set_is_search=False
+                self.client.inquiryCls_set_Info(REQmsg)
+            elif self.SetSelectView.ui.btnSelect1.text() == "取消查询":
+                self.SetSelectView.ui.tableWidget_set.setSelectionBehavior(QAbstractItemView.SelectRows)
+                self.SetSelectView.ui.tableWidget_set.clear()
+                self.clear_layout(self.SetSelectView.control_layout_tempt)
+                self.curPageIndex_set=self.tempt_set_CurpageIndex
+                self.SetSelectView.updatepage(self.curPageIndex_set)
+                self.SetSelectView.setPageController_set(self.curPageMax_set)
+                self.init_set_table(self.dataSet, self.SetSelectView.ui.tableWidget_set,
+                                          self.import_view.ui.label_set_name)
+                self.SetSelectView.ui.btnSelect1.setText("查询")
+                self.tempt_set_CurpageIndex=None
+                self.search_set_page_info=None
+                self.SetSelectView.ui.lineValue.clear()
+                self.SetSelectView.show()
+        except Exception as e:
+            print('on_clicked_select_classifier', e)
 
+    def inquiryCls_set_InfoRes(self,REPData):
+        try:
+            if REPData[0] == '1':
+                if REPData[2][1]!=[]:
+                    QMessageBox.information(self, '提示', '查询数据集信息成功', QMessageBox.Ok)
+                else:
+                    QMessageBox.information(self, '提示', '没有匹配的数据集，请点击取消查询重新搜索', QMessageBox.Ok)
+                search_set_info = REPData[2][1]
+                self.search_set_page_info=REPData[2][0]
+                self.SetSelectView.ui.tableWidget_set.setSelectionBehavior(QAbstractItemView.SelectRows)
+                self.SetSelectView.ui.tableWidget_set.clear()
+                self.SetSelectView.updatepage(self.curPageIndex_set)
+                self.clear_layout(self.SetSelectView.control_layout_tempt)
+                self.SetSelectView.setPageController_set(self.search_set_page_info)
+                self.init_set_table(search_set_info, self.SetSelectView.ui.tableWidget_set,
+                                          self.import_view.ui.label_set_name)
 
+                self.SetSelectView.show()
+                # self.init_comboCond()
+            else:
+                QMessageBox.information(self, '提示', '查询数据集信息失败,请重试', QMessageBox.Ok)
+        except Exception as e:
+            print('inquiryCls_set_InfoRes', e)
+    def getSelectSetInfoRes(self,REPData):
+        try:
+            if REPData[0] == '1':
+                self.dataSet = REPData[2]
+                self.curPageMax_set=REPData[3]
+                self.SetSelectView.ui.tableWidget_set.setSelectionBehavior(QAbstractItemView.SelectRows)
+                self.SetSelectView.ui.tableWidget_set.clear()
+                self.init_set_table(self.dataSet, self.SetSelectView.ui.tableWidget_set,
+                                          self.import_view.ui.label_set_name)
+                self.SetSelectView.setPageController_set(self.curPageMax_set)
+                self.SetSelectView.control_signal_set.connect(self.page_controller_set)
+                self.SetSelectView.show()
+                self.import_view.ui.pushButton_set_select.setEnabled(True)
+            elif REPData[0] =='2':
+                QMessageBox.information(self, '提示', '没有数据集', QMessageBox.Ok)
+                self.import_view.ui.pushButton_set_select.setEnabled(True)
+            else:
+                QMessageBox.information(self, '提示', '获取数据集信息失败,请重试', QMessageBox.Ok)
+        except Exception as e:
+            print('getSelectSetInfoRes', e)
+            # for id, name, config_id, des, fileTrain, fileTest in data[1][1]:
+            #     print(f'des: {des}')
+            #     tempType = json.loads(des)['type']
+            #     print(f'tempType: {tempType}')
+            #     tempSetInfo.append(
+            #         [id, name, '波形' if tempType == 'wave' else '状态', fileTrain, fileTest, config_id, des])
     def check_file_hash(self,file_path):
         try:
             with open(file_path, 'rb') as file:  # 检测文件完整性
@@ -817,7 +945,132 @@ class classifierController(QWidget):
         table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         # 增加和查询的时候列数会改变，所以需要保存原来的列数
         # col = table.columnCount()
+    def init_set_table(self, set_info, table, set_name_label):
+        item_row = -1
+        if table in self._clicked_connections:
+            table.clicked.disconnect(self._clicked_connections[table])
 
+        # 响应函数，获取用户选择的数据集信息，并关闭页面
+        def on_clicked_set_view_item():
+            item_row = table.currentRow()
+            self.set = None
+            self.set = set_info[item_row]
+            print(1 and self.set)
+            print(table)
+            set_name = self.set[1]
+            _translate = QtCore.QCoreApplication.translate
+            set_name_label.setText(_translate("model_import",
+                                                    "<html><head/><body><p><span style=\" font-size:12pt;\">数据集：" + set_name + "</span></p></body></html>"))
+
+            self.SetSelectView.close()
+        table.clicked.connect(on_clicked_set_view_item)
+        self._clicked_connections[table] = on_clicked_set_view_item  # 记录新的连接
+        header = ['数据集名称']
+        field = ['set_name']
+        data = set_info
+        col_num = len(header)
+        row_num = 0
+        if set_info:
+            # 删除不必要的信息，只留下算法名称和训练参数和测试参数
+            data = np.delete(set_info, [0,2,3,4,5], axis=1)
+            row_num = len(data)
+        table.setColumnCount(col_num)
+        table.setRowCount(row_num)
+        for i in range(col_num):
+            header_item = QTableWidgetItem(header[i])
+            font = header_item.font()
+            font.setPointSize(40)
+            header_item.setFont(font)
+            header_item.setForeground(QBrush(Qt.black))
+            header_item.setData(Qt.UserRole, field[i])
+            table.setHorizontalHeaderItem(i, header_item)
+            # 拉伸表格列项，使其铺满
+            table.horizontalHeader().setStretchLastSection(True)
+        for r in range(row_num):
+            for c in range(col_num):
+                item = QTableWidgetItem(str(data[r][c]))
+                item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                font = item.font()
+                font.setPointSize(24)
+                item.setFont(font)
+                table.setItem(r, c, item)
+        table.horizontalHeader().setHighlightSections(False)
+        table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
+        table.setSelectionMode(QTableWidget.SingleSelection)
+        #   按字段长度进行填充
+        table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        # 增加和查询的时候列数会改变，所以需要保存原来的列数
+        # col = table.columnCount()
+    def page_controller_set(self, signal):
+        if "home" == signal[0]:
+            if self.curPageIndex_set == 1:
+                QMessageBox.information(self, "提示", "已经是首页了", QMessageBox.Yes)
+                return
+            self.curPageIndex_set = 1
+            self.SetSelectView.curPage.setText(str(self.curPageIndex_set))
+        elif "pre" == signal[0]:
+            if 1 == int(signal[1]):
+                QMessageBox.information(self, "提示", "已经是第一页了", QMessageBox.Yes)
+                return
+            if self.curPageIndex_set <= 1:
+                return
+            self.curPageIndex_set = self.curPageIndex_set - 1
+            self.SetSelectView.curPage.setText(str(self.curPageIndex_set))
+        elif "next" == signal[0]:
+            if self.curPageMax_set == int(signal[1]) or self.search_set_page_info == int(signal[1]):
+                QMessageBox.information(self, "提示", "已经是最后一页了", QMessageBox.Yes)
+                return
+            self.curPageIndex_set = self.curPageIndex_set + 1
+            self.SetSelectView.curPage.setText(str(self.curPageIndex_set))
+        elif "final" == signal[0]:
+            if self.curPageIndex_set == self.curPageMax_set or self.search_set_page_info == self.curPageIndex_set:
+                QMessageBox.information(self, "提示", "已经是尾页了", QMessageBox.Yes)
+                return
+            self.curPageIndex_set = self.curPageMax_set
+            self.SetSelectView.curPage.setText(str(self.curPageMax_set))
+        elif "confirm" == signal[0]:
+            if signal[1]=='':
+                QMessageBox.information(self, "提示", "请输入数字", QMessageBox.Yes)
+                return
+            if self.curPageIndex_set == int(signal[1]):
+                QMessageBox.information(self, "提示", "当前已显示该页面", QMessageBox.Yes)
+                return
+            if self.curPageMax_set < int(signal[1]) or int(signal[1]) <= 0:
+                QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
+                return
+            if self.SetSelectView.ui.lineValue.text() != '':
+                if self.search_set_page_info < int(signal[1]) or int(signal[1]) <= 0:
+                    QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
+                    return
+            self.curPageIndex_set = int(signal[1])
+            self.SetSelectView.curPage.setText(signal[1])
+
+        if self.import_view.ui.checkbox1.isChecked():
+            msg = [self.curPageIndex_set, self.pageRows,signal[0],'state']
+        else:
+            msg = [self.curPageIndex_set, self.pageRows,signal[0],'wave']
+        if self.SetSelectView.ui.lineValue.text() != '':
+            self.set_is_search=True
+            self.on_clicked_select_set(pageIndex=self.curPageIndex_set)
+        else:
+            self.client.classifierPaging_set(msg)
+
+    def classifierPaging_setRes(self,REPData):
+        try:
+            if REPData[0] == '1':
+                self.dataSet = REPData[2]
+                self.SetSelectView.ui.tableWidget_set.setSelectionBehavior(QAbstractItemView.SelectRows)
+                self.SetSelectView.ui.tableWidget_set.clear()
+                self.init_set_table(self.dataSet, self.SetSelectView.ui.tableWidget_set,
+                                          self.import_view.ui.label_set_name)
+                #self.algorithmSelectView.setPageController_al(self.curPageMax_al)
+                #self.algorithmSelectView.control_signal_al.connect(self.page_controller_al)
+                self.SetSelectView.show()
+            else:
+                QMessageBox.information(self, '提示', '数据集信息翻页失败,请重试', QMessageBox.Ok)
+        except Exception as e:
+            print('classifierPaging_setRes', e)
     def on_btnDel_clicked(self):
         row = self.select_row
         answer = QMessageBox.warning(

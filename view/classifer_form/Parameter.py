@@ -99,7 +99,7 @@ class Ui_model_import(object):
         horizon_layout_7.addWidget(self.pushButton_model_select)
         horizon_layout_7.addWidget(self.label_model_path)
 
-
+        #算法选择按钮
         font = QtGui.QFont()
         font.setPointSize(16)
         self.pushButton_algorithm_select = QtWidgets.QPushButton()
@@ -113,6 +113,21 @@ class Ui_model_import(object):
         horizon_layout_6 = QtWidgets.QHBoxLayout()
         horizon_layout_6.addWidget(self.pushButton_algorithm_select)
         horizon_layout_6.addWidget(self.label_algorithm_name)
+
+        #数据集选择按钮
+        font = QtGui.QFont()
+        font.setPointSize(16)
+        self.pushButton_set_select = QtWidgets.QPushButton()
+        self.pushButton_set_select.setGeometry(QtCore.QRect(0, 320, 191, 51))
+        self.pushButton_set_select.setObjectName("pushButton_set_select")
+        self.pushButton_set_select.setFont(font)
+        self.label_set_name = QtWidgets.QLabel()
+        self.label_set_name.setGeometry(QtCore.QRect(190, 320, 441, 61))
+        self.label_set_name.setFont(font)
+        self.label_set_name.setObjectName("label_set_name")
+        horizon_layout_10 = QtWidgets.QHBoxLayout()
+        horizon_layout_10.addWidget(self.pushButton_set_select)
+        horizon_layout_10.addWidget(self.label_set_name)
 
         font = QtGui.QFont()
         font.setPointSize(16)
@@ -195,6 +210,7 @@ class Ui_model_import(object):
         self.verticalLayout.addLayout(horizon_layout_5)
         self.verticalLayout.addLayout(horizon_layout_8)
         self.verticalLayout.addLayout(horizon_layout_6)
+        self.verticalLayout.addLayout(horizon_layout_10)
         self.verticalLayout.addLayout(horizon_layout_7)
         self.verticalLayout.addLayout(horizon_layout_9)
 
@@ -217,6 +233,9 @@ class Ui_model_import(object):
         self.label_2.setText(_translate("model_import", "扫描段长(采样点)："))
         self.label_3.setText(_translate("model_import", "配置选择：   "))
         self.pushButton_configOptions_select.setText((_translate("model_import","配置选择")))
+        self.pushButton_set_select.setText(_translate("model_import", "数据集选择"))
+        self.label_set_name.setText(_translate("model_import",
+                                                     "<html><head/><body><p><span style=\" font-size:12pt;\">模型数据集：未选择</span></p></body></html>"))
         self.label_4.setText(_translate("model_import", "分类任务："))
         self.pushButton_label_select.setText(_translate("model_import", "通道列表（选填）"))
         self.label_label_select.setText(_translate("model_import",
