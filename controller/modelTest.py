@@ -125,7 +125,7 @@ class modelTestController(QWidget):
                 QMessageBox.information(self.view, '提示', '当前服务器正在进行其他模型测试', QMessageBox.Yes)
                 return
             else:
-                self.progressBarView = ProgressBarView(window_title="测试中", hasStopBtn=False, maximum=100)
+                self.progressBarView = ProgressBarView(window_title="测试中", hasStopBtn=False)
                 self.progressBarView.show()
                 self.timer = QTimer()
                 self.timer.start(5000)
