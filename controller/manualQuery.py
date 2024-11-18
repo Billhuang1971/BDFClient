@@ -184,39 +184,58 @@ class manualQueryController(QWidget):
         self.mainLayout.addWidget(self.diagListView)
 
     def mq_paging(self,page_to):
-       if page_to[0] == "home":
-           self.curPageIndex=1
-           self.diagListView.ui.curPage.setText(str(self.curPageIndex))
-       elif page_to[0] == "pre":
-           if self.curPageIndex <= 1:
-               return
-           self.curPageIndex=self.curPageIndex-1
-           self.diagListView.ui.curPage.setText(str(self.curPageIndex))
-       elif page_to[0] == "next":
-           self.curPageIndex=self.curPageIndex+1
-           self.diagListView.ui.curPage.setText(str(self.curPageIndex))
-       elif page_to[0] == "final":
-           self.curPageIndex = self.curPageMax
-           self.diagListView.ui.curPage.setText(str(self.curPageIndex))
-       elif page_to[0] == "confirm":
-           pp=self.diagListView.ui.skipPage.text()
-           if int(pp)>self.curPageMax or int(pp)<=0:
-               QMessageBox.information(self, "查询", f'页数：1 至 {self.curPageMax}', QMessageBox.Yes)
-               self.diagListView.ui.skipPage.setText(str(self.curPageMax))
-               return False
-           self.curPageIndex = int(pp)
-           self.diagListView.ui.curPage.setText(str(self.curPageIndex))
-       elif page_to[0] == "query":
-           self.curPageIndex = 1
-           self.diagListView.ui.curPage.setText(str(self.curPageIndex))
-       pname = self.diagListView.ui.comboBox.currentText()
-       pvalue = self.diagListView.ui.lineEdit.text()
-       mdate1 = self.diagListView.ui.lineEditDate1.text()
-       mdate2 = self.diagListView.ui.lineEditDate2.text()
-       self.diagListView.setDisabled(True)
-       msg=[self.client.tUser[0], self.curPageIndex, self.pageRows,page_to[0],pname,pvalue,mdate1,mdate2]
-       self.client.mq_paging(msg)
+        if page_to[0] == "home":
+            self.curPageIndex = 1
+            self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+        elif page_to[0] == "pre":
+            if self.curPageIndex <= 1:
+                return
+            self.curPageIndex = self.curPageIndex - 1
+            self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+        elif page_to[0] == "next":
+            self.curPageIndex = self.curPageIndex + 1
+            self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+        elif page_to[0] == "final":
+            self.curPageIndex = self.curPageMax
+            self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+        elif page_to[0] == "confirm":
+            pp = self.diagListView.ui.skipPage.text()
+            if int(pp) > self.curPageMax or int(pp) <= 0:
+                QMessageBox.information(self, "查询", f'页数：1 至 {self.curPageMax}', QMessageBox.Yes)
+                self.diagListView.ui.skipPage.setText(str(self.curPageMax))
+                return False
+            self.curPageIndex = int(pp)
+            self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+        elif page_to[0] == "query":
+            self.curPageIndex = 1
+            self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+        pname = self.diagListView.ui.comboBox.currentText()
+        pvalue = self.diagListView.ui.lineEdit.text()
+        if pname == '测量日期':
+            r, pvalue = self.chkdate(pvalue)
+            if r == '0':
+                return
+        mdate1 = self.diagListView.ui.lineEditDate1.text()
+        r, mdate1 = self.chkdate(mdate1)
+        if r == '0':
+            return
+        mdate2 = self.diagListView.ui.lineEditDate2.text()
+        r, mdate2 = self.chkdate(mdate2)
+        if r == '0':
+            return
+        self.diagListView.setDisabled(True)
+        msg = [self.client.tUser[0], self.curPageIndex, self.pageRows, page_to[0], pname, pvalue, mdate1, mdate2]
+        self.client.mq_paging(msg)
 
+    def chkdate(self, date_str):
+        try:
+            if date_str is None or date_str == '':
+                return '1', ''
+            date = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+            return '1', date_str
+        except:
+            QMessageBox.information(self, "输入数据校验", f"输入{date_str}不正确,日期格式,如2024-9-18", QMessageBox.Yes)
+            return '0', date_str
     def mq_pagingRes(self, REPData):
         self.diagListView.setEnabled(True)
         if REPData[0] == '0':
