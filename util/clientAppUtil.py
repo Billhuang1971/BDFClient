@@ -87,6 +87,41 @@ class clientAppUtil():
         except Exception as e:
             print('writeByte', e)
 
+    # 清空指定路径，指定文件名开头文件
+    # 1.仅传入filepath，清空文件夹文件
+    # 2.传入filepath与filename，删除指定文件
+    # 3.传入filepath与fullname，删除指定文件名开头文件（同时删除脑电文件及txt文件）
+    def empty(self, filepath, filename='', fullname=''):
+        # 获取文件夹下所有文件
+        fileslist = os.listdir(filepath)
+        # 删除所有文件
+        if filename == '' and fullname == '':
+            for file in fileslist:
+                file_path = os.path.join(filepath, file)  # 获取文件的完整路径
+                os.remove(file_path)  # 删除文件
+        # 删除某一文件名文件
+        elif filename == '' and fullname != '':
+            for file in fileslist:
+                if file == fullname:
+                    file_path = os.path.join(filepath, file)  # 获取文件的完整路径
+                    os.remove(file_path)
+        # 删除指定文件名开头文件
+        else:
+            # 遍历文件夹中的文件
+            for file in fileslist:
+                if file.startswith(filename):  # 判断文件名是否以指定的文件名开头
+                    file_path = os.path.join(filepath, file)  # 获取文件的完整路径
+                    os.remove(file_path)  # 删除文件
+
+    def isNull(self, filepath):
+        if not os.path.exists(filepath):  # 判断路径是否存在
+            return False
+        if os.path.isdir(filepath):  # 如果是文件夹
+            return not os.listdir(filepath)  # 文件夹为空返回True
+        if os.path.isfile(filepath):  # 如果是文件
+            return os.path.getsize(filepath) == 0  # 文件大小为0返回True
+        return False  # 其他情况，默认返回False
+
     # 写文件功能
     def writeEEG(self, savePath, data):
         try:
