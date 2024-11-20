@@ -1413,12 +1413,13 @@ class taskSettingsController(QWidget):
             # 无搜索条件的翻页
             self.get_choose_marker_info(flag='2')
 
-
     # 获取标注主题相关分页
     # 设置分页
     def page_controller(self, signal):
         total_page = self.view.tableWidget.showTotalPage()
         is_fromSkip = False
+        previous_page = int(self.view.tableWidget.curPage.text())  # 保存当前页码
+
         if "home" == signal[0]:
             self.view.tableWidget.curPage.setText("1")
         elif "pre" == signal[0]:
@@ -1440,11 +1441,14 @@ class taskSettingsController(QWidget):
                 return
             is_fromSkip = True
             self.view.tableWidget.curPage.setText(signal[1])
-        self.changeTableContent(is_fromSkip)  # 改变表格内容
+
+        # 改变表格内容并检查结果
+        if not self.changeTableContent(is_fromSkip):
+            # 如果没有数据，将页码恢复为之前的值
+            self.view.tableWidget.curPage.setText(str(previous_page))
 
     def changeTableContent(self, is_fromSkip):
         """根据当前页改变表格的内容"""
-        # self.clear(self.view.ui.verticalLayout_3)
         self.is_fromSkip = is_fromSkip
         self.cur_page = int(self.view.tableWidget.curPage.text())
         self.skip_page = int(self.view.tableWidget.skipPage.text())
@@ -1462,15 +1466,20 @@ class taskSettingsController(QWidget):
             key_word = 'state'
         print("key_word:", key_word)
         print("key_value:", key_value)
-        # 只有当搜索框有值时候才搜索
+
+        # 获取数据并检查是否有返回内容
+        has_data = False
         if key_value:
             # 有搜索条件的翻页
-            self.getThemeInfo(flag='5', key_word=key_word, key_value=key_value)
+            has_data = self.getThemeInfo(flag='5', key_word=key_word, key_value=key_value)
         else:
             # 无搜索条件的翻页
-            self.getThemeInfo(flag='2')
+            has_data = self.getThemeInfo(flag='2')
 
-
+        # 如果没有数据，恢复页码并返回 False
+        if not has_data:
+            return False
+        return True
 
     # 清理布局
     def clear(self, layout, num=0, count=-1):
