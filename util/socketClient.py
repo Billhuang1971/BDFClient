@@ -23,13 +23,11 @@ class socketClient:
     def appMain(self, serverAddr, REQmsg):
         pass
     def sockOpenConn(self, s_ip, s_port):
-        if self.sock is not None:
-            return False
         self.ip = s_ip
         self.port = s_port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # 生成socket
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # 不经过WAIT_TIME，直接关闭
-        self.sock.setblocking(False)  # 设置非阻塞编程
+        # self.sock.setblocking(False)  # 设置非阻塞编程
 
         self.inputs = [self.sock, ]
         self.executor = ThreadPoolExecutor(max_workers=1)  # 设置线程池最大数量
@@ -38,7 +36,7 @@ class socketClient:
             self.sock.connect((self.ip, self.port))
         except Exception as e:
             print(f"socketClient.sockOpenConn:{e}")
-        return True
+
     def sockClose(self):
         self.inputs.clear()
         self.sock.close()
@@ -46,16 +44,12 @@ class socketClient:
 
     def handle_received_data(self, data):
         print("接收服务端信息:", data)
-        self.inputs.clear()
-        if self.sock is not None:
-            self.sock.close()
-            self.sock = None
         self.appMain("", data)
 
     def receive_service_data(self):
-       while len(self.inputs)>0:
+       while True:
             try:
-                r_list, w_list, e_list = select.select(self.inputs, [], [], 1)
+                r_list, _, _ = select.select(self.inputs, [], [])
                 for event in r_list:
                     data, data_len = self.recv_msg(event)
                     if data:
@@ -64,7 +58,6 @@ class socketClient:
                         except Exception as e:
                             pass
                     else:
-                        print("远程断开连接")
                         if event in self.inputs:
                             self.inputs.remove(event)
                             self.sock.close()

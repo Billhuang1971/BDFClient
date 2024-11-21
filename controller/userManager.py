@@ -462,6 +462,8 @@ class userManagerController(QWidget):
                     print(user_info)
                     self.searchInfo = user_info
                     self.searchPageMax = maxPage
+                    if self.searchPageMax == 0:
+                        self.searchPageMax = 1
                     self.clear(self.view.ui.verticalLayout_3)
                     self.tableWidget = TableWidget(self.searchInfo, self.col_name, self.searchPage,
                                                    self.editConfirm, self.editCancel, self.on_clicked_user_del,

@@ -13,7 +13,7 @@ class ProgressBarView(QDialog):
     # maximum: 进度条最大值， 默认值为0（无进度）
     # hasStopBtn: 是否显示取消按钮， 默认为True
     # speed: 进度条流速，默认为1
-    def __init__(self, parent=None, window_title="", maximum=0, hasStopBtn=True, speed=1):
+    def __init__(self, parent=None, window_title="", maximum=100, hasStopBtn=True, speed=100):
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowMaximizeButtonHint | Qt.MSWindowsFixedSizeDialogHint)
         self.setWindowModality(Qt.ApplicationModal)

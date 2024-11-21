@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import threading
+
 from PyQt5.QtCore import Qt, pyqtSignal, QObject
 
 from threading import Thread
@@ -446,7 +448,8 @@ class client(QObject, socketClient):
         self.s_port = s_port
         self.cAppUtil = cAppUtil
         self.macAddr = self.cAppUtil.getMacAddress()
-        # self.sockOpenConn(self.s_ip, self.s_port)
+
+
     ## dsj [ ===
 
     # 学习评估/提取课程学习测试内容
@@ -1826,6 +1829,9 @@ class client(QObject, socketClient):
     def login(self, REQmsg):
         REQmsg.insert(0, self.macAddr)
         msg = ["login", 1, 0, REQmsg]
+        self.isConnected = True
+        self.sockOpenConn(self.s_ip, self.s_port)
+        threading.Thread(target=self.receive_service_data).start()
         self.sendRequest(msg)
 
     # 回调，处理服务端回传的登录结果
@@ -1849,6 +1855,7 @@ class client(QObject, socketClient):
     def logoutRes(self, REPData):
         data = REPData[3]
         self.logoutResSig.emit(list(data))
+        self.sockClose()
 
     # 回调，处理服务端回传的退出处理结果
     def quitRes(self, revData):
@@ -3444,14 +3451,13 @@ class client(QObject, socketClient):
         self.getSearchScanFileInfoResSig.emit(list(REPData[3]))
 
     def sendRequest(self, msg):
-        r = self.sockOpenConn(self.s_ip, self.s_port)
-        if r is None:
-            msg[3] = ['0','','网络忙.']
-            self.appMain('', msg)
-            return
+        # r = self.sockOpenConn(self.s_ip, self.s_port)
+        # if r is None:
+        #     msg[3] = ['0','','网络忙.']
+        #     self.appMain('', msg)
+        #     return
         ret = self.send_client_data(msg)
         if ret:
-            Thread(target=self.receive_service_data).start()
             return True
         else:
             self.sockClose()
