@@ -41,35 +41,6 @@ class Ui_DataImportForm(object):
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
 
-        # self.addButton = QtWidgets.QPushButton(self.groupBox_3)
-        # sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        # sizePolicy.setHorizontalStretch(0)
-        # sizePolicy.setVerticalStretch(0)
-        # sizePolicy.setHeightForWidth(self.addButton.sizePolicy().hasHeightForWidth())
-        # self.addButton.setSizePolicy(sizePolicy)
-        # font = QtGui.QFont()
-        # font.setFamily("Agency FB")
-        # font.setPointSize(16)
-        # self.addButton.setFont(font)
-        # self.addButton.setObjectName("addButton")
-        # self.horizontalLayout_4.addWidget(self.addButton)
-        # spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
-        # self.horizontalLayout_4.addItem(spacerItem)
-
-        self.delButton = QtWidgets.QPushButton(self.groupBox_3)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.delButton.sizePolicy().hasHeightForWidth())
-        self.delButton.setSizePolicy(sizePolicy)
-        font = QtGui.QFont()
-        font.setFamily("Agency FB")
-        font.setPointSize(16)
-        self.delButton.setFont(font)
-        self.delButton.setObjectName("delButton")
-        self.horizontalLayout_4.addWidget(self.delButton)
-        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_4.addItem(spacerItem1)
         self.gridLayout_3.addLayout(self.horizontalLayout_4, 1, 0, 1, 1)
         self.verticalLayout_10.addWidget(self.groupBox_3)
         self.verticalLayout_2.addLayout(self.verticalLayout_10)
@@ -164,18 +135,6 @@ class Ui_DataImportForm(object):
         self.label_cdoctor.setObjectName("label_cdoctor")
         self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.label_cdoctor)
 
-        #
-        # self.dateEdit = QtWidgets.QDateEdit(self.groupBox_4)
-        # # self.dateEdit.setDate(QDateTime.currentDateTime())
-        # sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        # sizePolicy.setHorizontalStretch(0)
-        # sizePolicy.setVerticalStretch(0)
-        # sizePolicy.setHeightForWidth(self.dateEdit.sizePolicy().hasHeightForWidth())
-        # self.dateEdit.setSizePolicy(sizePolicy)
-        # self.dateEdit.setObjectName("dateEdit")
-        # self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.dateEdit)
-
-
         # 检查日期选项
         self.dateEdit = QtWidgets.QDateTimeEdit(QDateTime.currentDateTime(), self.groupBox_4)
         self.dateEdit.setDisplayFormat("yyyy-MM-dd")
@@ -188,9 +147,6 @@ class Ui_DataImportForm(object):
         self.dateEdit.setFont(font)
         # self.gridLayout_19.addWidget(self.dateEdit, 8, 1, 1, 2)
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.dateEdit)
-
-
-
 
         self.horizontalLayout_7.addLayout(self.formLayout)
         self.horizontalLayout_6.addLayout(self.horizontalLayout_7)
@@ -242,43 +198,35 @@ class Ui_DataImportForm(object):
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.verticalLayout_7 = QtWidgets.QVBoxLayout()
         self.verticalLayout_7.setObjectName("verticalLayout_7")
+
         self.groupBox = QtWidgets.QGroupBox(DataImportForm)
         font = QtGui.QFont()
         font.setFamily("Agency FB")
         font.setPointSize(16)
         self.groupBox.setFont(font)
         self.groupBox.setObjectName("groupBox")
+
+        # 替换 QTextEdit 为 QTableWidget
         self.gridLayout_2 = QtWidgets.QGridLayout(self.groupBox)
         self.gridLayout_2.setObjectName("gridLayout_2")
-        self.textEdit = QtWidgets.QTextEdit(self.groupBox)
-        self.textEdit.setObjectName("textEdit")
-        self.gridLayout_2.addWidget(self.textEdit, 0, 0, 1, 1)
+        self.tableWidget_1 = QtWidgets.QTableWidget(self.groupBox)  # 创建 QTableWidget
+        self.tableWidget_1.setObjectName("tableWidget_1")
+        self.tableWidget_1.setColumnCount(0)  # 根据需要设置列数
+        self.tableWidget_1.setRowCount(0)  # 根据需要设置行数
+
+        # 将 QTableWidget 添加到布局中
+        self.gridLayout_2.addWidget(self.tableWidget_1, 0, 0, 1, 1)
         self.verticalLayout_7.addWidget(self.groupBox)
         self.verticalLayout_4.addLayout(self.verticalLayout_7)
         self.verticalLayout_8 = QtWidgets.QVBoxLayout()
         self.verticalLayout_8.setObjectName("verticalLayout_8")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+
+        # 添加布局中的间隔项
         spacerItem5 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem5)
-        self.chooseBtn = QtWidgets.QPushButton(DataImportForm)
-        font = QtGui.QFont()
-        font.setFamily("Agency FB")
-        font.setPointSize(16)
-        self.chooseBtn.setFont(font)
-        self.chooseBtn.setObjectName("chooseBtn")
-        self.horizontalLayout_2.addWidget(self.chooseBtn)
-        spacerItem6 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_2.addItem(spacerItem6)
-        self.processButton = QtWidgets.QPushButton(DataImportForm)
-        font = QtGui.QFont()
-        font.setFamily("Agency FB")
-        font.setPointSize(16)
-        self.processButton.setFont(font)
-        self.processButton.setObjectName("processButton")
-        self.horizontalLayout_2.addWidget(self.processButton)
-        self.verticalLayout_8.addLayout(self.horizontalLayout_2)
-        self.verticalLayout_4.addLayout(self.verticalLayout_8)
+
         self.verticalLayout_4.setStretch(0, 5)
         self.verticalLayout_4.setStretch(1, 1)
         self.verticalLayout.addLayout(self.verticalLayout_4)
@@ -286,6 +234,7 @@ class Ui_DataImportForm(object):
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout()
         self.verticalLayout_5.setObjectName("verticalLayout_5")
+
         self.groupBox_2 = QtWidgets.QGroupBox(DataImportForm)
         font = QtGui.QFont()
         font.setFamily("Agency FB")
@@ -309,23 +258,42 @@ class Ui_DataImportForm(object):
         self.horizontalLayout_3.addItem(spacerItem7)
         spacerItem8 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(spacerItem8)
-        self.sendMsgButton = QtWidgets.QPushButton(DataImportForm)
+
+        # 创建两个按钮
+        self.startUploadButton = QtWidgets.QPushButton(DataImportForm)
         font = QtGui.QFont()
         font.setFamily("Agency FB")
         font.setPointSize(16)
-        self.sendMsgButton.setFont(font)
-        self.sendMsgButton.setObjectName("sendMsgButton")
-        self.horizontalLayout_3.addWidget(self.sendMsgButton)
+        self.startUploadButton.setFont(font)
+        self.startUploadButton.setObjectName("startUploadButton")
+        self.startUploadButton.setText("启动上传")  # 设置按钮的文本
+
+        self.exitUploadButton = QtWidgets.QPushButton(DataImportForm)
+        self.exitUploadButton.setFont(font)
+        self.exitUploadButton.setObjectName("exitUploadButton")
+        self.exitUploadButton.setText("返回")  # 设置按钮的文本
+
+        # 将两个按钮添加到水平布局
+        self.horizontalLayout_3.addWidget(self.startUploadButton)
+        self.horizontalLayout_3.addWidget(self.exitUploadButton)
+
+        # 将布局添加到verticalLayout_6
         self.verticalLayout_6.addLayout(self.horizontalLayout_3)
         self.verticalLayout_3.addLayout(self.verticalLayout_6)
+
+        # 设置stretch
         self.verticalLayout_3.setStretch(0, 5)
         self.verticalLayout_3.setStretch(1, 1)
+
+        # 最后将整个布局添加到verticalLayout
         self.verticalLayout.addLayout(self.verticalLayout_3)
         self.verticalLayout.setStretch(0, 1)
         self.verticalLayout.setStretch(1, 1)
         self.horizontalLayout.addLayout(self.verticalLayout)
         self.horizontalLayout.setStretch(0, 4)
         self.horizontalLayout.setStretch(1, 2)
+
+        # 添加到gridLayout
         self.gridLayout_7.addLayout(self.horizontalLayout, 0, 0, 1, 1)
 
         self.retranslateUi(DataImportForm)
@@ -334,9 +302,9 @@ class Ui_DataImportForm(object):
     def retranslateUi(self, DataImportForm):
         _translate = QtCore.QCoreApplication.translate
         DataImportForm.setWindowTitle(_translate("DataImportForm", "Form"))
-        self.groupBox_3.setTitle(_translate("DataImportForm", "病人诊断信息"))
+        self.groupBox_3.setTitle(_translate("DataImportForm", "病人检查信息"))
         # self.addButton.setText(_translate("DataImportForm", "添加"))
-        self.delButton.setText(_translate("DataImportForm", "删除"))
+        # self.delButton.setText(_translate("DataImportForm", "删除"))
         self.groupBox_4.setTitle(_translate("DataImportForm", "脑电检查添加表单"))
         self.label.setText(_translate("DataImportForm", "检查单号："))
         self.label_3.setText(_translate("DataImportForm", "病人姓名："))
@@ -349,8 +317,13 @@ class Ui_DataImportForm(object):
         self.label_2.setText(_translate("DataImportForm", "检查描述："))
         self.btnConfirm.setText(_translate("DataImportForm", "确认添加"))
         self.btnExit.setText(_translate("DataImportForm", "取消添加"))
-        self.groupBox.setTitle(_translate("DataImportForm", "信息窗口"))
-        self.chooseBtn.setText(_translate("DataImportForm", "选择文件"))
-        self.processButton.setText(_translate("DataImportForm", "上传文件"))
+        # self.groupBox.setTitle(_translate("DataImportForm", "信息窗口"))
+        # 将信息窗口改为待上传文件
+        self.groupBox.setTitle(_translate("DataImportForm", "待上传文件"))
+        # self.chooseBtn.setText(_translate("DataImportForm", "选择文件"))
+        # self.processButton.setText(_translate("DataImportForm", "上传文件"))
         self.groupBox_2.setTitle(_translate("DataImportForm", "远程文件"))
-        self.sendMsgButton.setText(_translate("DataImportForm", "完成"))
+
+        self.startUploadButton.setText(_translate("DataImportForm","启动上传"))
+        self.exitUploadButton.setText(_translate("DataImportForm", "返回"))
+        # self.sendMsgButton.setText(_translate("DataImportForm", "完成"))
