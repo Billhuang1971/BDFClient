@@ -357,7 +357,7 @@ class MainController(QWidget):
                                                         mainLayout=self.view.verticalLayout_1)
             #self.m_controllers[controller_name] = self.controller
         elif controller_name == "dataImportController":
-            self.controller = dataImportController(client=self.client, cAppUtil=self.cAppUtil)
+            self.controller = dataImportController(client=self.client, cAppUtil=self.cAppUtil,mainMenubar=self.view.ui.menubar)
             #self.m_controllers[controller_name] = self.controller
         elif controller_name == "configOptionsController":
             self.controller = configOptionsController(client=self.client, cAppUtil=self.cAppUtil)
