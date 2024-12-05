@@ -203,7 +203,7 @@ class dataImportController(QWidget):
         else:
             print(f"未找到队列文件，创建新文件：{self.queue_file_path}")
 
-    # TODO:测下这里上传的edf文件
+    # 测下这里上传的edf文件
     def on_btnAddFile_clicked(self , row):
         if self.row == -1:
             QMessageBox.information(self, ' ', '请先在病人诊断信息中选择一行')
@@ -306,7 +306,7 @@ class dataImportController(QWidget):
                 check_number = self.patientCheck_info[self.row][5]
                 # 添加新任务到内存队列
                 self.addWaitFile(check_number)
-                # FIXME:这个位置有没有必要在内存等待队列文件中新增？到时候点击启动上传会更新
+                # 这个位置有没有必要在内存等待队列文件中新增？到时候点击启动上传会更新
                 self.addPending(check_number)
 
             elif REPData[0] == '2':
@@ -387,8 +387,6 @@ class dataImportController(QWidget):
             print(f"从pending.json中删除task有误: {e}")
 
     def on_btnComplete_clicked(self,row):
-        # TODO:检查是否存在待上传文件，如果存在的话要直接确认吗？直接确认的话pending.json中还是存在数据，此处的处理
-        # FIXME:删除待上传文件，若无需要上传的文件，此时patientCheckinfo的状被更新为uploaded,但是没文件，更新状态干啥  这个位置再考虑一下，或许需要向服务器发送请求查询是否有文件已上传再判断是否删除当前检查信息
         if self.row == -1:
             QMessageBox.information(self, ' ', '请先在病人诊断信息中选择一行')
             return
