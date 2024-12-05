@@ -3,6 +3,7 @@ import os
 import time, shutil
 import hashlib
 import uuid
+import json
 
 
 class clientAppUtil():
@@ -119,8 +120,19 @@ class clientAppUtil():
         if os.path.isdir(filepath):  # 如果是文件夹
             return not os.listdir(filepath)  # 文件夹为空返回True
         if os.path.isfile(filepath):  # 如果是文件
-            return os.path.getsize(filepath) == 0  # 文件大小为0返回True
-        return False  # 其他情况，默认返回False
+            # 如果是json文件
+            if filepath.endswith('.json'):
+                try:
+                    # 加载 JSON 文件内容
+                    with open(filepath, 'r', encoding='utf-8') as file:
+                        data = json.load(file)
+                        # 判断 "task" 是否存在且非空
+                        return not data.get("task") or not isinstance(data["task"], list) or not any(data["task"])
+                except (json.JSONDecodeError, KeyError):  # 捕获 JSON 格式错误或 KeyError
+                    return True  # 如果解析失败，认为文件无效/为空
+                return False  # 其他情况，默认返回 False
+            else:
+                return os.path.getsize(filepath) == 0  # 文件大小为0返回True
 
     # 写文件功能
     def writeEEG(self, savePath, data):
