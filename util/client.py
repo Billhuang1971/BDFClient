@@ -310,8 +310,10 @@ class client(QObject, socketClient):
     delPatientCheckInfoResSig = pyqtSignal(list)
     # 回调添加脑电检查信息信号
     addCheckInfoResSig = pyqtSignal(list)
-    # 检查配置并返回生成文件名字
-    checkMakeFileNameResSig = pyqtSignal(list)
+    # 检查配置信息信号
+    checkConfigResSig = pyqtSignal(list)
+    #生成文件名信息信号
+    makeFileNameResSig = pyqtSignal(list)
     # 写脑电文件信息信号
     writeEEGResSig = pyqtSignal(list)
     # 回调更新脑电检查信息
@@ -2582,15 +2584,27 @@ class client(QObject, socketClient):
     def addCheckInfoRes(self, REPData):
         self.addCheckInfoResSig.emit(REPData[3])
 
-    # 检查配置并生成文件名
-    def checkMakeFileName(self, REQmsg):
+    # 检查配置
+    def checkConfig(self, REQmsg):
         REQmsg.insert(0, self.macAddr)
         msg = ["dataImport", 4, self.tUser[0], REQmsg]
         self.sendRequest(msg)
 
-    # 处理客户端返回的检查配置并生成文件名信息
-    def checkMakeFileNameRes(self, REPData):
-        self.checkMakeFileNameResSig.emit(REPData[3])
+    # 处理客户端返回的检查配置信息
+    def checkConfigRes(self, REPData):
+        self.checkConfigResSig.emit(REPData[3])
+
+    # 生成文件名
+    def makeFileName(self,REQmsg):
+        REQmsg.insert(0,self.macAddr)
+        msg = ["dataImport", 10, self.tUser[0], REQmsg]
+        print("生成文件名传过去的msg:",msg)
+        self.sendRequest(msg)
+
+    # 处理返回的生成文件名信息
+    def makeFileNameRes(self,REPData):
+        self.makeFileNameResSig.emit(REPData[3])
+
 
     # 写脑电数据请求
     def writeEEG(self, REQmsg):
@@ -4004,7 +4018,7 @@ class client(QObject, socketClient):
             self.addCheckInfoRes(REQmsg)
         # 检查脑电文件
         elif REQmsg[0] == 'dataImport' and REQmsg[1] == 4:
-            self.checkMakeFileNameRes(REQmsg)
+            self.checkConfigRes(REQmsg)
         # 写脑电请求
         elif REQmsg[0] == 'dataImport' and REQmsg[1] == 5:
             self.writeEEGRes(REQmsg)
@@ -4068,9 +4082,12 @@ class client(QObject, socketClient):
         # 添加病人检查信息
         elif REQmsg[0] == 'dataImport' and REQmsg[1] == 3:
             self.addCheckInfoRes(REQmsg)
-        # 检查脑电文件
+        # 检查脑电文件配置
         elif REQmsg[0] == 'dataImport' and REQmsg[1] == 4:
-            self.checkMakeFileNameRes(REQmsg)
+            self.checkConfigRes(REQmsg)
+        #生成脑电文件名
+        elif REQmsg[0] == 'dataImport' and REQmsg[1] == 10:
+            self.makeFileNameRes(REQmsg)
         # 写脑电请求
         elif REQmsg[0] == 'dataImport' and REQmsg[1] == 5:
             self.writeEEGRes(REQmsg)
