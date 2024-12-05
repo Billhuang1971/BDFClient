@@ -8,7 +8,6 @@ from view.progressBar_form.progressBar import Ui_progressbar
 
 
 class ProgressBarView(QDialog):
-
     # window_title: 窗口名称，默认为""
     # maximum: 进度条最大值， 默认值为0（无进度）
     # hasStopBtn: 是否显示取消按钮， 默认为True
@@ -30,6 +29,8 @@ class ProgressBarView(QDialog):
         self.ui.progressBar.setValue(self.pv)
         if hasStopBtn is False:
             self.ui.stop_pushButton.hide()
+        else:
+            self.ui.stop_pushButton.setText("退出上传")  # 设置按钮显示文本
         QApplication.processEvents()
 
     # 更新当前进度值，进度条会以speed速度到达该值，到达该值后停止
@@ -40,7 +41,6 @@ class ProgressBarView(QDialog):
             self.ui.progressBar.setValue(self.pv)
             QApplication.processEvents()
             time.sleep(0.5)
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
