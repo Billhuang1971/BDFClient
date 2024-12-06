@@ -967,7 +967,7 @@ class dataImportController(QWidget):
                             self.client.writeEEG(REQmsg)
                         else:
                             # 先更新进度条
-                            self.progress_value = (block_id /self.block_num ) * 100
+                            self.progress_value = int((block_id / self.block_num ) * 100)
                             self.progressBarView.updateProgressBar(self.progress_value)
                             EEGdata = self.cAppUtil.readByte(self.file_path, self.block_size, block_id)
                             REQmsg = self.packMsg('uploading', block_id, EEGdata)
@@ -979,7 +979,7 @@ class dataImportController(QWidget):
                             self.client.writeEEG(REQmsg)
                         else:
                             # 先更新进度条
-                            self.progress_value = (block_id / self.block_num) * 100
+                            self.progress_value = int((block_id / self.block_num) * 100)
                             self.progressBarView.updateProgressBar(self.progress_value)
                             EEGdata = self.cAppUtil.readByte(self.file_path, self.block_size, block_id)
                             REQmsg = self.packMsg('uploading', block_id, EEGdata)
