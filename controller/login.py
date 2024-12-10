@@ -52,8 +52,6 @@ class loginController(QWidget, QObject):
 
     def exit(self):
         print(f'Login Exit')
-        self.line_1.returnPressed.disconnect(self.login)
-        self.line_2.returnPressed.disconnect(self.login)
         self.client.loginResSig.disconnect()
 
 
