@@ -89,6 +89,7 @@ class MainController(QWidget):
 
             self.sub_view = InitView()
             self.view.verticalLayout_1.addWidget(self.sub_view)
+            self.controller.exit()
             # self.sub_view = InitView()
             # while self.view.verticalLayout_1.count() > 1:
             #     witem = self.view.verticalLayout_1.itemAt(self.view.verticalLayout_1.count() - 1)
