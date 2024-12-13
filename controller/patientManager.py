@@ -265,6 +265,10 @@ class patientManagerController(QWidget):
                 self.tableWidget.control_signal.connect(self.page_controller)
                 self.tableWidget.table.itemClicked.connect(self.set_selectRow)
                 QMessageBox.information(self, '提示', '添加病人成功, 请翻转到尾页查看', QMessageBox.Ok)
+                self.isSearch = False
+                self.view.ui.lineEdit.clear()
+                self.searchInfo.clear()
+                self.searchID.clear()
             else:
                 QMessageBox.information(self, '提示', '添加病人失败', QMessageBox.Ok)
                 self.clear_layout(self.view.ui.verticalLayout_2)
@@ -523,9 +527,9 @@ class patientManagerController(QWidget):
                         row = i
                         print(f'New row: {row}')
                         break
-                self.isSearch = False
-                self.searchInfo.clear()
-                self.searchID.clear()
+                # self.isSearch = False
+                # self.searchInfo.clear()
+                # self.searchID.clear()
             if REPData[0] == '1':
                 self.patientInfo[row] = patient_info
                 for i in range(0, self.col_num):

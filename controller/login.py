@@ -54,6 +54,9 @@ class loginController(QWidget, QObject):
         print(f'Login Exit')
         self.client.loginResSig.disconnect()
 
+    def disconnect_login(self):
+        self.line_1.returnPressed.disconnect(self.login)
+        self.line_2.returnPressed.disconnect(self.login)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

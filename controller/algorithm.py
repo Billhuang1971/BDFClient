@@ -21,6 +21,8 @@ import numpy as np
 import sys, re, os
 import shutil
 
+from view.progressBarView import ProgressBarView
+
 
 class algorithmController(QWidget):
     # is_reload_controller = pyqtSignal(str)
@@ -74,7 +76,7 @@ class algorithmController(QWidget):
             self.searchPage = 1
             self.searchPageMax = 1
             self.upload_finished.connect(self.uploadFinished)
-            self.update_process.connect(self.updateProcessValue)
+            # self.update_process.connect(self.updateProcessValue)
             self.view.ui.pushButton.clicked.connect(self.reset)
             self.view.ui.btnAdd.clicked.connect(self.on_clicked_add_algorithm)
             self.view.ui.btnDel.clicked.connect(self.on_clicked_del_algorithm)
@@ -502,27 +504,49 @@ class algorithmController(QWidget):
                     return
             if not os.path.exists(self.algorithm_file_path):
                 os.makedirs(self.algorithm_file_path)
-            if len(os.listdir(self.algorithm_file_path)) == 0:
+            result = self.cAppUtil.isNull(self.algorithm_file_path)
+            if result:
                 REQmsg = [alg_id, flag]
                 print(REQmsg)
                 self.client.getAlgorithmFileName(REQmsg)
             else:
-                file_list = os.listdir(self.algorithm_file_path)
-                for file in file_list:
-                    file_path = os.path.join(self.algorithm_file_path, file)
-                    os.remove(file_path)
-                reUpload = True
-                self.client.getAlgorithmFileName([alg_id, flag, reUpload])
-                # if flag == 'training':
-                #     file_hash = self.calculate_md5(self.file_train_algorithm[0])
-                #     file_name_d = 'training.{:>08}'.format(alg_id)
-                # elif flag == 'test':
-                #     file_hash = self.calculate_md5(self.file_test_algorithm[0])
-                #     file_name_d = 'test.{:>08}'.format(alg_id)
-                # elif flag == 'predict':
-                #     file_hash = self.calculate_md5(self.file_train_algorithm[0])
-                #     file_name_d = 'predict.{:>08}'.format(alg_id)
-                # file_name = self.check_py_files(self.algorithm_file_path)
+                # self.testFile(self.algorithm_file_path)
+                # file_list = os.listdir(self.algorithm_file_path)
+                # for file in file_list:
+                #     file_path = os.path.join(self.algorithm_file_path, file)
+                #     os.remove(file_path)
+                # reUpload = True
+                # self.client.getAlgorithmFileName([alg_id, flag, reUpload])
+                if flag == 'training':
+                    # file_hash = self.calculate_md5(self.file_train_algorithm[0])
+                    file_name_d = 'training.{:>08}'.format(alg_id)
+                elif flag == 'test':
+                    # file_hash = self.calculate_md5(self.file_test_algorithm[0])
+                    file_name_d = 'test.{:>08}'.format(alg_id)
+                elif flag == 'predict':
+                    # file_hash = self.calculate_md5(self.file_train_algorithm[0])
+                    file_name_d = 'predict.{:>08}'.format(alg_id)
+                file_name = self.testFile(self.algorithm_file_path)
+                if file_name == '':
+                    QMessageBox.information(self, '提示', f'本地预处理{file_name_d}的过程出错，上传过程需重新开始',
+                                            QMessageBox.Ok)
+                    return
+                else:
+                    r = self.check_txt_files(self.algorithm_file_path)
+                    if not r:
+                        self.progressBarView = ProgressBarView(window_title="上传算法文件中", hasStopBtn=False,
+                                                               maximum=100,
+                                                               speed=5)
+                        self.progressBarView.show()
+                        self.progressBarView.updateProgressBar(0)
+                        self.client.addAlgorithmFile(['unknown', alg_id, flag, file_name_d, self.mac])
+                    else:
+                        self.progressBarView = ProgressBarView(window_title="上传算法文件中", hasStopBtn=False,
+                                                               maximum=100,
+                                                               speed=5)
+                        self.progressBarView.show()
+                        self.progressBarView.updateProgressBar(0)
+                        self.client.addAlgorithmFile(['continue', alg_id, flag, file_name_d, self.mac])
                 # file_path = os.path.join(self.algorithm_file_path, file_name)
                 # result = self.check_file_integrity(file_path, file_hash)
                 # if not result:
@@ -537,7 +561,7 @@ class algorithmController(QWidget):
             md5_hash = hashlib.md5(content).hexdigest()
         return md5_hash
 
-    def check_py_files(self, folder_path):
+    def testFile(self, folder_path):
         for file_name in os.listdir(folder_path):
             if file_name.endswith(".py"):
                 return file_name
@@ -655,26 +679,33 @@ class algorithmController(QWidget):
                 if state == 'waiting':
                     block_id = msg[3]
                     if block_id == 1:
-                        word = str(alg_id) + ',' + str(file_state) + ',' + str(self.filename) + ',' + str(self.mac)
-                        with open(upload_file_path, 'w') as f:
-                            f.write(word)
-                        self.dlgProgress = QProgressDialog('正在处理并上传', '', 0, 0, self)
-                        self.dlgProgress.setFixedSize(300, 100)
-                        self.dlgProgress.setCancelButtonText(None)
-                        self.dlgProgress.setAttribute(Qt.WA_DeleteOnClose, True)
-                        self.dlgProgress.setWindowTitle("算法文件上传进度")
-                        self.dlgProgress.setWindowModality(Qt.ApplicationModal)  # 进度对话框
-                        self.dlgProgress.setRange(0, 101)
-                        self.dlgProgress.show()
-                        self.value = 0
-                        self.dlgProgress.setValue(self.value)
-                        self.thread_start(flag='1', file_path=file_path)
+                        # word = str(alg_id) + ',' + str(file_state) + ',' + str(self.filename) + ',' + str(self.mac)
+                        # with open(upload_file_path, 'w') as f:
+                        #     f.write(word)
+                        self.makeText(alg_id, file_state, upload_file_path)
+                        self.progressBarView = ProgressBarView(window_title="上传算法文件中", hasStopBtn=False, maximum=100,
+                                                               speed=5)
+                        self.progressBarView.show()
+                        self.progressBarView.updateProgressBar(0)
+                        # self.dlgProgress = QProgressDialog('正在处理并上传', '', 0, 0, self)
+                        # self.dlgProgress.setFixedSize(300, 100)
+                        # self.dlgProgress.setCancelButtonText(None)
+                        # self.dlgProgress.setAttribute(Qt.WA_DeleteOnClose, True)
+                        # self.dlgProgress.setWindowTitle("算法文件上传进度")
+                        # self.dlgProgress.setWindowModality(Qt.ApplicationModal)  # 进度对话框
+                        # self.dlgProgress.setRange(0, 101)
+                        # self.dlgProgress.show()
+                        # self.value = 0
+                        # self.dlgProgress.setValue(self.value)
+                        # self.thread_start(flag='1', file_path=file_path)
                     # 请求文件块数超出文件总块数情况
                     if block_id > self.block_num:
                         REQmsg = self.packageFileMsg(state='uploaded', msg=msg)
                         self.client.addAlgorithmFile(REQmsg)
                     else:
-                        data = self.readFileData(file_path, self.block_size, block_id)
+                        data = self.cAppUtil.readByte(file_path, self.block_size, block_id)
+                        self.progressBarView.updateProgressBar(block_id/self.block_size *100)
+                        # data = self.readFileData(file_path, self.block_size, block_id)
                         REQmsg = self.packageFileMsg('uploading', msg, data)
                         self.client.addAlgorithmFile(REQmsg)
                 # 算法文件上传协议6.2情况
@@ -711,7 +742,7 @@ class algorithmController(QWidget):
             alg_id = msg[1]
             # _translate = QtCore.QCoreApplication.translate
             self.removeFiles(self.algorithm_file_path)
-            self.dlgProgress.close()
+            self.progressBarView.close()
             QMessageBox.information(self, "算法文件上传", "算法文件上传完成", QMessageBox.Yes)
             self.fileUploadView.ui.pushButton_train_algorithm_select.setEnabled(True)
             self.fileUploadView.ui.pushButton_save.setEnabled(True)
@@ -976,44 +1007,49 @@ class algorithmController(QWidget):
         except Exception as e:
             print('on_predict_alg_btn_clicked', e)
 
-    def thread_start(self, flag='', file_path=''):
-        if flag == '1':
-            # 处理后上传
-            self.thread1 = threading.Thread(target=self.timeCount, args=(file_path,))
-            self.thread1.start()
-            # self.thread = threading.Thread(target=self.process_edf)
-            # self.thread.start()
-        else:
-            # 重新上传
-            self.thread1 = threading.Thread(target=self.timeCount, args=(file_path,))
-            self.thread1.start()
+    # def thread_start(self, flag='', file_path=''):
+    #     if flag == '1':
+    #         # 处理后上传
+    #         self.thread1 = threading.Thread(target=self.timeCount, args=(file_path,))
+    #         self.thread1.start()
+    #         # self.thread = threading.Thread(target=self.process_edf)
+    #         # self.thread.start()
+    #     else:
+    #         # 重新上传
+    #         self.thread1 = threading.Thread(target=self.timeCount, args=(file_path,))
+    #         self.thread1.start()
 
 
-    def timeCount(self, from_filepath):
-        if not os.path.exists(from_filepath):
-            self.update_process.emit(100)
-            return
-        # 根据文件大小预估时间(单位kB)
-        file_size = (os.path.getsize(from_filepath) // 1024)
-        if from_filepath.endswith('.py'):
-            # 进度条更新周期
-            turn_time = 0.01
-            # 预估时间
-            guess_time = file_size // 0.01
-        # 进度条更新轮次
-        turn = int(guess_time / turn_time)
-        for i in range(turn):
-            sleep(turn_time)
-            incre_value = math.ceil(turn_time * 100 / guess_time)
-            self.update_process.emit(incre_value)
+    # def timeCount(self, from_filepath):
+    #     if not os.path.exists(from_filepath):
+    #         self.update_process.emit(100)
+    #         return
+    #     # 根据文件大小预估时间(单位kB)
+    #     file_size = (os.path.getsize(from_filepath) // 1024)
+    #     if from_filepath.endswith('.py'):
+    #         # 进度条更新周期
+    #         turn_time = 0.01
+    #         # 预估时间
+    #         guess_time = file_size // 0.01
+    #     # 进度条更新轮次
+    #     turn = int(guess_time / turn_time)
+    #     for i in range(turn):
+    #         sleep(turn_time)
+    #         incre_value = math.ceil(turn_time * 100 / guess_time)
+    #         self.update_process.emit(incre_value)
 
-    def updateProcessValue(self, incre_value):
-        if self.value == 100:
-            return
-        self.value += incre_value
-        if self.value > 100:
-            self.value = 100
-        self.dlgProgress.setValue(self.value)
+    # def updateProcessValue(self, incre_value):
+    #     if self.value == 100:
+    #         return
+    #     self.value += incre_value
+    #     if self.value > 100:
+    #         self.value = 100
+    #     self.dlgProgress.setValue(self.value)
+
+    def makeText(self, alg_id, file_state, upload_file_path):
+        word = str(alg_id) + ',' + str(file_state) + ',' + str(self.filename) + ',' + str(self.mac)
+        with open(upload_file_path, 'w') as f:
+            f.write(word)
 
     def exit(self):
         self.client.getAlgorithmInfoResSig.disconnect()
