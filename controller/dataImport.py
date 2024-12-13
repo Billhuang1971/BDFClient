@@ -943,7 +943,7 @@ class dataImportController(QWidget):
             if result == '1' or result == '0':
                 state = repFilemsg[0]
                 print("state:",state)
-
+                # TODO:这个地方如果在block_id为1时发生故障会有问题
                 # 脑电文件传输协议6.1情况
                 if state == 'waiting':
                     block_id = repFilemsg[1]
@@ -2224,7 +2224,7 @@ class dataImportController(QWidget):
         self.client.delPatientCheckInfoResSig.disconnect()
         self.client.addCheckInfoResSig.disconnect()
         self.client.checkConfigResSig.disconnect()
-        self.cilent.makeFileNameResSig.disconnect()
+        self.client.makeFileNameResSig.disconnect()
         self.client.writeEEGResSig.disconnect()
         self.client.updateCheckInfoResSig.disconnect()
         self.client.getFileInfoResSig.disconnect()
