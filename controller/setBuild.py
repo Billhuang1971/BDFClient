@@ -53,6 +53,12 @@ class setBuildController(QWidget):
             self.fltAllInfo = {}
             self.view.fltTable(self.fltContent)
 
+            self.savePath = ''
+            self.startBlock = 0
+            self.originPath = ''
+            self.blockN = 0
+            self.closeSig = False
+
             # 数据来源
             self.dataSource = []
 
@@ -75,6 +81,7 @@ class setBuildController(QWidget):
             self.client.getSetSearchSig.connect(self.setSearchRes)
             self.client.getSetDescribeSig.connect(self.showDescribeRes)
             self.view.set_page_control_signal.connect(self.rg_paging)
+            self.client.getSetExportDataResSig.connect(self.getSetExportDataRes)
             # 数据初始化
             self.init_data()
             # 表格初始化,界面初始化默认先显示数据集的信息
@@ -755,14 +762,14 @@ class setBuildController(QWidget):
 
         set_id = self.set_info[row_num][0]
         menu = QMenu()
-        # item1 = menu.addAction(u"详细信息")
+        item1 = menu.addAction(u"详细信息")
         # item2 = menu.addAction(u"集合重建")
         item4 = menu.addAction(u"训练集导出")
         item5 = menu.addAction(u"测试集导出")
         item3 = menu.addAction(u"删除集合")
         action = menu.exec_(self.view.ui.tableWidget.mapToGlobal(pos))
-        # if action == item1:
-        #     self.showDescribe(self.set_info[row_num])
+        if action == item1:
+            self.showDescribe(self.set_info[row_num])
         # elif action == item2:
         #     self.setRebuild(set_name, set_type)
         if action == item3:
@@ -807,54 +814,67 @@ class setBuildController(QWidget):
 
     # 集合导出
     def set_export(self, set_id, set_type='training'):
-        reply = QMessageBox.information(self, "提示", "是否导出集合", QMessageBox.Yes | QMessageBox.No)
-        if reply != 16384:
-            return
+        # reply = QMessageBox.information(self, "提示", "是否导出集合", QMessageBox.Yes | QMessageBox.No)
+        # if reply != 16384:
+        #     return
 
         downloadPath = 'download'
         if not os.path.exists(downloadPath):
             os.makedirs(downloadPath)
 
         if os.listdir(downloadPath):
-            reply = QMessageBox.information(self, "提示", "系统正在处理未完成的上传任务，是否继续上传",
-                                            QMessageBox.Yes | QMessageBox.No)
-            if reply == 16384:
-                # TODO 在这里继续完成之前的操作
-                file_path = 'download/downloading.txt'
-                pattern = r'.*?\.npz\s*, \s*.*?\.npz\s*, \s*block_id=\d+\s*, \s*blockN=\d+'
-                with open(file_path, 'r') as file:
-                    content = file.read()
-                    print(content)
+            QMessageBox.information(self, "提示", "系统正在处理未完成的下载任务，完成后才能启动新的下载任务")
+            # if reply == 16384:
+            # TODO 在这里继续完成之前的操作
+            file_path = 'download/downloading.txt'
+            pattern = r'.*?\.npz\s*, \s*.*?\.npz\s*, \s*block_id=\d+\s*, \s*blockN=\d+'
+            with open(file_path, 'r') as file:
+                content = file.read()
+                print(content)
 
-                if not os.path.exists(file_path) or not bool(re.match(pattern, content)):
-                    QMessageBox.information(self, '提示', '文件已损坏')
-                    # if os.path.exists(file_path):
-                    #     os.remove(file_path)
-                    return
+            if not os.path.exists(file_path) or not bool(re.match(pattern, content)):
+                QMessageBox.information(self, '提示', '本地文件系统出错，下载过程需重新启动')
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                return
 
-                fData = content.split(', ')
-                print(f'fData: {fData}')
-                startBlock = int(fData[2].split('=')[1])
-                blockN = int(fData[3].split('=')[1])
-                print(f'startBlock: {startBlock}')
+            fData = content.split(', ')
+            print(f'fData: {fData}')
+            startBlock = int(fData[2].split('=')[1])
+            blockN = int(fData[3].split('=')[1])
+            print(f'startBlock: {startBlock}')
 
-                self.setExportThread = setExportThread(client=self.client, cAppUtil=self.cAppUtil, savePath=fData[0],
-                                                       originPath=fData[1], startBlock=startBlock, blockN=blockN)
-                self.setExportThread.progress.connect(self.setExportPgbValue)
-                self.setExportThread.start()
+            # self.setExportThread = setExportThread(client=self.client, cAppUtil=self.cAppUtil, savePath=fData[0],
+            #                                        originPath=fData[1], startBlock=startBlock, blockN=blockN)
+            # self.setExportThread.progress.connect(self.setExportPgbValue)
+            # self.setExportThread.start()
 
-                # 启动进度条，然后向服务器获取block=1的数据
-                self.progressBarView = QProgressDialog('集合导出中...', '取消', 0, 100, self)
-                self.progressBarView.setWindowTitle('构建数据集模块')
-                self.progressBarView.setFixedSize(300, 80)
-                self.progressBarView.canceled.connect(self.onExportPgbCancel)
-                self.progressBarView.show()
-            else:
-                # 如果不想继续上传，那么就清空文件夹
-                for filename in os.listdir(downloadPath):
-                    file_path = os.path.join(downloadPath, filename)
-                    if os.path.isfile(file_path) or os.path.islink(file_path):
-                        os.unlink(file_path)
+            self.savePath = fData[0]
+            self.startBlock = startBlock
+            self.originPath = fData[1]
+            self.blockN = blockN
+            self.client.getSetExportData(['download', self.originPath, f'block_id={self.startBlock + 1}'])
+
+            # self.progressBarView = progressBarView(window_title="集合导出中...", hasStopBtn=False,
+            #                                        maximum=100,
+            #                                        speed=5)
+            # self.progressBarView.ui.progressBar.setFixedSize(300, 80)
+            # self.progressBarView.ui.progressBar.canceled.connect(self.onExportPgbCancel)
+            # self.progressBarView.show()
+            # self.progressBarView.updateProgressBar(0)
+
+            # 启动进度条，然后向服务器获取block=1的数据
+            self.progressBarView = QProgressDialog('集合导出中...', '取消', 0, 100, self)
+            self.progressBarView.setWindowTitle('构建数据集模块')
+            self.progressBarView.setFixedSize(300, 80)
+            self.progressBarView.canceled.connect(self.onExportPgbCancel)
+            self.progressBarView.show()
+            # else:
+            #     # 如果不想继续上传，那么就清空文件夹
+            #     for filename in os.listdir(downloadPath):
+            #         file_path = os.path.join(downloadPath, filename)
+            #         if os.path.isfile(file_path) or os.path.islink(file_path):
+            #             os.unlink(file_path)
         else:
             print(f'set_id: {set_id}')
             self.client.getSetExportInitData(['want', set_id, set_type])
@@ -874,15 +894,30 @@ class setBuildController(QWidget):
             # 创建txt文件，并写入初始数据
             fileName = os.path.basename(data[1])
             content = f'{fileName}, {fileName}, block_id=1, blockN={data[2]}'
-            with open('download/downloading.txt', 'w', encoding='utf-8') as file:
-                file.write(content)
+            self.cAppUtil.writeTxt(file_path='download/downloading.txt', content=content)
+            # with open('download/downloading.txt', 'w', encoding='utf-8') as file:
+            #     file.write(content)
 
             # self.client.getSetExportData(['download', data[1], f'block_id=1'])
 
-            self.setExportThread = setExportThread(client=self.client, cAppUtil=self.cAppUtil, savePath=savePath,
-                                                   originPath=data[1], startBlock=0, blockN=data[2])
-            self.setExportThread.progress.connect(self.setExportPgbValue)
-            self.setExportThread.start()
+            # self.setExportThread = setExportThread(client=self.client, cAppUtil=self.cAppUtil, savePath=savePath,
+            #                                        originPath=data[1], startBlock=0, blockN=data[2])
+            # self.setExportThread.progress.connect(self.setExportPgbValue)
+            # self.setExportThread.start()
+
+            self.savePath = savePath
+            self.startBlock = 0
+            self.originPath = data[1]
+            self.blockN = data[2]
+            self.client.getSetExportData(['download', self.originPath, f'block_id={self.startBlock + 1}'])
+
+            # self.progressBarView = progressBarView(window_title="集合导出中...", hasStopBtn=False,
+            #                                        maximum=100,
+            #                                        speed=5)
+            # self.progressBarView.ui.progressBar.setFixedSize(300, 80)
+            # self.progressBarView.ui.progressBar.canceled.connect(self.onExportPgbCancel)
+            # self.progressBarView.show()
+            # self.progressBarView.updateProgressBar(0)
 
             # 启动进度条，然后向服务器获取block=1的数据
             self.progressBarView = QProgressDialog('集合导出中...', '取消', 0, 100, self)
@@ -892,6 +927,36 @@ class setBuildController(QWidget):
             self.progressBarView.show()
         else:
             pass
+
+    def getSetExportDataRes(self, data):
+        try:
+            self.cAppUtil.writeByte(self.savePath, data[1])
+            self.curBlockID = int(data[0].split('=')[1])
+            print(f'self.curBlockID: {self.curBlockID}')
+            file_path = 'download/downloading.txt'
+            if self.curBlockID <= self.blockN:
+                # 创建txt文件，并写入初始数据
+                # fileName = os.path.basename(self.originPath)
+                # saveName = os.path.basename(self.savePath)
+                content = f'{self.savePath}, {self.originPath}, block_id={self.curBlockID}, blockN={self.blockN}'
+                print(f'content: {content}')
+                self.cAppUtil.writeTxt(file_path=file_path, content=content)
+                # with open(file_path, 'w', encoding='utf-8') as file:
+                #     file.write(content)
+
+                self.setExportPgbValue(int(self.curBlockID / self.blockN * 100))
+                # self.progress.emit(int(self.curBlockID / self.blockN * 100))
+                if self.curBlockID + 1 > self.blockN:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                        print(f"下载完成，文件 {file_path} 删除")
+                else:
+                    if not self.closeSig:
+                        self.client.getSetExportData(['download', self.originPath, f'block_id={self.curBlockID + 1}'])
+                    else:
+                        print(f"下载中断")
+        except Exception as e:
+            print('getSetExportDataRes', e)
 
     # 回传进度条参数
     def setExportPgbValue(self, i):
@@ -913,7 +978,8 @@ class setBuildController(QWidget):
 
     def onExportPgbCancel(self):
         print('onExportPgbCancel: ')
-        self.setExportThread.closeSig = True
+        # self.setExportThread.closeSig = True
+        self.closeSig = True
 
     def buildSetCancel(self):
         print('buildSetCancel: ')
@@ -964,8 +1030,9 @@ class setExportThread(QThread):
                 # saveName = os.path.basename(self.savePath)
                 content = f'{self.savePath}, {self.originPath}, block_id={self.curBlockID}, blockN={self.blockN}'
                 print(f'content: {content}')
-                with open(file_path, 'w', encoding='utf-8') as file:
-                    file.write(content)
+                self.cAppUtil.writeTxt(file_path=file_path, content=content)
+                # with open(file_path, 'w', encoding='utf-8') as file:
+                #     file.write(content)
 
                 self.progress.emit(int(self.curBlockID / self.blockN * 100))
                 if self.curBlockID + 1 > self.blockN:
