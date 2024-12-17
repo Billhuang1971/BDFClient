@@ -74,7 +74,7 @@ class dataImportController(QWidget):
         self.processing_lock = threading.Lock()
 
 
-        # # 存放当前标注类型信息列表
+        # 存放当前标注类型信息列表
         self.patientCheck_info = []
         # 存放脑电数据信息列表
         self.file_info = []
@@ -761,7 +761,7 @@ class dataImportController(QWidget):
                     physical_maxs.append(physical_max)
                     prefilter_info.append(prefilter)
                     print(f"Channel {i}: Physical Min = {physical_min}, Physical Max = {physical_max}")
-                # TODO: 在这里要从列表里把最大值和最小值拎出来
+                # 从列表里把最大值和最小值拎出来
                 Physical_Min = min(physical_mins)
                 Physical_Max = max(physical_maxs)
         except Exception as e:
@@ -911,24 +911,28 @@ class dataImportController(QWidget):
                     # 删除第一条记录
                     removed_task = data["task"].pop(0)
                     print(f"Removed task: {removed_task}")
-
+                    # 获取被删除记录中的 fileName
+                    original_filepath = removed_task.get("fileName")
                     # 写回 JSON 文件
                     with open(json_path, 'w', encoding='utf-8') as file:
                         json.dump(data, file, indent=4, ensure_ascii=False)
 
+                    return original_filepath
                     print("第一条记录被成功删除")
                 else:
+                    return None
                     print("没有记录可以删除")
             except Exception as e:
+                return None
                 print("delPending:", e)
 
-    def makeText(self):
+    def makeText(self,original_filepath):
         # 创建上传的文件记录
         uploading_name = self.filename + '.txt'
         uploading_path = os.path.join(self.dir_path, uploading_name)
         mac = self.cAppUtil.getMacAddress()
-        title = ['check_id', 'file_id', 'mac']
-        fileMsg = [self.check_id, self.file_id, mac]
+        title = ['check_id', 'file_id', 'mac','path']
+        fileMsg = [self.check_id, self.file_id, mac ,original_filepath]
         writeMsg = dict(zip(title, fileMsg))
         with open(uploading_path, 'wb') as f:
             pickle.dump(writeMsg, f)
@@ -943,24 +947,45 @@ class dataImportController(QWidget):
             if result == '1' or result == '0':
                 state = repFilemsg[0]
                 print("state:",state)
-                # TODO:这个地方如果在block_id为1时发生故障会有问题
                 # 脑电文件传输协议6.1情况
                 if state == 'waiting':
                     block_id = repFilemsg[1]
                     # block_id为1时删除第一条记录
                     if block_id == 1:
                         self.is_uploading = True
-                        self.delPending(self.queue_file_path)
-                        self.makeText()
-                        # 开启进度条
-                        # 初始化进度条
-                        self.progressBarView = ProgressBarView(window_title="正在上传文件",
-                                                               hasStopBtn=True,
-                                                               maximum=100,
-                                                               speed=100)
-                        self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
-                        # self.progressBarView.stop_signal.connect(self.stop_upload)  # 连接停止信号
-                        self.progressBarView.show()
+                        # 这里加一个条件判断 问题在于：如果本身就打算上传两个相同的文件呢？
+                        # uploading.txt不存在
+                        if not self.findFile(self.dir_path,'txt'):
+                            # 删除第一条记录并创建txt文件
+                            original_filepath = self.delPending(self.queue_file_path)
+                            self.makeText(original_filepath)
+                            # 开启进度条
+                            # 初始化进度条
+                            self.progressBarView = ProgressBarView(window_title="正在上传文件",
+                                                                   hasStopBtn=True,
+                                                                   maximum=100,
+                                                                   speed=100)
+                            self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
+                            # self.progressBarView.stop_signal.connect(self.stop_upload)  # 连接停止信号
+                            self.progressBarView.show()
+                        # uploading.txt文件存在
+                        else:
+                            # FIXME:其实续传完全可以不进行校对、删除操作
+                            # 说明是续传，因此需要对pending.json中的第一条记录做校对，若一致进行删除操作，否则不进行删除
+                            with open(self.queue_file_path, 'r', encoding='utf-8') as file:
+                                data = json.load(file)
+                                if data["task"]:
+                                    if "task" in data and data["task"]:
+                                        fileName = data["task"][0].get("fileName")  # 获取第一条记录
+                                    if fileName:
+                                        if fileName == self.fileName:
+                                            self.delPending(self.queue_file_path)
+                                        else:
+                                            print("当前续传任务并不存在于JSON文件中！！")
+                                    else:
+                                        print("当前续传任务后无待上传任务！！")
+                                else:
+                                    print("当前续传任务后无待上传任务！！")
                         # 请求文件块数超出文件总块数情况
                         if block_id > self.block_num:
                             REQmsg = self.packMsg('uploaded', block_id)
@@ -1113,6 +1138,7 @@ class dataImportController(QWidget):
                             self.check_id = data['check_id']
                             self.file_id = data['file_id']
                             mac = str(data['mac'])
+                            self.fileName = data['path']
                             # .txt文件完整
                             # 重启进度条
                             self.progressBarView = ProgressBarView(window_title="上传过程出错，系统将从出错位置开始继续上传",
@@ -2189,6 +2215,7 @@ class dataImportController(QWidget):
 
     # 查找某一路径指定文件后缀文件名
     def findFile(self, filepath, suffix):
+        # fixme:这里最好做个异常处理
         # 获取文件夹下所有文件
         fileslist = os.listdir(filepath)
         fileName = []
