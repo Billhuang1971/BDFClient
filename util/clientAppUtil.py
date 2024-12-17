@@ -4,6 +4,7 @@ import time, shutil
 import hashlib
 import uuid
 import json
+import re
 
 
 class clientAppUtil():
@@ -182,6 +183,29 @@ class clientAppUtil():
                         dgroup.setdefault(bkey,bg)
         print(dgroup)
         return dgroup
+
+    def makeTxt(self, file_path):
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.write('')
+
+    # 写Txt功能
+    def writeTxt(self, file_path, content):
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.write(content)
+        return True
+
+    def readTxt(self, file_path):
+        pattern = r'.*?\.npz\s*, \s*.*?\.npz\s*, \s*block_id=\d+\s*, \s*blockN=\d+'
+        with open(file_path, 'r') as file:
+            content = file.read()
+            print(content)
+
+        if not os.path.exists(file_path) or not bool(re.match(pattern, content)):
+            # if os.path.exists(file_path):
+            #     os.remove(file_path)
+            return False, '文件已损坏'
+        else:
+            return True, content
 
 
 if __name__ == '__main__':
