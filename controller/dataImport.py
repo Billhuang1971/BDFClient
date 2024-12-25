@@ -629,7 +629,8 @@ class dataImportController(QWidget):
                 )
                 # 删除脑电记录和脑电文件
                 self.cAppUtil.empty(self.dir_path, filename = bdfFileName)
-                REQmsg = [self.check_id,self.file_id]
+                account = self.client.tUser[1]
+                REQmsg = [account,self.check_id,self.file_id]
                 self.client.delFileInfo(REQmsg)
                 # 打开所有功能键
                 self.view.ui.groupBox_3.setEnabled(True)
