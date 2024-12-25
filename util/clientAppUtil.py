@@ -91,8 +91,8 @@ class clientAppUtil():
 
     # 清空指定路径，指定文件名开头文件
     # 1.仅传入filepath，清空文件夹文件
-    # 2.传入filepath与filename，删除指定文件
-    # 3.传入filepath与fullname，删除指定文件名开头文件（同时删除脑电文件及txt文件）
+    # 2.传入filepath与fullname，删除指定文件
+    # 3.传入filepath与filename，删除指定文件名开头文件（同时删除脑电文件及txt文件）
     def empty(self, filepath, filename='', fullname=''):
         # 获取文件夹下所有文件
         fileslist = os.listdir(filepath)
