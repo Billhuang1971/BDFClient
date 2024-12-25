@@ -54,6 +54,7 @@ class dataImportController(QWidget):
         self.client.writeEEGResSig.connect(self.writeEEGRes)
         self.client.updateCheckInfoResSig.connect(self.updateCheckInfoRes)
         self.client.getFileInfoResSig.connect(self.getFileInfoRes)
+        self.client.delFileInfoResSig.connect(self.delFileInfoRes)
         self.client.getChoosePatientInfoResSig.connect(self.get_choose_patient_infoRes)
         self.client.getChooseDoctorInfoResSig.connect(self.get_choose_doctor_infoRes)
         self.uploadFileSig.connect(self.upload_startCall)
@@ -300,7 +301,7 @@ class dataImportController(QWidget):
         try:
             if REPData[0] == '1':
                 userConfig = REPData[3][0]
-                self.UserConfig = userConfig
+                self.userConfig_info = userConfig
                 print('userConfig', userConfig)
                 # 获取check_number
                 check_number = self.patientCheck_info[self.row][5]
@@ -556,8 +557,15 @@ class dataImportController(QWidget):
             # findFile返回不带后缀的文件名
             bdfFileNameList = self.findFile(self.dir_path,'.bdf')
             bdfFileName = bdfFileNameList[0]
+            self.filename = bdfFileName
             self.file_path = os.path.join(self.dir_path , bdfFileName + str('.bdf'))
             ret = self.testEEGFile(self.file_path)
+            # 对BDF文件名做拆解
+            parts = bdfFileName.split('_')
+            if len(parts) == 2:
+                # 去掉前导零并将字符串转换为整数再转回字符串
+                self.check_id = int(parts[0])
+                self.file_id = int(parts[1])
             # bdf文件完整
             if ret[0] == '1':
                 txtFileName = self.findSameFile(self.dir_path , bdfFileName + str('.txt'))
@@ -592,6 +600,8 @@ class dataImportController(QWidget):
                                                                speed=100)
                         self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
                         self.progressBarView.show()
+                        # 将续传标志置为True
+                        self.is_uploading = True
                         REQmsg = self.packMsg('clean')
                         self.client.writeEEG(REQmsg)
                 # 不存在同名的txt文件
@@ -606,6 +616,8 @@ class dataImportController(QWidget):
                     # 转到步骤4开始上传 正在上传标志置为true
                     self.is_uploading = True
                     self.block_num = math.ceil((os.stat(self.file_path).st_size) / self.block_size)
+                    # 这个地方虽然是需要存入原始路径，但由于数据库中没有这个字段并且这是重新上传，其实不传也没关系
+                    self.makeText(original_filepath="")
                     REQmsg = self.packMsg(state='start')
                     self.client.writeEEG(REQmsg)
             else:
@@ -617,11 +629,19 @@ class dataImportController(QWidget):
                 )
                 # 删除脑电记录和脑电文件
                 self.cAppUtil.empty(self.dir_path, filename = bdfFileName)
+                # TODO:删除服务端记录
+                REQmsg = [self.check_id,self.file_id]
+                self.client.delFileInfo(REQmsg)
                 # 打开所有功能键
                 self.view.ui.groupBox_3.setEnabled(True)
                 self.view.ui.groupBox_4.setEnabled(True)
                 self.view.ui.groupBox.setEnabled(True)
                 self.view.ui.startUploadButton.setEnabled(True)
+
+    def delFileInfoRes(self,REPData):
+        print("delFileInfoRes:",REPData)
+        # 更新file_info展示
+        self.getFileInfo()
 
     # 判断.bdf文件是否损坏
     def testEEGFile(self, testfile):
@@ -729,7 +749,7 @@ class dataImportController(QWidget):
             with self.processing_lock:
                 self.is_processing = False  # 重置状态
 
-    # TODO:加入预处理后上传BDF文件，待实验
+
     def process_bdf(self, userConfig_info, filename):
         # 初始化进度条
         self.progressBarView = ProgressBarView(window_title="正在处理文件",
@@ -739,10 +759,10 @@ class dataImportController(QWidget):
         self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
         self.progressBarView.show()
 
-        # sampling_rate = userConfig_info[0]
-        # notch = userConfig_info[1]
-        # low_pass = userConfig_info[2]
-        # high_pass = userConfig_info[3]
+        sampling_rate = userConfig_info[0]
+        notch = userConfig_info[1]
+        low_pass = userConfig_info[2]
+        high_pass = userConfig_info[3]
 
         try:
             raw = mne.io.read_raw_bdf(filename)
@@ -750,7 +770,6 @@ class dataImportController(QWidget):
                 n_channels = f.signals_in_file  # 获取通道数
                 physical_mins = []
                 physical_maxs = []
-                prefilter_info = []  # 用于存储每个通道的预处理信息
 
                 # 遍历每个通道，获取 physical_min 和 physical_max
                 for i in range(n_channels):
@@ -759,7 +778,6 @@ class dataImportController(QWidget):
                     prefilter = f.getPrefilter(i)  # 获取每个通道的预处理信息（如 HP, LP, N）
                     physical_mins.append(physical_min)
                     physical_maxs.append(physical_max)
-                    prefilter_info.append(prefilter)
                     print(f"Channel {i}: Physical Min = {physical_min}, Physical Max = {physical_max}")
                 # 从列表里把最大值和最小值拎出来
                 Physical_Min = min(physical_mins)
@@ -773,9 +791,19 @@ class dataImportController(QWidget):
             meas_date = raw.info['meas_date']
             if isinstance(meas_date, tuple):
                 meas_date = datetime.datetime.fromtimestamp(meas_date)
+            # 12/24 bdf文件 通道名映射逻辑
+            channels = raw.info['ch_names']
+            dict_ch = {}  # 映射字典
+            for ch in channels:
+                temp = ch
+                if temp.find('-') > 0 and temp.find('-REF') < 0 and temp.find('-AV') < 0:
+                    temp = temp.replace("-", "_")
+                dict_ch[ch] = temp
+            raw.rename_channels(dict_ch)
+            channels = [dict_ch[ch] for ch in channels]  # 映射后的通道名
 
             # 选择包含 'EEG' 前缀的通道
-            include_channel = mne.pick_channels_regexp(raw.info['ch_names'], '^sfgre')
+            include_channel = mne.pick_channels_regexp(channels, 'EEG')
             if not include_channel:  # 如果没有 'EEG' 前缀的通道，则不进行重映射
                 channels = raw.ch_names
             else:
@@ -791,14 +819,8 @@ class dataImportController(QWidget):
 
             stack_size = 3600
             turn = math.ceil(duration / stack_size)
-            #
-            # highpass = raw.info['highpass'] if raw.info['highpass'] is not None else 0.0
-            # lowpass = raw.info['lowpass'] if raw.info['lowpass'] is not None else 0.0
-            # prefilter = f"HP:{highpass:.1f}Hz LP:{lowpass:.1f}Hz N:0.0"
-            # print('prefilter:',prefilter)
 
-            # prefilter = f"HP:{raw.info['highpass']}Hz LP:{raw.info['lowpass']}Hz"
-            # prefilter = ('HP:{}Hz LP:{}Hz N:NoneHz'.format(high_pass, low_pass))
+            prefilter = ('HP:{}Hz LP:{}Hz N:NoneHz'.format(high_pass, low_pass))
 
             signal_headers = pyedflib.highlevel.make_signal_headers(channels,
                                                                     physical_min=Physical_Min,
@@ -806,10 +828,10 @@ class dataImportController(QWidget):
                                                                     digital_min=-8388608,  # 24位格式的数字最小值
                                                                     digital_max=8388607,  # 24位格式的数字最大值
                                                                     # physical_max=6368.439, physical_min=-6337.78
-                                                                    # sample_rate=sampling_rate,
-                                                                    sample_rate=freq,
+                                                                    sample_rate=sampling_rate,
+                                                                    # sample_rate=freq,
                                                                     # sample_frequency=sampling_rate,
-                                                                    prefiler=prefilter_info[0]
+                                                                    prefiler=prefilter
                                                                     )
             header = pyedflib.highlevel.make_header(startdate=meas_date)
             with pyedflib.EdfWriter(self.file_path, file_type=pyedflib.FILETYPE_BDF, n_channels=len(channels)) as f:
@@ -824,9 +846,9 @@ class dataImportController(QWidget):
                         end = start + stack_size
                         t_raw = raw_copy.crop(tmin=start, tmax=end, include_tmax=True)
                     t_raw.load_data()
-                    # t_raw.filter(l_freq=high_pass, h_freq=low_pass)  # 带通滤波
-                    # t_raw.notch_filter(freqs=notch)
-                    # t_raw.resample(sampling_rate, npad='auto')
+                    t_raw.filter(l_freq=high_pass, h_freq=low_pass)  # 带通滤波
+                    t_raw.notch_filter(freqs=notch)
+                    t_raw.resample(sampling_rate, npad='auto')
                     t_signals, t_times = t_raw[index_channels, :]
                     del t_raw
 
@@ -944,7 +966,7 @@ class dataImportController(QWidget):
             print("上传终止！")
             return
         try:
-            if result == '1' or result == '0':
+            if result == '1':
                 state = repFilemsg[0]
                 print("state:",state)
                 # 脑电文件传输协议6.1情况
@@ -1052,7 +1074,14 @@ class dataImportController(QWidget):
 
                 # 脑电文件传输协议6.5情况
                 elif state == 'recover':
-                    self.cAppUtil.empty(self.dir_path, filename=self.filename)
+                    # self.check_id = repFilemsg[1]
+                    # self.file_id = repFilemsg[2]
+                    fileName = self.findFile(self.dir_path, 'txt')
+                    # 存在已损坏的uploading.txt文件，删除后重新创建， 否则直接创建
+                    if fileName:
+                        self.cAppUtil.empty(self.dir_path, fullname = fileName[0] + str('.txt'))
+                    # 这个地方虽然是需要存入原始路径，但由于数据库中没有这个字段并且这是recover，其实不传也没关系
+                    self.makeText(original_filepath="")
                     REQmsg = self.packMsg('continue')
                     self.client.writeEEG(REQmsg)
 
@@ -1128,6 +1157,12 @@ class dataImportController(QWidget):
                 self.file_path = os.path.join(self.dir_path, bdfFileName + str('.bdf'))
                 ret = self.testEEGFile(self.file_path)
                 # bdf文件完整
+                # 对BDF文件名做拆解
+                parts = bdfFileName.split('_')
+                if len(parts) == 2:
+                    # 去掉前导零并将字符串转换为整数再转回字符串
+                    self.check_id = str(int(parts[0]))
+                    self.file_id = str(int(parts[1]))
                 if ret[0] == '1':
                     txtFileName = self.findSameFile(self.dir_path, bdfFileName + str('.txt'))
                     # 存在同名的txt文件,判断是否完整
@@ -1162,10 +1197,13 @@ class dataImportController(QWidget):
                                                                    speed=100)
                             self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
                             self.progressBarView.show()
+                            # 这个位置，txt文件损坏，怎么获取check_id,file_id? 协议6.5的位置，存入check_id、file_id这个位置要再推敲一下，否则容易存入其他check_id和file_id
+                            # 该情况下是存在完整bdf文件的，根据BDF文件的命名可以获取到check_id和file_id
                             REQmsg = self.packMsg('clean')
                             self.client.writeEEG(REQmsg)
                     # 不存在同名的txt文件
                     else:
+                        # 同样的道理，该情况下是存在完整bdf文件的，根据BDF文件的命名可以获取到check_id和file_id
                         # 重启进度条
                         self.progressBarView = ProgressBarView(window_title="上传过程出错，系统将从出错位置开始继续上传",
                                                                hasStopBtn=False,
@@ -1183,7 +1221,12 @@ class dataImportController(QWidget):
                     message='本地预处理file_name的过程出错，上传过程需重新开始！此消息将在5秒内自动关闭',
                     close_time=5000
                 )
-                self.empty(self.dir_path, fullname=bdfFileName + str('.bdf'))
+                self.cAppUtil.empty(self.dir_path, fullname=bdfFileName + str('.bdf'))
+                # 打开所有功能键
+                self.view.ui.groupBox_3.setEnabled(True)
+                self.view.ui.groupBox_4.setEnabled(True)
+                self.view.ui.groupBox.setEnabled(True)
+                self.view.ui.startUploadButton.setEnabled(True)
 
     def stop_upload(self):
         """终止上传"""
@@ -1925,6 +1968,8 @@ class dataImportController(QWidget):
         self.addInfo['check_num'] = self.view.ui.check_num.text()
         # 检查单号是否为空
         result = self.check_item_pattern(self.addInfo)
+        if not result:
+            self.view.ui.btnConfirm.setEnabled(True)
         if result:
             # self.addFormView.close()
             strDate = self.view.ui.dateEdit.date().toString("yyyy-MM-dd")
@@ -2255,5 +2300,6 @@ class dataImportController(QWidget):
         self.client.writeEEGResSig.disconnect()
         self.client.updateCheckInfoResSig.disconnect()
         self.client.getFileInfoResSig.disconnect()
+        self.client.delFileInfoResSig.disconnect()
         self.client.getChoosePatientInfoResSig.disconnect()
         self.client.getChooseDoctorInfoResSig.disconnect()
