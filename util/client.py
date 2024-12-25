@@ -386,7 +386,7 @@ class client(QObject, socketClient):
     delClassifierInfoResSig = pyqtSignal(list)
     getSelectAlgorithmInfoResSig = pyqtSignal(list)
     checkClassifierInfoRessig = pyqtSignal(list)
-    add_import_classifierInfoRessig = pyqtSignal(list)
+    cls_restateRessig = pyqtSignal(list)
     checkstateRessig = pyqtSignal(list)
     model_transmit_messageRessig = pyqtSignal(list)
     classifier_id_inquiryRessig = pyqtSignal(list)
@@ -397,6 +397,8 @@ class client(QObject, socketClient):
     getSelectSetInfoResSig =pyqtSignal(list)
     inquiryCls_set_InfoResSig=pyqtSignal(list)
     classifierPaging_setResSig=pyqtSignal(list)
+    upload_schemeResSig=pyqtSignal(list)
+    upload_modelResSig=pyqtSignal(list)
 
 
     # 模型测试
@@ -3133,13 +3135,13 @@ class client(QObject, socketClient):
     def checkClassfierInfoRes(self, REPData):
         self.checkClassifierInfoRessig.emit(list(REPData[3]))
 
-    def add_import_classifierInfo(self, REQmsg):
+    def cls_restate(self, REQmsg):
         REQmsg.insert(0, self.macAddr)
         msg = ["classifier", 6, self.tUser[0], REQmsg]
         self.sendRequest(msg)
 
-    def add_import_classifierInfoRes(self, REPData):
-        self.add_import_classifierInfoRessig.emit(list(REPData[3]))
+    def cls_restateRes(self, REPData):
+        self.cls_restateRessig.emit(list(REPData[3]))
 
     def checkstate(self, REQmsg):
         REQmsg.insert(0, self.macAddr)
@@ -3209,8 +3211,21 @@ class client(QObject, socketClient):
     def classifierPaging_setRes(self,REPData):
         self.classifierPaging_setResSig.emit(list(REPData[3]))
 
+    def upload_scheme(self,REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["classifier", 17, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    def upload_schemeRes(self,REPData):
+        self.upload_schemeResSig.emit(list(REPData[3]))
     # 脑电扫描
     # 向服务器发送获取脑电扫描界面信息请求
+    def upload_model(self,REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["classifier", 18, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+    def upload_modelRes(self,REPData):
+        self.upload_modelResSig.emit(list(REPData[3]))
 
     def getAutoInitData(self, REQmsg):
         REQmsg.insert(0, self.macAddr)
@@ -4324,7 +4339,7 @@ class client(QObject, socketClient):
         elif REQmsg[0] == 'classifier' and REQmsg[1] == 5:
             self.checkClassfierInfoRes(REQmsg)
         elif REQmsg[0] == 'classifier' and REQmsg[1] == 6:
-            self.add_import_classifierInfoRes(REQmsg)
+            self.cls_restateRes(REQmsg)
         elif REQmsg[0] == 'classifier' and REQmsg[1] == 7:
             self.checkstateRes(REQmsg)
         elif REQmsg[0] == 'classifier' and REQmsg[1] == 8:
@@ -4345,6 +4360,10 @@ class client(QObject, socketClient):
             self.inquiryCls_set_InfoRes(REQmsg)
         elif REQmsg[0] == 'classifier' and REQmsg[1] == 16:
             self.classifierPaging_setRes(REQmsg)
+        elif REQmsg[0] == 'classifier' and REQmsg[1] == 17:
+            self.upload_schemeRes(REQmsg)
+        elif REQmsg[0] == 'classifier' and REQmsg[1] == 18:
+            self.upload_modelRes(REQmsg)
 
 
         # 模型测试

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'prentry.ui'
+# Form implementation generated from reading ui file 'Ui_clsPrentry.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -11,7 +11,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Prentry(object):
+class Ui_clsPrentryForm(object):
     def setupUi(self, Prentry):
         Prentry.setObjectName("Prentry")
         Prentry.resize(700, 600)

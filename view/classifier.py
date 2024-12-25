@@ -1,79 +1,55 @@
 from PyQt5.QtGui import QBrush
 from PyQt5.QtCore import Qt
-from view.classifer_form.form import Ui_ClassifierForm
-from view.classifer_form.Parameter import Ui_model_import
-from view.classifer_form.algorithm_table import Ui_algorithm_table
-from view.classifer_form.label_select import Ui_label_select
-from view.classifer_form.prentry import Ui_Prentry
-from view.classifer_form.Set_select import Ui_Set_Select
+from view.classifer_form.Ui_classifier import Ui_ClassifierForm
+from view.classifer_form.Ui_clsimport import Ui_clsimportForm
+from view.classifer_form.Ui_algorithmSelect import Ui_algorithmSelectForm
+from view.classifer_form.Ui_labelSelect import Ui_labelSelectForm
+from view.classifer_form.Ui_clsPrentry import Ui_clsPrentryForm
+from view.classifer_form.UI_clsupload import Ui_model_uploadForm
+from view.classifer_form.Ui_setselect import Ui_setselectForm
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import pyqtSignal
 
 
 class ClassifierView(QWidget):
+    control_signal = pyqtSignal(list)
     def __init__(self, parent=None):
         super().__init__(parent)
         self.ui = Ui_ClassifierForm()
         self.ui.setupUi(self)
         self.header = ['分类器模型名称', '算法名称', '数据集名称', '训练性能', '测试性能']
         self.field = ['classifier_name', 'alg_name', 'set_name', 'train_performance', 'test_performance']
+        self.table = QTableWidget()
+        self.cur_page=0
+        self.state_select_name=None
+        self.ui.btngroup1.buttonClicked.connect(self.single_select)
+    def single_select(self):
+        state_select=self.ui.btngroup1.checkedButton()
+        self.state_select_name=state_select.text()
+        print(self.state_select_name)
+    def clear_select(self):
+        self.ui.btngroup1.setExclusive(False)
+        self.ui.built_btn.setChecked(False)
+        self.ui.ready_btn.setChecked(False)
+        self.ui.uploaded_btn.setChecked(False)
+        self.ui.btngroup1.setExclusive(True)
 
-    # def initTable(self, data):
-    #     col_num = len(self.header)
-    #     row_num = len(data)
-    #     self.ui.tableWidget.setColumnCount(col_num)
-    #     self.ui.tableWidget.setRowCount(row_num)
-    #     for i in range(col_num):
-    #         header_item = QTableWidgetItem(self.header[i])
-    #         font = header_item.font()
-    #         font.setPointSize(16)
-    #         header_item.setFont(font)
-    #         header_item.setForeground(QBrush(Qt.black))
-    #         header_item.setData(Qt.UserRole, self.field[i])
-    #         self.ui.tableWidget.setHorizontalHeaderItem(i, header_item)
-    #         # 拉伸表格列项，使其铺满
-    #         self.ui.tableWidget.horizontalHeader().setStretchLastSection(True)
-    #
-    #     for r in range(row_num):
-    #         for c in range(col_num):
-    #             self.item = QTableWidgetItem(str(data[r][c]))
-    #             self.item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-    #             font = self.item.font()
-    #             font.setPointSize(10)
-    #             self.item.setFont(font)
-    #             self.ui.tableWidget.setItem(r, c, self.item)
-    #     self.ui.tableWidget.horizontalHeader().setHighlightSections(False)
-    #     #   按字段长度进行填充
-    #     self.ui.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-    #     # 增加和查询的时候列数会改变，所以需要保存原来的列数
-    #     self.col = self.ui.tableWidget.columnCount()
-
-    def reject(self):
-        pass
-class TableWidget(QWidget):
-    control_signal=pyqtSignal(list)
-    def __init__(self,data,current_page,*args,**kwargs):
-        super(TableWidget,self).__init__(*args,**kwargs)
-        self.header = ['分类器模型名称', '算法名称', '数据集名称', '训练性能', '测试性能']
-        self.field = ['classifier_name', 'alg_name', 'set_name', 'train_performance', 'test_performance']
-        self.cur_page=current_page
-        self.table=QTableWidget()
-        self.init_table(data)
-    def init_table(self, data):
+    def initTable(self, data,curPageIndex):
+        self.cur_page = curPageIndex
         style_sheet = """
-                   QTableWidget {
-                       border: 1px solid blue;
-                       background-color:rgb(255,255,255)
-                   }
-                   QPushButton{
-                       max-width: 30ex;
-                       max-height: 12ex;
-                       font-size: 14px;
-                   }
-                   QLineEdit{
-                       max-width: 30px
-                   }
-               """
+                           QTableWidget {
+                               border: 1px solid blue;
+                               background-color:rgb(255,255,255)
+                           }
+                           QPushButton{
+                               max-width: 30ex;
+                               max-height: 12ex;
+                               font-size: 14px;
+                           }
+                           QLineEdit{
+                               max-width: 30px
+                           }
+                       """
         try:
             col_num = len(self.header)
             row_num = len(data)
@@ -98,7 +74,6 @@ class TableWidget(QWidget):
                 # 拉伸表格列项，使其铺满
                 self.table.horizontalHeader().setStretchLastSection(True)
 
-
             for r in range(row_num):
                 for c in range(col_num):
                     self.item = QTableWidgetItem(str(data[r][c]))
@@ -114,14 +89,62 @@ class TableWidget(QWidget):
             self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
 
+            self.table.setSelectionBehavior(QTableWidget.SelectRows)#设置选中一行
+
             # 增加和查询的时候列数会改变，所以需要保存原来的列数
             self.col = self.table.columnCount()
-            self.__layout = QVBoxLayout()
-            self.__layout.addWidget(self.table)
-            self.setLayout(self.__layout)
+            self.ui.verticalLayout_2.addWidget(self.table)
             self.setStyleSheet(style_sheet)
         except Exception as e:
             print('initTable', e)
+    def update_table(self,data,curPageIndex,curpagemax=''):
+
+        self.cur_page = curPageIndex
+        self.curPage.setText(str(curPageIndex))
+        if curpagemax !='':
+            self.totalPage.setText("共" + str(curpagemax) + "页")
+        col_num = len(self.header)
+        row_num = len(data)
+        row_max=12
+        for r in range(row_max):
+            self.table.removeRow(r)
+        self.table.setColumnCount(col_num)
+        self.table.setRowCount(row_num)
+        self.table.setInputMethodHints(Qt.ImhHiddenText)
+        for i in range(row_num):
+            self.table.setRowHeight(i, 45)
+        # 设置除最后一列之外的列的宽度
+        for i in range(0, col_num - 1):
+            self.table.setColumnWidth(i, 150)
+
+        for i in range(col_num):
+            header_item = QTableWidgetItem(self.header[i])
+            font = header_item.font()
+            font.setPointSize(16)
+            header_item.setFont(font)
+            header_item.setForeground(QBrush(Qt.black))
+            header_item.setData(Qt.UserRole, self.field[i])
+            self.table.setHorizontalHeaderItem(i, header_item)
+            # 拉伸表格列项，使其铺满
+            self.table.horizontalHeader().setStretchLastSection(True)
+
+        for r in range(row_num):
+            for c in range(col_num):
+                self.item = QTableWidgetItem(str(data[r][c]))
+                self.item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                font = self.item.font()
+                font.setPointSize(10)
+                self.item.setFont(font)
+
+                self.table.setItem(r, c, self.item)
+        self.table.horizontalHeader().setHighlightSections(False)
+
+        #   按字段长度进行填充
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
+    def reject(self):
+        pass
     def setPageController(self, page):
         """自定义页码控制器"""
         control_layout = QHBoxLayout()
@@ -152,7 +175,7 @@ class TableWidget(QWidget):
         control_layout.addWidget(skipLabel_1)
         control_layout.addWidget(confirmSkip)
         control_layout.addStretch(1)
-        self.__layout.addLayout(control_layout)
+        self.ui.verticalLayout.addLayout(control_layout)
         # self.__layout.setStretch(0, 12)
         # self.__layout.setStretch(1, 1)
 
@@ -179,31 +202,136 @@ class TableWidget(QWidget):
     def showTotalPage(self):
         """返回当前总页数"""
         return int(self.totalPage.text()[1:-1])
-
-
-
-
-class ImportView(QWidget):
+class clsimportView(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.ui = Ui_model_import()
+        self.ui = Ui_clsimportForm()
         self.ui.setupUi(self)
         self.saved_EEG_names = []
         self.ui.pushButton_label_select.setEnabled(False)
         self.ui.checkbox1.stateChanged.connect(self.handle_checkbox_state_change)
+        self.algorithm=None
+        self.set=None
     def handle_checkbox_state_change(self, state):
         self.ui.pushButton_label_select.setEnabled(state)
-
+    def init_algorithm(self,data,curPageIndex_al,curPageMax_al):
+        self.algorithm=AlgorithmSelectView(curPageIndex_al)
+        self.algorithm.initTable(data,curPageIndex_al)
+        self.algorithm.setPageController_al(curPageMax_al)
+    def init_set(self,data,curPageIndex_set,curPageMax_set):
+        self.set = SetSelectView(curPageIndex_set)
+        self.set.initTable(data, curPageIndex_set)
+        self.set.setPageController_set(curPageMax_set)
+class clsuploadView(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.ui = Ui_model_uploadForm()
+        self.ui.setupUi(self)
+        self.saved_EEG_names = []
 class AlgorithmSelectView(QWidget):
     control_signal_al = pyqtSignal(list)
-    def __init__(self,current_page, parent=None):
+    def __init__(self,current_page,parent=None):
         super().__init__(parent)
-        self.ui = Ui_algorithm_table()
+        self.ui = Ui_algorithmSelectForm()
         self.ui.setupUi(self)
-        self.cur_page=current_page
-        self.control_layout_tempt=None
-    def updatepage(self,current_page):
-        self.cur_page=current_page
+        self.header = ['算法名称']
+        self.field = [ 'alg_name']
+        self.cur_page = 0
+        # self.header = [ '算法名称']
+        # self.field = ['alg_name']
+        # self.table = QTableWidget()
+        # self.init_table(data)
+    def initTable(self, data,curPageIndex):
+        self.cur_page = curPageIndex
+        try:
+            col_num = len(self.header)
+            row_num = len(data)
+            self.ui.tableWidget_algorithm.setColumnCount(col_num)
+            self.ui.tableWidget_algorithm.setRowCount(row_num)
+            self.ui.tableWidget_algorithm.setInputMethodHints(Qt.ImhHiddenText)
+            # 设置表格高度
+            for i in range(row_num):
+                self.ui.tableWidget_algorithm.setRowHeight(i, 45)
+            # 设置除最后一列之外的列的宽度
+            for i in range(0, col_num - 1):
+                self.ui.tableWidget_algorithm.setColumnWidth(i, 150)
+
+            for i in range(col_num):
+                header_item = QTableWidgetItem(self.header[i])
+                font = header_item.font()
+                font.setPointSize(16)
+                header_item.setFont(font)
+                header_item.setForeground(QBrush(Qt.black))
+                header_item.setData(Qt.UserRole, self.field[i])
+                self.ui.tableWidget_algorithm.setHorizontalHeaderItem(i, header_item)
+                # 拉伸表格列项，使其铺满
+                self.ui.tableWidget_algorithm.horizontalHeader().setStretchLastSection(True)
+
+            for r in range(row_num):
+                for c in range(col_num):
+                    self.item = QTableWidgetItem(str(data[r][c+1]))
+                    self.item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    self.item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                    font = self.item.font()
+                    font.setPointSize(10)
+                    self.item.setFont(font)
+
+                    self.ui.tableWidget_algorithm.setItem(r, c, self.item)
+            self.ui.tableWidget_algorithm.horizontalHeader().setHighlightSections(False)
+            #   按字段长度进行填充
+            self.ui.tableWidget_algorithm.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            self.ui.tableWidget_algorithm.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
+
+            # 增加和查询的时候列数会改变，所以需要保存原来的列数
+            self.col = self.ui.tableWidget_algorithm.columnCount()
+        except Exception as e:
+            print('initTable', e)
+    def update_table(self,data,curPageIndex,curpagemax=''):
+
+        self.cur_page = curPageIndex
+        self.curPage.setText(str(curPageIndex))
+        if curpagemax !='':
+            self.totalPage.setText("共" + str(curpagemax) + "页")
+        col_num = len(self.header)
+        row_num = len(data)
+        row_max=12
+        for r in range(row_max):
+            self.ui.tableWidget_algorithm.removeRow(r)
+        self.ui.tableWidget_algorithm.setColumnCount(col_num)
+        self.ui.tableWidget_algorithm.setRowCount(row_num)
+        self.ui.tableWidget_algorithm.setInputMethodHints(Qt.ImhHiddenText)
+        for i in range(row_num):
+            self.ui.tableWidget_algorithm.setRowHeight(i, 45)
+        # 设置除最后一列之外的列的宽度
+        for i in range(0, col_num - 1):
+            self.ui.tableWidget_algorithm.setColumnWidth(i, 150)
+
+        for i in range(col_num):
+            header_item = QTableWidgetItem(self.header[i])
+            font = header_item.font()
+            font.setPointSize(16)
+            header_item.setFont(font)
+            header_item.setForeground(QBrush(Qt.black))
+            header_item.setData(Qt.UserRole, self.field[i])
+            self.ui.tableWidget_algorithm.setHorizontalHeaderItem(i, header_item)
+            # 拉伸表格列项，使其铺满
+            self.ui.tableWidget_algorithm.horizontalHeader().setStretchLastSection(True)
+
+        for r in range(row_num):
+            for c in range(col_num):
+                self.item = QTableWidgetItem(str(data[r][c+1]))
+                self.item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                font = self.item.font()
+                font.setPointSize(10)
+                self.item.setFont(font)
+
+                self.ui.tableWidget_algorithm.setItem(r, c, self.item)
+        self.ui.tableWidget_algorithm.horizontalHeader().setHighlightSections(False)
+
+        #   按字段长度进行填充
+        self.ui.tableWidget_algorithm.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.ui.tableWidget_algorithm.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
     def setPageController_al(self, page):
         """自定义页码控制器"""
         control_layout = QHBoxLayout()
@@ -267,7 +395,7 @@ class LabelSelectVew(QWidget):
     signal_save_label_names = pyqtSignal(list)
     def __init__(self, EEG_lead, saved_EEG_names,parent=None):
         super().__init__(parent)
-        self.ui = Ui_label_select()
+        self.ui = Ui_labelSelectForm()
         self.ui.setupUi(self)
         # 用户点击保存时，已经选中的分类标签
         self.saved_EEG_names = saved_EEG_names
@@ -341,22 +469,112 @@ class LabelSelectVew(QWidget):
         self.saved_EEG_names = selected_EEG_names
         self.signal_save_label_names.emit(selected_EEG_names)
         self.close()
-class PrentryView(QWidget):
+class clsPrentryView(QWidget):
     signal_save_configID_names = pyqtSignal(str)
     def __init__(self,  parent=None):
         super().__init__(parent)
-        self.ui = Ui_Prentry()
+        self.ui = Ui_clsPrentryForm()
         self.ui.setupUi(self)
 class SetSelectView(QWidget):
     control_signal_set = pyqtSignal(list)
     def __init__(self,current_page, parent=None):
         super().__init__(parent)
-        self.ui = Ui_Set_Select()
+        self.ui = Ui_setselectForm()
         self.ui.setupUi(self)
-        self.cur_page=current_page
-        self.control_layout_tempt=None
-    def updatepage(self,current_page):
-        self.cur_page=current_page
+        self.header = ['数据集名称']
+        self.field = ['set_name']
+        self.cur_page = 0
+    def initTable(self, data,curPageIndex):
+        self.cur_page = curPageIndex
+        try:
+            col_num = len(self.header)
+            row_num = len(data)
+            self.ui.tableWidget_set.setColumnCount(col_num)
+            self.ui.tableWidget_set.setRowCount(row_num)
+            self.ui.tableWidget_set.setInputMethodHints(Qt.ImhHiddenText)
+            # 设置表格高度
+            for i in range(row_num):
+                self.ui.tableWidget_set.setRowHeight(i, 45)
+            # 设置除最后一列之外的列的宽度
+            for i in range(0, col_num - 1):
+                self.ui.tableWidget_set.setColumnWidth(i, 150)
+
+            for i in range(col_num):
+                header_item = QTableWidgetItem(self.header[i])
+                font = header_item.font()
+                font.setPointSize(16)
+                header_item.setFont(font)
+                header_item.setForeground(QBrush(Qt.black))
+                header_item.setData(Qt.UserRole, self.field[i])
+                self.ui.tableWidget_set.setHorizontalHeaderItem(i, header_item)
+                # 拉伸表格列项，使其铺满
+                self.ui.tableWidget_set.horizontalHeader().setStretchLastSection(True)
+
+            for r in range(row_num):
+                for c in range(col_num):
+                    self.item = QTableWidgetItem(str(data[r][c+1]))
+                    self.item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    self.item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                    font = self.item.font()
+                    font.setPointSize(10)
+                    self.item.setFont(font)
+
+                    self.ui.tableWidget_set.setItem(r, c, self.item)
+            self.ui.tableWidget_set.horizontalHeader().setHighlightSections(False)
+            #   按字段长度进行填充
+            self.ui.tableWidget_set.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            self.ui.tableWidget_set.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
+
+            # 增加和查询的时候列数会改变，所以需要保存原来的列数
+            self.col = self.ui.tableWidget_set.columnCount()
+        except Exception as e:
+            print('initTable', e)
+    def update_table(self,data,curPageIndex,curpagemax=''):
+
+        self.cur_page = curPageIndex
+        self.curPage.setText(str(curPageIndex))
+        if curpagemax !='':
+            self.totalPage.setText("共" + str(curpagemax) + "页")
+        col_num = len(self.header)
+        row_num = len(data)
+        row_max=12
+        for r in range(row_max):
+            self.ui.tableWidget_set.removeRow(r)
+        self.ui.tableWidget_set.setColumnCount(col_num)
+        self.ui.tableWidget_set.setRowCount(row_num)
+        self.ui.tableWidget_set.setInputMethodHints(Qt.ImhHiddenText)
+        for i in range(row_num):
+            self.ui.tableWidget_set.setRowHeight(i, 45)
+        # 设置除最后一列之外的列的宽度
+        for i in range(0, col_num - 1):
+            self.ui.tableWidget_set.setColumnWidth(i, 150)
+
+        for i in range(col_num):
+            header_item = QTableWidgetItem(self.header[i])
+            font = header_item.font()
+            font.setPointSize(16)
+            header_item.setFont(font)
+            header_item.setForeground(QBrush(Qt.black))
+            header_item.setData(Qt.UserRole, self.field[i])
+            self.ui.tableWidget_set.setHorizontalHeaderItem(i, header_item)
+            # 拉伸表格列项，使其铺满
+            self.ui.tableWidget_set.horizontalHeader().setStretchLastSection(True)
+
+        for r in range(row_num):
+            for c in range(col_num):
+                self.item = QTableWidgetItem(str(data[r][c+1]))
+                self.item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                font = self.item.font()
+                font.setPointSize(10)
+                self.item.setFont(font)
+
+                self.ui.tableWidget_set.setItem(r, c, self.item)
+        self.ui.tableWidget_set.horizontalHeader().setHighlightSections(False)
+
+        #   按字段长度进行填充
+        self.ui.tableWidget_set.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.ui.tableWidget_set.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
     def setPageController_set(self, page):
         """自定义页码控制器"""
         control_layout = QHBoxLayout()

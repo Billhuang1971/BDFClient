@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'label_select.ui'
+# Form implementation generated from reading ui file 'Ui_labelSelect.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -11,7 +11,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_label_select(object):
+class Ui_labelSelectForm(object):
     def setupUi(self, label_select):
         label_select.setObjectName("label_select")
         label_select.resize(663, 611)

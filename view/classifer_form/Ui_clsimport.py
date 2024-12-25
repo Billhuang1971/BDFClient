@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'Parameter.ui'
+# Form implementation generated from reading ui file 'Ui_clsimport.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -11,7 +11,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_model_import(object):
+class Ui_clsimportForm(object):
     def setupUi(self, model_import):
         model_import.setObjectName("model_import")
         model_import.setFixedSize(800, 700)#窗口大小
@@ -87,17 +87,17 @@ class Ui_model_import(object):
 
         font = QtGui.QFont()
         font.setPointSize(16)
-        self.pushButton_model_select = QtWidgets.QPushButton()
-        self.pushButton_model_select.setGeometry(QtCore.QRect(0, 410, 191, 51))
-        self.pushButton_model_select.setObjectName("pushButton_model_select")
-        self.pushButton_model_select.setFont(font)
-        self.label_model_path = QtWidgets.QLabel()
-        self.label_model_path.setGeometry(QtCore.QRect(190, 410, 441, 61))
-        self.label_model_path.setFont(font)
-        self.label_model_path.setObjectName("label_model_path")
+        #self.pushButton_model_select = QtWidgets.QPushButton()
+        #self.pushButton_model_select.setGeometry(QtCore.QRect(0, 410, 191, 51))
+        #self.pushButton_model_select.setObjectName("pushButton_model_select")
+        #self.pushButton_model_select.setFont(font)
+        #self.label_model_path = QtWidgets.QLabel()
+        #self.label_model_path.setGeometry(QtCore.QRect(190, 410, 441, 61))
+        #self.label_model_path.setFont(font)
+        #self.label_model_path.setObjectName("label_model_path")
         horizon_layout_7 = QtWidgets.QHBoxLayout()
-        horizon_layout_7.addWidget(self.pushButton_model_select)
-        horizon_layout_7.addWidget(self.label_model_path)
+        #horizon_layout_7.addWidget(self.pushButton_model_select)
+        #horizon_layout_7.addWidget(self.label_model_path)
 
         #算法选择按钮
         font = QtGui.QFont()
@@ -129,6 +129,8 @@ class Ui_model_import(object):
         horizon_layout_10.addWidget(self.pushButton_set_select)
         horizon_layout_10.addWidget(self.label_set_name)
 
+
+        #扫描段长
         font = QtGui.QFont()
         font.setPointSize(16)
         self.label_2 = QtWidgets.QLabel()
@@ -146,6 +148,25 @@ class Ui_model_import(object):
         horizon_layout_3.addWidget(self.lineEdit_epoch_length_name)
         horizon_layout_3.addItem(spacerItem_3)
         horizon_layout_3.setStretch(-1, 1)
+
+        #单位选择
+        font = QtGui.QFont()
+        font.setPointSize(16)
+        self.label_unit = QtWidgets.QLabel()
+        self.label_unit.setGeometry(QtCore.QRect(0, 130, 181, 41))
+        self.label_unit.setObjectName("label_unit")
+        self.label_unit.setFont(font)
+        self.Unit_comboCond = QtWidgets.QComboBox()
+        self.Unit_comboCond.setFont(font)
+        self.Unit_comboCond.setObjectName("comboCond")
+        self.Unit_comboCond.addItems(["V", "mV", "mμV"])
+        spacerItem_4 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        horizon_layout_11 = QtWidgets.QHBoxLayout()
+        horizon_layout_11.addWidget(self.label_unit)
+        horizon_layout_11.addWidget(self.Unit_comboCond)
+        horizon_layout_11.addItem(spacerItem_4)
+        horizon_layout_11.setStretch(-1, 1)
+
 
         font = QtGui.QFont()
         font.setPointSize(16)
@@ -206,6 +227,7 @@ class Ui_model_import(object):
         self.verticalLayout.addLayout(horizon_layout_1)
         self.verticalLayout.addLayout(horizon_layout_2)
         self.verticalLayout.addLayout(horizon_layout_3)
+        self.verticalLayout.addLayout(horizon_layout_11)
         self.verticalLayout.addLayout(horizon_layout_4)
         self.verticalLayout.addLayout(horizon_layout_5)
         self.verticalLayout.addLayout(horizon_layout_8)
@@ -219,18 +241,19 @@ class Ui_model_import(object):
 
     def retranslateUi(self, model_import):
         _translate = QtCore.QCoreApplication.translate
-        model_import.setWindowTitle(_translate("model_import", "模型导入"))
+        model_import.setWindowTitle(_translate("model_import", "导入计划上传"))
         self.label_Parameter_setting_title.setText(
-            _translate("model_import", "<html><head/><body><p align=\"center\">模型导入</p></body></html>"))
+            _translate("model_import", "<html><head/><body><p align=\"center\">导入计划上传</p></body></html>"))
         self.pushButton_save.setText(_translate("model_import", "保存"))
         self.label.setText(_translate("model_import", "模型名称：        "))
-        self.pushButton_model_select.setText(_translate("model_import", "模型文件选择"))
-        self.label_model_path.setText(_translate("model_import",
-                                                 "<html><head/><body><p><span style=\" font-size:12pt;\">模型文件路径：未选择</span></p></body></html>"))
+        #self.pushButton_model_select.setText(_translate("model_import", "模型文件选择"))
+        #self.label_model_path.setText(_translate("model_import",
+                                                 #"<html><head/><body><p><span style=\" font-size:12pt;\">模型文件路径：未选择</span></p></body></html>"))
         self.pushButton_algorithm_select.setText(_translate("model_import", "算法选择"))
         self.label_algorithm_name.setText(_translate("model_import",
                                                      "<html><head/><body><p><span style=\" font-size:12pt;\">模型算法：未选择</span></p></body></html>"))
         self.label_2.setText(_translate("model_import", "扫描段长(采样点)："))
+        self.label_unit.setText(_translate("model_import", "数据单位：  "))
         self.label_3.setText(_translate("model_import", "配置选择：   "))
         self.pushButton_configOptions_select.setText((_translate("model_import","配置选择")))
         self.pushButton_set_select.setText(_translate("model_import", "数据集选择"))

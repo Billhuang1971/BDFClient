@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'form.ui'
+# Form implementation generated from reading ui file 'Ui_classifier.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -19,35 +19,67 @@ class Ui_ClassifierForm(object):
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
+        #1
         self.comboCond = QtWidgets.QComboBox(ClassifierForm)
         font = QtGui.QFont()
         font.setPointSize(16)
         self.comboCond.setFont(font)
         self.comboCond.setObjectName("comboCond")
         self.horizontalLayout.addWidget(self.comboCond)
+        #2 输入框
         self.lineValue = QtWidgets.QLineEdit(ClassifierForm)
         font = QtGui.QFont()
         font.setPointSize(16)
         self.lineValue.setFont(font)
         self.lineValue.setObjectName("lineValue")
         self.horizontalLayout.addWidget(self.lineValue)
+        #3 单选按钮
+        self.built_btn = QtWidgets.QRadioButton(ClassifierForm)#built
+        self.ready_btn = QtWidgets.QRadioButton(ClassifierForm)#ready
+        self.uploaded_btn = QtWidgets.QRadioButton(ClassifierForm)#uploaded
+        self.btngroup1=QtWidgets.QButtonGroup()
+        self.btngroup1.addButton(self.built_btn)
+        self.btngroup1.addButton(self.ready_btn)
+        self.btngroup1.addButton(self.uploaded_btn)
+        self.built_btn.setText("built")
+        self.ready_btn.setText("ready")
+        self.uploaded_btn.setText("uploaded")
+        self.horizontalLayout.addWidget(self.built_btn)
+        self.horizontalLayout.addWidget(self.ready_btn)
+        self.horizontalLayout.addWidget(self.uploaded_btn)
+
+        # 3
         self.btnSelect = QtWidgets.QPushButton(ClassifierForm)
         font = QtGui.QFont()
         font.setPointSize(16)
         self.btnSelect.setFont(font)
         self.btnSelect.setObjectName("btnSelect")
+        self.lineValue.setFixedWidth(200)
         self.horizontalLayout.addWidget(self.btnSelect)
+        #4
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
+        #5
         self.btn_import = QtWidgets.QPushButton(ClassifierForm)
         font = QtGui.QFont()
         font.setFamily("Arial")
         font.setPointSize(16)
         self.btn_import.setFont(font)
         self.btn_import.setObjectName("btn_import")
+        self.btn_import.setFixedSize(100,35)
         self.horizontalLayout.addWidget(self.btn_import)
+        #6
+        self.btn_upload = QtWidgets.QPushButton(ClassifierForm)
+        font = QtGui.QFont()
+        font.setFamily("Arial")
+        font.setPointSize(16)
+        self.btn_upload.setFont(font)
+        self.btn_upload.setObjectName("btn_upload")
+        self.horizontalLayout.addWidget(self.btn_upload)
+        #7
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
+        #8
         self.btnDel = QtWidgets.QPushButton(ClassifierForm)
         self.btnDel.setEnabled(True)
         font = QtGui.QFont()
@@ -57,22 +89,17 @@ class Ui_ClassifierForm(object):
         self.btnDel.setIconSize(QtCore.QSize(16, 16))
         self.btnDel.setObjectName("btnDel")
         self.horizontalLayout.addWidget(self.btnDel)
+        #9
         spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem2)
-        self.horizontalLayout.setStretch(7, 5)
+        self.horizontalLayout.setStretch(8, 5)
         self.verticalLayout.addLayout(self.horizontalLayout)
-        #self.tableWidget = QtWidgets.QTableWidget(ClassifierForm)
-        #self.tableWidget.setObjectName("tableWidget")
-        #self.tableWidget.setColumnCount(0)
-        #self.tableWidget.setRowCount(0)
-        #self.verticalLayout.addWidget(self.tableWidget)
         self.verticalLayout_2 = QtWidgets.QHBoxLayout()
         self.verticalLayout_2.setObjectName("verticalLayout_2")
-        #spacerItem3 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout.addLayout(self.verticalLayout_2)
-        self.verticalLayout.setStretch(0, 1)
-        self.verticalLayout.setStretch(1, 8)
-        self.verticalLayout.setStretch(2, 1)
+        #self.verticalLayout.setStretch(0, 1)
+        #self.verticalLayout.setStretch(1, 17)
+        #self.verticalLayout.setStretch(2, 2)
 
         self.retranslateUi(ClassifierForm)
         QtCore.QMetaObject.connectSlotsByName(ClassifierForm)
@@ -81,5 +108,6 @@ class Ui_ClassifierForm(object):
         _translate = QtCore.QCoreApplication.translate
         ClassifierForm.setWindowTitle(_translate("ClassifierForm", "Form"))
         self.btnSelect.setText(_translate("ClassifierForm", "查询"))
-        self.btn_import.setText(_translate("ClassifierForm", "导入模型"))
+        self.btn_import.setText(_translate("ClassifierForm", "导入计划"))
+        self.btn_upload.setText(_translate("ClassifierForm", "模型上传"))
         self.btnDel.setText(_translate("ClassifierForm", "删除"))
