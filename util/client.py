@@ -318,8 +318,10 @@ class client(QObject, socketClient):
     writeEEGResSig = pyqtSignal(list)
     # 回调更新脑电检查信息
     updateCheckInfoResSig = pyqtSignal(list)
-    # 回调获取脑电检查信息
+    # 回调获取脑电文件信息
     getFileInfoResSig = pyqtSignal(list)
+    # 回调删除脑电文件信息
+    delFileInfoResSig = pyqtSignal(list)
     # 新增
     getChoosePatientInfoResSig = pyqtSignal(list)
     getChooseDoctorInfoResSig = pyqtSignal(list)
@@ -2626,7 +2628,7 @@ class client(QObject, socketClient):
     def updateCheckInfoRes(self, REPData):
         self.updateCheckInfoResSig.emit(REPData[3])
 
-    # 查询脑电文件模块方法
+    # 查询脑电文件方法
     def getFileInfo(self, REQmsg):
         REQmsg.insert(0, self.macAddr)
         msg = ["dataImport", 7, self.tUser[0], REQmsg]
@@ -2636,6 +2638,18 @@ class client(QObject, socketClient):
     def getFileInfoRes(self, REPData):
         print(REPData[3])
         self.getFileInfoResSig.emit(list(REPData[3]))
+
+    # 删除脑电文件方法
+    def delFileInfo(self,REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["dataImport", 11, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    # 处理客户端返回的删除脑电文件的结果
+    def delFileInfoRes(self,REPData):
+        print(REPData[3])
+        self.delFileInfoResSig.emit(list(REPData[3]))
+
 
     # 查询选择的病人方法
     def getChoosePatientInfo(self, REQmsg):
@@ -4028,6 +4042,9 @@ class client(QObject, socketClient):
         # 获取脑电检查信息
         elif REQmsg[0] == 'dataImport' and REQmsg[1] == 7:
             self.getFileInfoRes(REQmsg)
+        # 删除脑电文件信息
+        elif REQmsg[0] == 'dataImport' and REQmsg[1] == 11:
+            self.delFileInfoRes(REQmsg)
 
         # 创建会诊
         # 获取医生信息
