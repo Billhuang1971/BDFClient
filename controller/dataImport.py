@@ -629,7 +629,6 @@ class dataImportController(QWidget):
                 )
                 # 删除脑电记录和脑电文件
                 self.cAppUtil.empty(self.dir_path, filename = bdfFileName)
-                # TODO:删除服务端记录
                 REQmsg = [self.check_id,self.file_id]
                 self.client.delFileInfo(REQmsg)
                 # 打开所有功能键
