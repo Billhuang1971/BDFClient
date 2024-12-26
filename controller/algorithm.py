@@ -35,7 +35,7 @@ class algorithmController(QWidget):
             self.client = client
             self.cAppUtil = cAppUtil
             self.view = algorithmView()
-            self.root_path = os.path.join(os.path.dirname(__file__))[:-10]
+            self.root_path = os.path.dirname(os.path.dirname(__file__))+'\\'
             print(self.root_path)
             self.algorithm_file_path = os.path.join(self.root_path, 'upload', 'algorithm\\')
             print(self.algorithm_file_path)

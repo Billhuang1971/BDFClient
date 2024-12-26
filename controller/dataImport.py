@@ -38,7 +38,7 @@ class dataImportController(QWidget):
         self.cAppUtil = cAppUtil
         self.view = DataImportView()
         self.mainMenubar = mainMenubar
-        self.root_path = os.path.join(os.path.dirname(__file__))[:-10]
+        self.root_path = os.path.dirname(os.path.dirname(__file__))+'\\'
         # 存放处理过后的脑电文件目录
         self.dir_path = os.path.join(self.root_path, 'upload', 'EEG')
 

@@ -44,7 +44,7 @@ class classifierController(QWidget):
         self.start_position=None #传输时从文件读取的位置
         self.block_size=5*1024*1024 #传输时指定块大小 5MB
         self.model_hash_right=None #存储模型文件的校验值
-        self.root_path = os.path.join(os.path.dirname(__file__))[:-10]
+        self.root_path = os.path.dirname(os.path.dirname(__file__))+'\\'
         self.view.ui.btn_import.clicked.connect(self.on_btn_import_clicked)
         self.view.ui.btnDel.clicked.connect(self.on_btnDel_clicked)
         self.view.ui.btn_upload.clicked.connect(self.onClicked_upload)
