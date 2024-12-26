@@ -9,7 +9,7 @@ import re
 
 class clientAppUtil():
     def __init__(self):
-        self.root_path = os.path.join(os.path.dirname(__file__))[:-16]
+        self.root_path=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         self.model_path = self.root_path + 'client_root\\upload\\model\\'
         self.path = os.path.dirname(__file__)
 
