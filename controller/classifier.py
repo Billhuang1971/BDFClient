@@ -94,8 +94,11 @@ class classifierController(QWidget):
         self.client.upload_schemeResSig.connect(self.upload_schemeRes)
         self.client.upload_modelResSig.connect(self.upload_modelRes)
         self.init_comboCond()
+        self.init_filepath()
 
-
+    def init_filepath(self):
+        if not os.path.exists(self.model_path):
+            os.makedirs(self.model_path)
     def getClassifierAlgSetNameRes(self, REPData):
         try:
             if REPData[0] == '1':
