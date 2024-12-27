@@ -1,3 +1,5 @@
+from PyQt5.QtCore import pyqtSignal
+
 from controller.classifier import classifierController
 from controller.algorithm import algorithmController
 from controller.consulting import consultingController
@@ -34,11 +36,11 @@ from controller.patientManager import patientManagerController
 from controller.basicConfig import basicConfigController
 from controller.configOptions import configOptionsController
 from controller.labelType import labelTypeController
-from  controller.dataImport import dataImportController
+from controller.dataImport import dataImportController
 from controller.setBuild import setBuildController
 from controller.createCons import createConsController
 from controller.createLesson import createLessonController
-from  controller.taskSettings import taskSettingsController
+from controller.taskSettings import taskSettingsController
 from controller.manual import manualController
 # from controller.detailLook import detailLookController
 from controller.auto import autoController
@@ -51,7 +53,8 @@ _translate = QtCore.QCoreApplication.translate
 
 
 class MainController(QWidget):
-
+    # 定义模块切换信号
+    switch_signal = pyqtSignal(str)
     def __init__(self, cAppUtil, client):
         super().__init__()
         self.cAppUtil = cAppUtil
@@ -74,6 +77,9 @@ class MainController(QWidget):
         self.client.serverExceptSig.connect(self.serverExcept)
         self.signalConnection()
         # 用户登录
+
+        # 信号绑定切换操作
+        self.switch_signal.connect(self.switch_page)
 
     def serverExcept(self):
         reply = QMessageBox.information(self, "登录", f'服务器异常', QMessageBox.Yes)
@@ -238,56 +244,66 @@ class MainController(QWidget):
         app.quit()
 
     # 页面切换
-    # 页面切换
     def switch_page(self, controller_name):
-        if self.previous_controller == 'diagTrainingController':
-            studyInfo = self.view.label_5.text()
-            if studyInfo is not None and studyInfo != '':
-                reply = QMessageBox.information(self, '提示',
-                                                "当前正在[诊断学习]中，请先单击[诊断学习]窗口右边的”返回,再切换菜单项。",
-                                                QMessageBox.Yes)
+        # 切换回主菜单
+        if controller_name == 'MainController':
+            if self.sub_view is not None:
+                self.sub_view.close()
+            if self.controller is not None:
+                self.controller.exit()
+            self.controller=None
+            self.generate_controller(controller_name)
+            self.sub_view = InitView()
+            self.view.verticalLayout_1.addWidget(self.sub_view)
+        else:
+            if self.previous_controller == 'diagTrainingController':
+                studyInfo = self.view.label_5.text()
+                if studyInfo is not None and studyInfo != '':
+                    reply = QMessageBox.information(self, '提示',
+                                                    "当前正在[诊断学习]中，请先单击[诊断学习]窗口右边的”返回,再切换菜单项。",
+                                                    QMessageBox.Yes)
+                    return
+            # elif self.previous_controller == 'dataImportController':
+            #     if self.controller.file_loading == 1:
+            #         QMessageBox.information(self, "脑电文件上传", f"上传文件：{self.controller.file_path}进行中，请先[暂停]文件上传。",
+            #                                 QMessageBox.Yes)
+            #         return
+
+            if self.sub_view is not None:
+                self.sub_view.close()
+
+            if self.controller is not None:
+                self.controller.exit()
+            self.controller=None
+            self.generate_controller(controller_name)
+
+            # # 判断是否生成新的子控制器
+            # if controller_name not in self.m_controllers.keys():
+            #     self.generate_controller(controller_name)
+            # else:
+            #     self.controller = self.m_controllers[controller_name]
+            #     self.controller.exit()
+            #     self.generate_controller(controller_name)
+
+            #if controller_name not in self.m_controllers and controller_name != "LoginController":
+            if self.controller is None:
+                QMessageBox.information(self, "系统提示", f'{controller_name}模块在开发中...,暂时不能使用.',
+                                        QMessageBox.Yes)
                 return
-        # elif self.previous_controller == 'dataImportController':
-        #     if self.controller.file_loading == 1:
-        #         QMessageBox.information(self, "脑电文件上传", f"上传文件：{self.controller.file_path}进行中，请先[暂停]文件上传。",
-        #                                 QMessageBox.Yes)
-        #         return
+            self.sub_view = self.controller.view
+            # try:
+            #     self.sub_view = self.m_controllers[controller_name].view
+            # except:
+            #     self.sub_view = self.controller.view
 
-        if self.sub_view is not None:
-            self.sub_view.close()
-
-        if self.controller is not None:
-            self.controller.exit()
-        self.controller=None
-        self.generate_controller(controller_name)
-
-        # # 判断是否生成新的子控制器
-        # if controller_name not in self.m_controllers.keys():
-        #     self.generate_controller(controller_name)
-        # else:
-        #     self.controller = self.m_controllers[controller_name]
-        #     self.controller.exit()
-        #     self.generate_controller(controller_name)
-
-        #if controller_name not in self.m_controllers and controller_name != "LoginController":
-        if  self.controller is None:
-            QMessageBox.information(self, "系统提示", f'{controller_name}模块在开发中...,暂时不能使用.',
-                                    QMessageBox.Yes)
-            return
-        self.sub_view = self.controller.view
-        # try:
-        #     self.sub_view = self.m_controllers[controller_name].view
-        # except:
-        #     self.sub_view = self.controller.view
-
-        while self.view.verticalLayout_1.count() > 1:
-            witem = self.view.verticalLayout_1.itemAt(self.view.verticalLayout_1.count() - 1)
-            witem.widget().hide()
-            self.view.verticalLayout_1.removeItem(witem)
-        self.sub_view.showMaximized()
-        self.view.verticalLayout_1.addWidget(self.sub_view)
-        self.previous_controller = controller_name
-        self.view.label_4.setText("")
+            while self.view.verticalLayout_1.count() > 1:
+                witem = self.view.verticalLayout_1.itemAt(self.view.verticalLayout_1.count() - 1)
+                witem.widget().hide()
+                self.view.verticalLayout_1.removeItem(witem)
+            self.sub_view.showMaximized()
+            self.view.verticalLayout_1.addWidget(self.sub_view)
+            self.previous_controller = controller_name
+            self.view.label_4.setText("")
 
     def generate_controller(self, controller_name):
         if controller_name == "LoginController":
@@ -359,6 +375,7 @@ class MainController(QWidget):
             #self.m_controllers[controller_name] = self.controller
         elif controller_name == "dataImportController":
             self.controller = dataImportController(client=self.client, cAppUtil=self.cAppUtil,mainMenubar=self.view.ui.menubar)
+            self.controller.switch_signal.connect(self.switch_signal.emit)
             #self.m_controllers[controller_name] = self.controller
         elif controller_name == "configOptionsController":
             self.controller = configOptionsController(client=self.client, cAppUtil=self.cAppUtil)

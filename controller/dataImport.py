@@ -22,14 +22,14 @@ from view.dataImport_form.doctor_table import DoctorTableWidget
 from view.progressBarView import ProgressBarView
 
 
-
-
 class dataImportController(QWidget):
     # 上传信号
     uploadFileSig = pyqtSignal()
     # 进度条相关信号
     upload_finished = pyqtSignal()
     upload_failed = pyqtSignal()
+    # 定义切换信号
+    switch_signal = pyqtSignal(str)
     # update_process = pyqtSignal(int)
     def __init__(self, client, cAppUtil, mainMenubar=None):
         super().__init__()
@@ -163,10 +163,18 @@ class dataImportController(QWidget):
 
         # 设置启动上传和退出上传的绑定事件
         self.view.ui.startUploadButton.clicked.connect(self.on_btnUploadStart_clicked)
-        self.view.ui.exitUploadButton.clicked.connect(self.on_btnUploadExit_clicked)
+        # self.view.ui.exitUploadButton.clicked.connect(self.on_btnReturn_clicked)
+        # 按钮点击时发送切换信号
+        self.view.ui.exitUploadButton.clicked.connect(self.on_btnExitUpload_clicked)
 
         # 暂存当前用户的config配置
         self.userConfig_info = []
+
+    def on_btnExitUpload_clicked(self):
+        # 发射切换信号，切换到 MainController
+        self.switch_signal.emit("MainController")
+        # 打开主菜单
+        self.mainMenubar.setEnabled(True)
 
     def showMessageBoxwithTimer(self, title, message, close_time=5000, buttons=QMessageBox.Ok):
         """
