@@ -5,7 +5,6 @@ from view.classifer_form.Ui_clsimport import Ui_clsimportForm
 from view.classifer_form.Ui_algorithmSelect import Ui_algorithmSelectForm
 from view.classifer_form.Ui_labelSelect import Ui_labelSelectForm
 from view.classifer_form.Ui_clsPrentry import Ui_clsPrentryForm
-from view.classifer_form.UI_clsupload import Ui_model_uploadForm
 from view.classifer_form.Ui_setselect import Ui_setselectForm
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import pyqtSignal
@@ -222,12 +221,6 @@ class clsimportView(QWidget):
         self.set = SetSelectView(curPageIndex_set)
         self.set.initTable(data, curPageIndex_set)
         self.set.setPageController_set(curPageMax_set)
-class clsuploadView(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.ui = Ui_model_uploadForm()
-        self.ui.setupUi(self)
-        self.saved_EEG_names = []
 class AlgorithmSelectView(QWidget):
     control_signal_al = pyqtSignal(list)
     def __init__(self,current_page,parent=None):

@@ -1,4 +1,4 @@
-from view.classifier import ClassifierView, clsimportView,clsuploadView,AlgorithmSelectView, LabelSelectVew,clsPrentryView,SetSelectView
+from view.classifier import ClassifierView, clsimportView,AlgorithmSelectView, LabelSelectVew,clsPrentryView,SetSelectView
 from view.classifer_form.question.question import Question
 from util.clientAppUtil import clientAppUtil
 
@@ -47,7 +47,7 @@ class classifierController(QWidget):
         self.root_path = os.path.dirname(os.path.dirname(__file__))+'\\'
         self.view.ui.btn_import.clicked.connect(self.on_btn_import_clicked)
         self.view.ui.btnDel.clicked.connect(self.on_btnDel_clicked)
-        self.view.ui.btn_upload.clicked.connect(self.onClicked_upload)
+        self.view.ui.btn_upload.clicked.connect(self.btnClicked_upload)
         self.view.ui.btnSelect.clicked.connect(lambda :self.on_clicked_select_classifier(pageIndex=1))
 
         self.update = -1
@@ -125,7 +125,7 @@ class classifierController(QWidget):
                 #self.is_reload_controller.emit("setBuildController")
                 QMessageBox.information(self, '提示', '删除模型信息成功', QMessageBox.Ok)
                 self.classifier_alg_set_name = REPData[3]
-                if  self.view.ui.btnSelect.text() == "取消查询": #在搜索时删除直接解除并返回
+                if  self.view.ui.btnSelect.text() == "全部显示": #在搜索时删除直接解除并返回
                     self.view.update_table(self.classifier_alg_set_name, self.curPageIndex, self.curPageMax)
                     self.view.ui.btnSelect.setText("查询")
                     self.search_classifier_page_info = None
@@ -180,7 +180,7 @@ class classifierController(QWidget):
             if self.curPageMax < int(signal[1]) or int(signal[1]) <= 0:
                 QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
                 return
-            if self.view.ui.lineValue.text() != '' and self.view.ui.btnSelect.text() == "取消查询":
+            if self.view.ui.lineValue.text() != '' and self.view.ui.btnSelect.text() == "全部显示":
                 if self.search_classifier_page_info < int(signal[1]) or int(signal[1]) <= 0:
                     QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
                     return
@@ -188,7 +188,7 @@ class classifierController(QWidget):
             self.view.curPage.setText(signal[1])
 
         msg = [self.curPageIndex, self.pageRows, signal[0]]
-        if self.view.ui.lineValue.text() != '' and self.view.ui.btnSelect.text() == "取消查询":
+        if self.view.ui.lineValue.text() != '' and self.view.ui.btnSelect.text() == "全部显示":
             self.is_search=True
             self.on_clicked_select_classifier(pageIndex=self.curPageIndex)
         else:
@@ -251,13 +251,13 @@ class classifierController(QWidget):
                 key_word = 'test_performance'
             REQmsg = [key_word, key_value,pageIndex,self.pageRows,self.view.state_select_name]
             if self.view.ui.btnSelect.text() == "查询":
-                self.view.ui.btnSelect.setText("取消查询")
+                self.view.ui.btnSelect.setText("全部显示")
                 self.restore_classifier=self.classifier_alg_set_name#查询前保存恢复数据
                 self.client.inquiryClassifierInfo(REQmsg)
             elif self.is_search==True: #翻页时处理
                 self.is_search=False
                 self.client.inquiryClassifierInfo(REQmsg)
-            elif self.view.ui.btnSelect.text() == "取消查询": #取消处理
+            elif self.view.ui.btnSelect.text() == "全部显示": #取消处理
                 self.client.inquiryClassifierInfo(['','',1,self.pageRows,''])
                 self.view.state_select_name=None
                 self.view.clear_select()
@@ -318,7 +318,7 @@ class classifierController(QWidget):
 
 
     # 模型选择按钮点击响应函数
-    def onClicked_upload(self):
+    def btnClicked_upload(self):
         path = os.path.dirname(os.path.dirname(__file__)) + '\\upload\\model\\'
         flag = self.cAppUtil.isNull(path)
         if flag == False:
@@ -330,66 +330,36 @@ class classifierController(QWidget):
                           not f.endswith(suffix_txt) and not f.endswith(suffix_json)]
             self.client.classifier_id_inquiry(file_names)  # 先检验服务器是否存在该名称的数据
             return
-        reply =QMessageBox.warning(self.view, '确认上传！', '您将进行上传模型的操作！',
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-        if reply == 16384:
-            self.row_content.clear()
-            selected_rows = self.view.table.selectionModel().selectedRows()
-            if selected_rows:
+        self.row_content.clear()
+        selected_rows = self.view.table.selectionModel().selectedRows()
+        if selected_rows:
+            selected_row = selected_rows[0].row()
+            for column in range(self.view.table.columnCount()):
+                item = self.view.table.item(selected_row, column)
+                if item:
+                    self.row_content.append(item.text())
 
-                selected_row = selected_rows[0].row()
-                for column in range(self.view.table.columnCount()):
-                    item = self.view.table.item(selected_row, column)
-                    if item:
-                        self.row_content.append(item.text())
-                self.upload_view = clsuploadView()
-                self.upload_view.show()
-                self.upload_view.ui.pushButton_model_select.clicked.connect(self.on_clicked_pushButton_model_select)
-                self.upload_view.ui.pushButton_upload.clicked.connect(self.on_clicked_upload)
-            else:
-                QMessageBox.information(self.view, ' ', '请先选中一行')
-                return
-        else:
-            return
-
-    def on_clicked_pushButton_model_select(self):
-        try:
             self.file_model = None
             model = QFileDialog.getOpenFileName(self, "选择模型文件", self.root_path)
             # 用户成功选择算法文件
             if model[0]:
                 self.file_model = model
-                f_name = self.file_model[0].split('/')[-1]
-                _translate = QtCore.QCoreApplication.translate
-                self.upload_view.ui.label_model_path.setText(_translate("model_import",
-                                                                        "<html><head/><body><p><span style=\" font-size:12pt;\">模型文件：" + f_name + "</span></p></body></html>"))
-        except Exception as e:
-            print('on_clicked_pushButton_model_select', e)
-    def on_clicked_upload(self):
-        model_file_type = self.file_model[0].split('/')[-1].split('.')[-1]  # 文件后缀
-        selected_item = self.upload_view.ui.Qcombox1.currentText()
-        nb_class=int(self.upload_view.ui.lineEdit_clsnum.text())
-        sample_lenth=int(self.upload_view.ui.lineEdit_epoch_length_name.text())
-        if selected_item=='状态':
-            type='state'
+                model_file_type = self.file_model[0].split('/')[-1].split('.')[-1]  # 文件后缀
+                msg = [self.row_content,model_file_type]
+                self.client.upload_model(msg)
         else:
-            type='wave'
-        msg=[self.row_content,model_file_type,type,nb_class,sample_lenth]
-        self.upload_view.close()
-        self.client.upload_model(msg)
+            QMessageBox.information(self.view, ' ', '请先选中一行')
+            return
+
     def upload_modelRes(self,REPmsg):
         if REPmsg[0]=='0':
             QMessageBox.information(self, '提示', '选择的模型不是准备上传状态', QMessageBox.Ok)
-            return
-        elif REPmsg[0]=='2':
-            QMessageBox.information(self, '提示', '模型匹配失败,请确认模型和数据集（算法）是否匹配', QMessageBox.Ok)
-            return
         else:
             self.client.checkstate([REPmsg[1]])
 
     def onClicked_pushButton_save(self):#保存模型
         model_name = self.import_view.ui.lineEdit_model_name.text()
-        epoch_len = self.import_view.ui.lineEdit_epoch_length_name.text()
+        epoch_len = int(self.import_view.ui.lineEdit_epoch_length_name.text())
         configID = self.configID
         channel_info = self.import_view.ui.lineEdit_channel_info.text()
         if not model_name:
@@ -420,9 +390,14 @@ class classifierController(QWidget):
             content_label = ''  # 所选的状态通道
             for item in self.import_view.saved_EEG_names:
                 content_label += item + '/'
-            selected_text = self.import_view.ui.Unit_comboCond.currentText()
+            selected_unit =self.import_view.ui.Unit_comboCond.currentText()
+            classifernum=int(self.import_view.ui.lineEdit_clsnum.text())
+            if self.import_view.ui.checkbox1.isChecked():
+                model_state='state'
+            else:
+                model_state='wave'
             self.client.upload_scheme([model_name, self.algorithm[0],self.set[0],
-                                                      epoch_len,configID,content_label,selected_text])
+                                                      epoch_len,configID,content_label,selected_unit,classifernum,model_state])
         except Exception as result:
             QMessageBox.information(self.import_view, '提示', "失败原因: %s" % result, QMessageBox.Yes)
             return
@@ -430,11 +405,15 @@ class classifierController(QWidget):
         if REPData[0]=='0':
             QMessageBox.information(self.import_view, '提示', '当前模型名称已存在，请更改', QMessageBox.Yes)
             return
-        else:
+        elif REPData[0]=='1':
             QMessageBox.information(self.import_view, '提示', '模型保存成功', QMessageBox.Yes)
             self.set = None
             self.algorithm = None
             self.import_view.close()
+        elif REPData[0]=='2':
+            QMessageBox.information(self.import_view, '提示', '模型匹配失败，请确认模型和数据集（算法）是否匹配', QMessageBox.Yes)
+            self.import_view.close()
+            return
 
     #上传④返回
     def checkstateRes(self,REPData):#REPData['1', REQmsg[1],classifier_info]

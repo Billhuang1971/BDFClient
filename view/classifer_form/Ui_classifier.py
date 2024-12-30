@@ -22,7 +22,7 @@ class Ui_ClassifierForm(object):
         #1
         self.comboCond = QtWidgets.QComboBox(ClassifierForm)
         font = QtGui.QFont()
-        font.setPointSize(16)
+        font.setPointSize(13)
         self.comboCond.setFont(font)
         self.comboCond.setObjectName("comboCond")
         self.horizontalLayout.addWidget(self.comboCond)
