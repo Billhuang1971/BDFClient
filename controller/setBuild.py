@@ -22,7 +22,7 @@ class setBuildController(QWidget):
         try:
             self.client = client
             self.cAppUtil = cAppUtil
-            self.view = setBulidView(controller=self)
+            self.view = setBulidView()
             # 进度条加载界面
             self.progressBarView = None
             # 当前添加的标注类型
@@ -82,6 +82,7 @@ class setBuildController(QWidget):
             self.client.getSetDescribeSig.connect(self.showDescribeRes)
             self.view.set_page_control_signal.connect(self.rg_paging)
             self.client.getSetExportDataResSig.connect(self.getSetExportDataRes)
+            self.view.ui.re_scheme.currentTextChanged.connect(self.on_reverse_scheme_changed)
             # 数据初始化
             self.init_data()
             # 表格初始化,界面初始化默认先显示数据集的信息
@@ -221,7 +222,13 @@ class setBuildController(QWidget):
             self.reverse_scheme_list = data[6]
             self.themeInfo = data[7]
 
-            self.init_reverse_scheme.emit([], [])
+            list_view_model = QStandardItemModel()
+            self.view.ui.re_scheme.setModel(list_view_model)
+            self.view.ui.re_scheme.clear()
+            item = QStandardItem()
+            item.setText("Random Select")
+            list_view_model.appendRow(item)
+
 
             revealMontage = ['Default'] + [item['name'] for item in self.montage]
             # 初始化试图

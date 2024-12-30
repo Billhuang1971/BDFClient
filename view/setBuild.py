@@ -13,43 +13,15 @@ from view.sampleState import QComboCheckBox
 class setBulidView(QWidget):
     set_page_control_signal = pyqtSignal(list)
 
-    def __init__(self, parent=None, controller=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.ui = Ui_Form()
-        self.controller = controller
         self.ui.setupUi(self)
         self.signal_connect()
         # self.ui.re_scheme.currentTextChanged.connect(self.set_re_scheme_tool_tip)
 
-    def init_reverse_scheme(self, rs_list, neg_desc_list):
-
-        list_view_model = QStandardItemModel()
-        self.ui.re_scheme.setModel(list_view_model)
-        self.ui.re_scheme.clear()
-        item = QStandardItem()
-        item.setText("Random Select")
-        list_view_model.appendRow(item)
-        # item = QStandardItem()
-        # item.setText("State Neg Model 1")
-        # list_view_model.appendRow(item)
-
-        # TODO 这边先注释掉
-        for rs in rs_list:
-            item = QStandardItem()
-            item.setText(rs)
-            list_view_model.appendRow(item)
-            # self.ui.re_scheme.addItem(rs)
-        i = 1
-        for nd in neg_desc_list:
-            list_view_model.item(i).setToolTip(nd)
-            i += 1
-
 
     def signal_connect(self):
-        # self.controller.re_scheme_signal.connect(self.model_import_show)
-        # self.controller.set_reverse_scheme_null.connect(self.set_current_scheme_null)
-        self.ui.re_scheme.currentTextChanged.connect(self.controller.on_reverse_scheme_changed)
-        self.controller.init_reverse_scheme.connect(self.init_reverse_scheme)
         self.ui.homePage.clicked.connect(self.home_page)
         self.ui.prePage.clicked.connect(self.pre_page)
         self.ui.nextPage.clicked.connect(self.next_page)
