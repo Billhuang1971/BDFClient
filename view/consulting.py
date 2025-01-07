@@ -6,58 +6,9 @@ from PyQt5.QtCore import Qt, QRect
 from PyQt5.QtGui import QFont
 
 from view.manual_form.diagList import Ui_diagList
-from view.manual_form.manual import Ui_ManualForm
-from view.manual_form.setBdf import Ui_SetBdf
-from view.manual_form.setting import Ui_Setting
 from view.manual_form.prentry import Ui_Prentry
-from view.manual_form.sign_info import Ui_diag_MainWindow
 
 from PyQt5.QtWidgets import *
-class ConsultingView(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.ui = Ui_ManualForm()
-        self.ui.setupUi(self)
-
-    # 显示病人相关信息
-    def show_patient_info(self, patient, file_name, measure_date, start_time, end_time):
-        name = patient[0][1]
-        birth = str(patient[0][2])
-        sex = patient[0][3]
-        self.ui.labelPatientName.setText(name)
-        self.ui.labelPatientBirth.setText(birth)
-        self.ui.labelPatientSex.setText(sex)
-        self.ui.labelPatientMeasure.setText(str(measure_date))
-        self.ui.labelFileName.setText(file_name)
-        meas_time = str(start_time) + ' - ' + str(end_time)
-        self.ui.labelMeasureTime.setText(meas_time)
-
-
-    # 显示样本信息
-    def show_sample_detail(self, type_name='', channel='', lent='', begin='', end='', amp='', user_name=''):
-        self.ui.labelType.setText(type_name)
-        self.ui.labelChannel.setText(channel)
-        if lent != '':
-            lent = str(round(float(lent), 3))
-        self.ui.labelLength.setText(lent)
-        self.ui.labelBegin.setText(begin)
-        self.ui.labelEnd.setText(end)
-        if amp != '':
-            amp = str(round(float(amp), 3))
-        self.ui.labelAmp.setText(amp)
-        self.ui.labelRole.setText(user_name)
-
-class BdfSettingView(QWidget):
-    def __init__(self, ckMontage, dgroup, dgroup_filter,parent=None):
-        super().__init__(parent)
-        self.ui = Ui_SetBdf()
-        self.ui.setupUi(self, ckMontage, dgroup, dgroup_filter)
-
-class SettingView(QWidget):
-    def __init__(self, type_name, user_name, type_filter, user_filter,parent=None):
-        super().__init__(parent)
-        self.ui = Ui_Setting()
-        self.ui.setupUi(self, type_name, user_name, type_filter, user_filter)
 
 class PrentryView(QWidget):
     def __init__(self,  parent=None):
@@ -65,30 +16,20 @@ class PrentryView(QWidget):
         self.ui = Ui_Prentry()
         self.ui.setupUi(self)
 
-class sign_InfoView(QMainWindow,QWidget):
-    def __init__(self,parent=None):
-        super().__init__(parent)
-        self.ui = Ui_diag_MainWindow()
-        self.ui.setupUi(self)
-
-class diagListView(QWidget):
+class DiagListView(QWidget):
     def __init__(self,parent=None):
         super().__init__(parent)
         self.ui = Ui_diagList()
         self.ui.setupUi(self)
-        # self.setWindowTitle("[脑电会诊]未诊断信息列表")
 
 
     def init_table(self, diags_viewInfo,curUser,userNamesDict,paitentNamesDict,on_clicked_manual_query,on_clicked_diag_query,on_clicked_diag_refused=None):
         try:
-
-            self.ui.tableWidget.clear()
             self.ui.tableWidget.setColumnCount(7)
             self.ui.tableWidget.setHorizontalHeaderLabels(
                 ["检查单号", '病人', '测量日期', '医生', '状态', '诊断时间', '操作'])
-            self.ui.tableWidget.removeRow(0)
             self.row_num = len(diags_viewInfo)
-            if self.row_num <=0:
+            if self.row_num <= 0:
                 self.ui.tableWidget.setRowCount(1)
                 self.ui.tableWidget.setItem(0, 0, QTableWidgetItem("[无]"))
                 self.ui.tableWidget.item(0, 0).setTextAlignment(Qt.AlignCenter)
@@ -187,6 +128,6 @@ class diagListView(QWidget):
     #    self.hide()
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    view = ConsultingView()
+    view = DiagListView()
     view.show()
     sys.exit(app.exec_())

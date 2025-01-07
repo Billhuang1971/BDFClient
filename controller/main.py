@@ -1,5 +1,6 @@
 from PyQt5.QtCore import pyqtSignal
 
+from controller.EEGController import EEGController
 from controller.classifier import classifierController
 from controller.algorithm import algorithmController
 from controller.consulting import consultingController
@@ -53,8 +54,11 @@ _translate = QtCore.QCoreApplication.translate
 
 
 class MainController(QWidget):
+    EEG_FOR_CONSULTING = 0
+
     # 定义模块切换信号
     switch_signal = pyqtSignal(str)
+
     def __init__(self, cAppUtil, client):
         super().__init__()
         self.cAppUtil = cAppUtil
@@ -244,7 +248,7 @@ class MainController(QWidget):
         app.quit()
 
     # 页面切换
-    def switch_page(self, controller_name):
+    def switch_page(self, controller_name,msg=None):
         # 切换回主菜单
         if controller_name == 'MainController':
             if self.sub_view is not None:
@@ -275,7 +279,10 @@ class MainController(QWidget):
             if self.controller is not None:
                 self.controller.exit()
             self.controller=None
-            self.generate_controller(controller_name)
+            if controller_name == 'EEGController':
+                self.generate_controller(controller_name, msg)
+            else:
+                self.generate_controller(controller_name)
 
             # # 判断是否生成新的子控制器
             # if controller_name not in self.m_controllers.keys():
@@ -305,7 +312,7 @@ class MainController(QWidget):
             self.previous_controller = controller_name
             self.view.label_4.setText("")
 
-    def generate_controller(self, controller_name):
+    def generate_controller(self, controller_name,msg=None):
         if controller_name == "LoginController":
             self.controller = loginController(client=self.client, cAppUtil=self.cAppUtil)
             self.controller.signal_login_user_info.connect(self.userLogin)
@@ -338,11 +345,10 @@ class MainController(QWidget):
             self.controller = basicConfigController(client=self.client, cAppUtil=self.cAppUtil)
             self.m_controllers[controller_name] = self.controller
         elif controller_name == "consultingController":
-            self.controller = consultingController(appUtil=self.cAppUtil, Widget=self.view.label_4,
-                                                   client=self.client,
-                                                   mainMenubar=self.view.ui.menubar,
-                                                   mainLayout=self.view.verticalLayout_1)
-            #self.m_controllers[controller_name] = self.controller
+            self.controller = consultingController(appUtil=self.cAppUtil,
+                                                   client=self.client)
+            self.controller.switchToEEG.connect(self.switchToEEGPage)
+            self.m_controllers[controller_name] = self.controller
         elif controller_name == "diagTrainingController":
             self.controller = diagTrainingController(appUtil=self.cAppUtil, Widget=self.view.label_4,
                                                      client=self.client,
@@ -420,7 +426,8 @@ class MainController(QWidget):
             #self.m_controllers[controller_name] = self.controller
         elif controller_name == "clearLabelController":
             self.controller = clearLabelController(client=self.client, cAppUtil=self.cAppUtil)
-
+        elif controller_name == "EEGController":
+            self.controller = EEGController(client=self.client, appUtil=self.cAppUtil, msg=msg, mainLabel=self.view.label_4)
     def handle_controller_reload(self, controller_name):
         try:
             if controller_name in self.m_controllers.keys():
@@ -429,6 +436,12 @@ class MainController(QWidget):
             # self.m_controllers_view.pop(controller_name)
         except:
             pass
+
+    def switchToEEGPage(self, msg):
+        self.switch_page('EEGController', msg)
+
+    def switchFromEEGPage(self, msg:str):
+        self.switch_page(controller_name = msg)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

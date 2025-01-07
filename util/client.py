@@ -148,7 +148,6 @@ class client(QObject, socketClient):
     add_sampleInfo11ResSig = pyqtSignal(list)
 
     load_dataDynamicalResSig = pyqtSignal(list)
-    openEEGFileResSig = pyqtSignal(list)
     get_fileNameByIdDateResSig = pyqtSignal(list)
 
     ## dsj ] ===
@@ -444,6 +443,12 @@ class client(QObject, socketClient):
     getLabelInfoByAssessResSig = pyqtSignal(list)
     getSearchScanFileInfoResSig = pyqtSignal(list)
 
+    # EEG脑电图显示
+    openEEGFileResSig = pyqtSignal(list)
+    loadDataDynamicalSig = pyqtSignal(list)
+    insertSampleSig = pyqtSignal(list)
+
+
     def __init__(self, s_ip=None, s_port=None, cAppUtil=None):
         super().__init__()
         # tUser存放的信息顺序为
@@ -455,6 +460,19 @@ class client(QObject, socketClient):
         self.cAppUtil = cAppUtil
         self.macAddr = self.cAppUtil.getMacAddress()
 
+    # EEG 脑电图绘制
+
+    def openEEGFile(self, REQdata):
+        REQdata.insert(0, self.macAddr)
+        msg = ["EEG", 0, self.tUser[0], REQdata]
+        self.sendRequest(msg)
+
+    def loadDataDynamical(self, check_id, file_id, readFrom, readTo):
+        msg = ['EEG', 1, self.tUser[0], [self.macAddr, check_id, file_id, readFrom, readTo]]
+        self.sendRequest(msg)
+
+    def loadDataDynamicalRes(self, REPmsg):
+        self.loadDataDynamicalSig.emit(list(REPmsg))
 
     ## dsj [ ===
 
@@ -1461,10 +1479,7 @@ class client(QObject, socketClient):
         self.load_dataDynamicalResSig.emit(list(REPmsg[3]))
 
     # 标注诊断/打开脑电文件
-    def openEEGFile(self, REQdata):
-        REQdata.insert(0, self.macAddr)
-        msg = ["manual", 8, self.tUser[0], REQdata]
-        self.sendRequest(msg)
+
 
     # 回调，处理服务端回传的标注诊断/打开脑电文件结果
     def openEEGFileRes(self, REPmsg):
@@ -3920,8 +3935,6 @@ class client(QObject, socketClient):
         elif REQmsg[0] == 'manual' and REQmsg[1] == 9:
             self.load_dataDynamicalRes(REQmsg)
         # 标注诊断/打开脑电文件
-        elif REQmsg[0] == 'manual' and REQmsg[1] == 8:
-            self.openEEGFileRes(REQmsg)
         # 标注诊断/脑电文件
         elif REQmsg[0] == 'manual' and REQmsg[1] == 7:
             self.get_fileNameByIdDateRes(REQmsg)
@@ -4445,6 +4458,11 @@ class client(QObject, socketClient):
         elif REQmsg[0] == 'clearLabel' and REQmsg[1] == 10:
             self.getSearchScanFileInfoRes(REQmsg)
 
+        # EEG 脑电图绘制
+        elif REQmsg[0] == 'EEG' and REQmsg[1] == 0:
+            self.openEEGFileRes(REQmsg)
+        elif REQmsg[0] == 'EEG' and REQmsg[1] == 1:
+            self.loadDataDynamicalRes(REQmsg)
 
         else:
             print(f"{REQmsg[0]}.{REQmsg[1]}未定义")
