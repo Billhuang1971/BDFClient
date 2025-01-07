@@ -69,8 +69,7 @@ class EEGData(object):
         data = self.data[:, from_time: to_time]
         return data
 
-    def initHeadData(self, channels, index_channels, lenFile, lenBlock):
-        self.channels = channels
-        self.index_channels = index_channels
+    def initEEGData(self, lenFile, lenBlock):
+        self.data = np.array([])
         self.lenFile = lenFile
         self.lenBlock = lenBlock

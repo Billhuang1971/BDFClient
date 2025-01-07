@@ -72,10 +72,8 @@ class EEGView(QWidget):
         self.wave_lines = []
         self.state_lines = []
         self.sen = 0
-        self.moveLength = 0
 
         self.create_paint_tools()
-        self.ui.moveLength.setCurrentText(str(self.moveLength))
 
     def setTypeInfo(self, type_info):
         self.type_info = type_info
@@ -126,18 +124,20 @@ class EEGView(QWidget):
         figureSize = self.ui.listView.size()
         figureWidth = figureSize.width()
         figureHeight = figureSize.height()
-        print(figureWidth, figureHeight)
         screen = QApplication.primaryScreen()
         xDPI = screen.physicalDotsPerInchX()
         yDPI = screen.physicalDotsPerInchY()
-        print(xDPI, yDPI)
         figureWidthMM = (figureWidth / xDPI) * 25.4
         figureHeightMM = (figureHeight / yDPI) * 25.4
-        axesXWidthMM = x_fraction * figureWidthMM
-        self.lenWin = int(round(axesXWidthMM / self.secondsSpan))
-        print(self.lenWin)
-        self.moveLength = self.lenWin
-        self.sen = (len(self.channels_name) + 1) / (y_fraction * figureHeightMM)
+        self.axesXWidthMM = x_fraction * figureWidthMM
+        self.axesYWidthMM = y_fraction * figureHeightMM
+        self.lenWin = int(round(self.axesXWidthMM / self.secondsSpan))
+        self.ui.moveLength.setCurrentText(str(self.lenWin))
+        self.sen = (len(self.channels_name) + 1) / self.axesYWidthMM
+
+    def secondsSpanChange(self, secondsSpan):
+        self.secondsSpan = secondsSpan
+        self.lenWin = int(round(self.axesXWidthMM / self.secondsSpan))
 
     def updateXAxis(self):
         self.axes.set_xlim([self.begin, self.end])

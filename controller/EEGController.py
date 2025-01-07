@@ -40,7 +40,7 @@ class EEGController(QWidget):
             self.channels = msg[1]
             self.index_channels = msg[2]
             sample_rate = msg[3]
-            self.n_times = msg[4]
+            self.lenFile = msg[4]
             self.duration = msg[5]
             self.start_time = msg[6]
             self.end_time = msg[7]
@@ -61,22 +61,31 @@ class EEGController(QWidget):
                                         self.end_time)
             self.view.show()
             self.view.calc_sen()
+            self.moveLen = self.view.getLenWin()
 
-            self.lenWin = self.view.getLenWin()
-            self.toBlock = self.lenWin * sample_rate
-            self.moveLen = self.lenWin
-            self.lenBlock = self.lenWin * 3 * sample_rate
-            self.updateTo = self.lenBlock
-            self.updateFrom = 0
-            self.fromBlock = 0
-            self.left_time = 0
-            self.right_time = min(self.lenWin, self.duration)
-            self.readFrom = 0
-            self.readTo = self.lenBlock
-            self.case = 1
-            self.data.initHeadData(self.channels, self.index_channels, self.n_times, self.lenBlock)
-            self.client.loadDataDynamical(self.check_id, self.file_id, self.readFrom, self.readTo)
+            self.updateSetting()
 
+
+    def insertSampleRes(self):
+        pass
+
+    def insertSample(self):
+        pass
+
+    def updateSetting(self):
+        self.lenWin = self.view.getLenWin()
+        self.toBlock = self.view.getIdx(self.lenWin)
+        self.lenBlock = self.view.getIdx(self.lenWin * 5)
+        self.updateTo = self.lenBlock
+        self.updateFrom = 0
+        self.fromBlock = 0
+        self.left_time = 0
+        self.right_time = min(self.lenWin, self.duration)
+        self.readFrom = 0
+        self.readTo = self.lenBlock
+        self.case = 1
+        self.data.initEEGData(self.lenFile, self.lenBlock)
+        self.client.loadDataDynamical(self.check_id, self.file_id, self.readFrom, self.readTo)
 
     def loadDataDynamicalRes(self, REPData):
         msg = REPData[3][2]
@@ -86,11 +95,9 @@ class EEGController(QWidget):
         self.view.updateSamples(self.readFrom, self.readTo, self.case, samples_info)
         data = self.data.getData(self.fromBlock, self.toBlock)
         self.view.refreshWin(data, self.left_time, self.right_time)
-        self.checkSolution()
 
     def connetEvent(self):
         self.view.insertSample.connect(self.insertSample)
-
         self.view.ui.btnUp.clicked.connect(self.onBtnDownClicked)
         self.view.ui.btnDown.clicked.connect(self.onBtnUpClicked)
         self.view.ui.btnUping.clicked.connect(self.onBtnUpingClicked)
@@ -103,6 +110,8 @@ class EEGController(QWidget):
         self.view.ui.tableWidget.itemClicked.connect(self.onSampleClicked)
         self.view.ui.hideWave.clicked.connect(self.hideWave)
         self.view.ui.hideState.clicked.connect(self.hideState)
+        self.view.ui.secondsSpan.lineEdit().editingFinished.connect(self.secondsSpanChange)
+        self.view.ui.moveLength.lineEdit().editingFinished.connect(self.moveLengthChange)
 
         self.view.canvas.mpl_connect("pick_event", self.handlePickEvent)
         self.view.canvas.mpl_connect("button_release_event", self.doMouseReleaseEvent)
@@ -111,11 +120,14 @@ class EEGController(QWidget):
         self.view.canvas.setFocusPolicy(Qt.ClickFocus)
         self.view.canvas.setFocus()
 
-    def insertSample(self, sample):
-        pass
+    def secondsSpanChange(self):
+        secondsSpan = self.view.ui.secondsSpan.lineEdit().text()
+        self.view.secondsSpanChange(int(secondsSpan))
+        self.updateSetting()
 
-    def insertSampleRes(self):
-        pass
+    def moveLengthChange(self):
+        moveLength = self.view.ui.moveLength.lineEdit().text()
+        self.moveLen = int(moveLength)
 
     def onSampleClicked(self, item=None):
         if item is None:
