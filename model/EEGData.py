@@ -8,13 +8,6 @@ class EEGData(object):
         self.data = np.array([])
         self.lenFile = None
 
-        self.channels = None
-        self.index_channels = None
-        self.montages = {}
-
-    def setMontages(self, montages):
-        self.montages = montages
-
     def queryRange(self, startWin, lenWin):
         if startWin >= self.startBlock and startWin + lenWin <= self.startBlock + self.lenBlock:
             fromBlock = startWin - self.startBlock

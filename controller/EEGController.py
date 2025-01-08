@@ -52,7 +52,6 @@ class EEGController(QWidget):
 
             self.connetEvent()
 
-            self.data.setMontages(self.montage)
             self.view.updateYAxis(channels_name=self.channels)
             self.view.setSampleRate(sample_rate)
             self.view.setAxHscroll(self.duration)
@@ -61,9 +60,21 @@ class EEGController(QWidget):
                                         self.end_time)
             self.view.show()
             self.view.calc_sen()
-            self.moveLen = self.view.getLenWin()
 
-            self.updateSetting()
+            self.lenWin = self.view.getLenWin()
+            self.moveLen = self.lenWin
+            self.toBlock = self.view.getIdx(self.lenWin)
+            self.lenBlock = self.view.getIdx(self.lenWin * 5)
+            self.updateTo = self.lenBlock
+            self.updateFrom = 0
+            self.fromBlock = 0
+            self.left_time = 0
+            self.right_time = min(self.lenWin, self.duration)
+            self.readFrom = 0
+            self.readTo = self.lenBlock
+            self.case = 1
+            self.data.initEEGData(self.lenFile, self.lenBlock)
+            self.client.loadDataDynamical(self.check_id, self.file_id, self.readFrom, self.readTo)
 
 
     def insertSampleRes(self):
@@ -71,21 +82,6 @@ class EEGController(QWidget):
 
     def insertSample(self):
         pass
-
-    def updateSetting(self):
-        self.lenWin = self.view.getLenWin()
-        self.toBlock = self.view.getIdx(self.lenWin)
-        self.lenBlock = self.view.getIdx(self.lenWin * 5)
-        self.updateTo = self.lenBlock
-        self.updateFrom = 0
-        self.fromBlock = 0
-        self.left_time = 0
-        self.right_time = min(self.lenWin, self.duration)
-        self.readFrom = 0
-        self.readTo = self.lenBlock
-        self.case = 1
-        self.data.initEEGData(self.lenFile, self.lenBlock)
-        self.client.loadDataDynamical(self.check_id, self.file_id, self.readFrom, self.readTo)
 
     def loadDataDynamicalRes(self, REPData):
         msg = REPData[3][2]
@@ -106,7 +102,7 @@ class EEGController(QWidget):
         self.view.ui.btnEnd.clicked.connect(self.onBtnEndClicked)
         self.view.ui.editTime.editingFinished.connect(self.timeChange)
         self.view.ui.btnStateAnnotate.clicked.connect(self.btnStateAnnotateClicked)
-        self.view.ui.btnRuler.clicked.connect(self.onRulerClicked)
+        self.view.ui.secondsLine.clicked.connect(self.secondsLineClicked)
         self.view.ui.tableWidget.itemClicked.connect(self.onSampleClicked)
         self.view.ui.hideWave.clicked.connect(self.hideWave)
         self.view.ui.hideState.clicked.connect(self.hideState)
@@ -123,7 +119,19 @@ class EEGController(QWidget):
     def secondsSpanChange(self):
         secondsSpan = self.view.ui.secondsSpan.lineEdit().text()
         self.view.secondsSpanChange(int(secondsSpan))
-        self.updateSetting()
+        self.lenWin = self.view.getLenWin()
+        self.toBlock = self.view.getIdx(self.lenWin)
+        self.lenBlock = self.view.getIdx(self.lenWin * 9)
+        self.updateTo = self.lenBlock
+        self.updateFrom = 0
+        self.fromBlock = 0
+        self.left_time = 0
+        self.right_time = min(self.lenWin, self.duration)
+        self.readFrom = 0
+        self.readTo = self.lenBlock
+        self.case = 1
+        self.data.initEEGData(self.lenFile, self.lenBlock)
+        self.client.loadDataDynamical(self.check_id, self.file_id, self.readFrom, self.readTo)
 
     def moveLengthChange(self):
         moveLength = self.view.ui.moveLength.lineEdit().text()
@@ -142,9 +150,9 @@ class EEGController(QWidget):
     def hideState(self):
         self.view.changeShowState()
 
-    def onRulerClicked(self):
-        self.view.changeTimeLine()
-        self.view.checkTimeLine()
+    def secondsLineClicked(self):
+        self.view.changeSecondsLine()
+        self.view.checkSecondsLine()
 
     def timeChange(self):
         reg = QRegExp(r"^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$")
@@ -309,6 +317,7 @@ class EEGController(QWidget):
             # 点击样本
             else:
                 self.view.clickSample(artist)
+
     def doMouseReleaseEvent(self, event):
         # 左键
         if event.button == 1:
