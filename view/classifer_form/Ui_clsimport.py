@@ -149,7 +149,7 @@ class Ui_clsimportForm(object):
         self.Unit_comboCond = QtWidgets.QComboBox()
         self.Unit_comboCond.setFont(font)
         self.Unit_comboCond.setObjectName("comboCond")
-        self.Unit_comboCond.addItems(["V", "mV", "mμV"])
+        self.Unit_comboCond.addItems(["V", "mV", "muV"])
         spacerItem_4 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         horizon_layout_11 = QtWidgets.QHBoxLayout()
         horizon_layout_11.addWidget(self.label_unit)

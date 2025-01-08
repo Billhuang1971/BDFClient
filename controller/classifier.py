@@ -125,7 +125,7 @@ class classifierController(QWidget):
                 #self.is_reload_controller.emit("setBuildController")
                 QMessageBox.information(self, '提示', '删除模型信息成功', QMessageBox.Ok)
                 self.classifier_alg_set_name = REPData[3]
-                if  self.view.ui.btnSelect.text() == "全部显示": #在搜索时删除直接解除并返回
+                if self.view.ui.btnSelect.text() == "全部显示": #在搜索时删除直接解除并返回
                     self.view.update_table(self.classifier_alg_set_name, self.curPageIndex, self.curPageMax)
                     self.view.ui.btnSelect.setText("查询")
                     self.search_classifier_page_info = None
@@ -362,6 +362,8 @@ class classifierController(QWidget):
         epoch_len = int(self.import_view.ui.lineEdit_epoch_length_name.text())
         configID = self.configID
         channel_info = self.import_view.ui.lineEdit_channel_info.text()
+        classifernum = int(self.import_view.ui.lineEdit_clsnum.text())
+        selected_unit = self.import_view.ui.Unit_comboCond.currentText()
         if not model_name:
             QMessageBox.information(self.import_view, '提示', '请输入模型名称', QMessageBox.Yes)
             return
@@ -377,6 +379,15 @@ class classifierController(QWidget):
         if not self.set:
             QMessageBox.information(self.import_view, '提示', '尚未选择模型的数据集', QMessageBox.Yes)
             return
+        if not classifernum:
+            QMessageBox.information(self.import_view, '提示', '尚未选择分类数目', QMessageBox.Yes)
+            return
+        if not selected_unit:
+            QMessageBox.information(self.import_view, '提示', '尚未选择数据单位', QMessageBox.Yes)
+            return
+        if not self.import_view.ui.checkbox1.isChecked() and not self.import_view.ui.checkbox2.isChecked():
+            QMessageBox.information(self.import_view, '提示', '尚未选择分类任务', QMessageBox.Yes)
+            return
         try:
             label_names = ''
             first = True
@@ -390,8 +401,7 @@ class classifierController(QWidget):
             content_label = ''  # 所选的状态通道
             for item in self.import_view.saved_EEG_names:
                 content_label += item + '/'
-            selected_unit =self.import_view.ui.Unit_comboCond.currentText()
-            classifernum=int(self.import_view.ui.lineEdit_clsnum.text())
+
             if self.import_view.ui.checkbox1.isChecked():
                 model_state='state'
             else:

@@ -1,4 +1,5 @@
 from PyQt5.QtGui import QBrush
+from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 from view.classifer_form.Ui_classifier import Ui_ClassifierForm
 from view.classifer_form.Ui_clsimport import Ui_clsimportForm
@@ -10,14 +11,30 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import pyqtSignal
 
 
+class CustomDialog(QDialog):
+    def __init__(self, message):
+        super().__init__()
+        layout = QVBoxLayout()
+        label = QLabel(message)
+        font =QFont()
+        font.setPointSize(16)
+        label.setFont(font)
+        layout.addWidget(label)
+        self.setWindowTitle("更多信息")
+        close_button = QPushButton("关闭")
+        close_button.clicked.connect(self.close)
+        layout.addWidget(close_button)
+        self.resize(200, 100)
+        self.setLayout(layout)
+
 class ClassifierView(QWidget):
     control_signal = pyqtSignal(list)
     def __init__(self, parent=None):
         super().__init__(parent)
         self.ui = Ui_ClassifierForm()
         self.ui.setupUi(self)
-        self.header = ['分类器模型名称', '算法名称', '数据集名称', '训练性能', '测试性能']
-        self.field = ['classifier_name', 'alg_name', 'set_name', 'train_performance', 'test_performance']
+        self.header = ['分类器模型名称', '算法名称', '数据集名称','扫描段长','数据单位','分类任务','更多信息']
+        self.field = ['classifier_name', 'alg_name', 'set_name', 'epoch_lenth','classifierUnit','type','more']
         self.table = QTableWidget()
         self.cur_page=0
         self.state_select_name=None
@@ -35,15 +52,10 @@ class ClassifierView(QWidget):
 
     def initTable(self, data,curPageIndex):
         self.cur_page = curPageIndex
-        style_sheet = """
+        self.style_sheet = """
                            QTableWidget {
                                border: 1px solid blue;
                                background-color:rgb(255,255,255)
-                           }
-                           QPushButton{
-                               max-width: 30ex;
-                               max-height: 12ex;
-                               font-size: 14px;
                            }
                            QLineEdit{
                                max-width: 30px
@@ -59,9 +71,8 @@ class ClassifierView(QWidget):
             for i in range(row_num):
                 self.table.setRowHeight(i, 45)
             # 设置除最后一列之外的列的宽度
-            for i in range(0, col_num - 1):
+            for i in range(0, col_num-1):
                 self.table.setColumnWidth(i, 150)
-
             for i in range(col_num):
                 header_item = QTableWidgetItem(self.header[i])
                 font = header_item.font()
@@ -75,14 +86,31 @@ class ClassifierView(QWidget):
 
             for r in range(row_num):
                 for c in range(col_num):
-                    self.item = QTableWidgetItem(str(data[r][c]))
-                    self.item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                    self.item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
-                    font = self.item.font()
-                    font.setPointSize(10)
-                    self.item.setFont(font)
+                    if c < col_num-2:
+                        self.item = QTableWidgetItem(str(data[r][c]))
+                        self.item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                        self.item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                        font = self.item.font()
+                        font.setPointSize(10)
+                        self.item.setFont(font)
+                        self.table.setItem(r, c, self.item)
+                    elif c ==col_num-1:
+                        button = QPushButton("查看更多参数")
+                        font = button.font()
+                        font.setPointSize(20)
+                        button.setFont(font)
+                        button.setStyleSheet("color: blue;")
+                        button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+                        button.clicked.connect(lambda _, para_channels=data[r][c],para_train=data[r][c+1],para_test=data[r][c+2]: self.show_custom_message(para_channels,para_train, para_test))
+                        button_widget = QWidget()
+                        button_layout = QHBoxLayout(button_widget)
+                        button_layout.addWidget(button)
+                        button_layout.setContentsMargins(0, 0, 0, 0)  # 移除按钮与单元格边框的间距
+                        button_layout.setSpacing(0)  # 去除子部件之间的间距
+                        # 设置 QWidget 为单元格内容
+                        self.table.setCellWidget(r, c, button_widget)
+                        #self.table.setCellWidget(r, c, button)
 
-                    self.table.setItem(r, c, self.item)
             self.table.horizontalHeader().setHighlightSections(False)
             #   按字段长度进行填充
             self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -93,9 +121,15 @@ class ClassifierView(QWidget):
             # 增加和查询的时候列数会改变，所以需要保存原来的列数
             self.col = self.table.columnCount()
             self.ui.verticalLayout_2.addWidget(self.table)
-            self.setStyleSheet(style_sheet)
+            self.setStyleSheet(self.style_sheet)
         except Exception as e:
             print('initTable', e)
+
+    def show_custom_message(self, para_channels,para_train, para_test):
+        custom_message = (f"训练性能参数： {para_train}, 测试性能参数:{para_test}\n"
+                          f"通道列表：{para_channels}")
+        dialog = CustomDialog(custom_message)
+        dialog.exec_()
     def update_table(self,data,curPageIndex,curpagemax=''):
 
         self.cur_page = curPageIndex
@@ -129,19 +163,38 @@ class ClassifierView(QWidget):
 
         for r in range(row_num):
             for c in range(col_num):
-                self.item = QTableWidgetItem(str(data[r][c]))
-                self.item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
-                font = self.item.font()
-                font.setPointSize(10)
-                self.item.setFont(font)
+                if c < col_num - 1:
+                    self.item = QTableWidgetItem(str(data[r][c]))
+                    self.item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    self.item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                    font = self.item.font()
+                    font.setPointSize(10)
+                    self.item.setFont(font)
+                    self.table.setItem(r, c, self.item)
+                else:
+                    button = QPushButton("查看更多参数")
+                    font = button.font()
+                    font.setPointSize(20)
+                    button.setFont(font)
+                    button.setStyleSheet("color: blue;")
+                    button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+                    button.clicked.connect(lambda _, para_channels=data[r][c], para_train=data[r][c + 1],
+                                                  para_test=data[r][c + 2]: self.show_custom_message(para_channels,
+                                                                                                     para_train,
+                                                                                                     para_test))
+                    button_widget = QWidget()
+                    button_layout = QHBoxLayout(button_widget)
+                    button_layout.addWidget(button)
+                    button_layout.setContentsMargins(0, 0, 0, 0)  # 移除按钮与单元格边框的间距
+                    button_layout.setSpacing(0)  # 去除子部件之间的间距
+                    self.table.setCellWidget(r, c, button_widget)
 
-                self.table.setItem(r, c, self.item)
         self.table.horizontalHeader().setHighlightSections(False)
 
         #   按字段长度进行填充
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
+        self.setStyleSheet(self.style_sheet)
     def reject(self):
         pass
     def setPageController(self, page):
