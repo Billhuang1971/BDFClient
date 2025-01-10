@@ -4,65 +4,89 @@ import numpy as np
 class EEGData(object):
     def __init__(self):
         self.startBlock = 0
-        self.lenBlock = None
+        self.lenBlock = 0
         self.data = np.array([])
-        self.lenFile = None
+        self.lenFile = 0
+        self.updateFrom = 0
+        self.updateTo = 0
+        self.case = 0
+        self.fromBlock = 0
+        self.toBlock = 0
+        self.nSamples = 0
+        self.lenWin = 0
+        self.labels = []
 
-    def queryRange(self, startWin, lenWin):
-        if startWin >= self.startBlock and startWin + lenWin <= self.startBlock + self.lenBlock:
-            fromBlock = startWin - self.startBlock
-            toBlock = startWin - self.startBlock + lenWin
-            return [True, None, None, int(fromBlock), int(toBlock), None, None, 0]
-        if startWin - (self.lenBlock - lenWin) / 2 < 0:
+    def queryRange(self, startWin):
+        if startWin >= self.startBlock and startWin + self.lenWin <= self.startBlock + self.lenBlock:
+            self.fromBlock = startWin - self.startBlock
+            self.toBlock = startWin - self.startBlock + self.lenWin
+            self.case = 0
+            return [True, None, None]
+        if startWin - (self.lenBlock - self.lenWin) / 2 < 0:
             readFrom = 0
             readTo = self.lenBlock
-            fromBlock = startWin
-            toBlock = fromBlock + lenWin
-        elif startWin + lenWin + (self.lenBlock - lenWin) / 2 > self.lenFile:
+            self.fromBlock = startWin
+            self.toBlock = self.fromBlock + self.lenWin
+        elif startWin + self.lenWin + (self.lenBlock - self.lenWin) / 2 > self.lenFile:
             readFrom = self.lenFile - self.lenBlock
             readTo = self.lenFile
-            fromBlock = startWin - (self.lenFile - self.lenBlock)
-            toBlock = fromBlock + lenWin
+            self.fromBlock = startWin - (self.lenFile - self.lenBlock)
+            self.toBlock = self.fromBlock + self.lenWin
         else:
-            readFrom = startWin - (self.lenBlock - lenWin) / 2
-            readTo = startWin + lenWin + (self.lenBlock - lenWin) / 2
-            fromBlock = (self.lenBlock - lenWin) / 2
-            toBlock = fromBlock + lenWin
+            readFrom = startWin - (self.lenBlock - self.lenWin) / 2
+            readTo = startWin + self.lenWin + (self.lenBlock - self.lenWin) / 2
+            self.fromBlock = (self.lenBlock - self.lenWin) / 2
+            self.toBlock = self.fromBlock + self.lenWin
         if self.startBlock + self.lenBlock <= readFrom or self.startBlock >= readTo:
             self.startBlock = readFrom
-            return [False, int(readFrom), int(readTo), int(fromBlock), int(toBlock), 0, int(self.lenBlock), 1]
+            self.case = 1
+            return [False, int(readFrom), int(readTo)]
         if self.startBlock + self.lenBlock < readTo:
             mid = int(readFrom - self.startBlock)
             self.data = self.data[:, mid:]
-            updateFrom = self.lenBlock - readFrom + self.startBlock
-            updateTo = self.lenBlock
+            self.updateFrom = self.lenBlock - readFrom + self.startBlock
+            self.updateTo = self.lenBlock
             startBlock = self.startBlock
             self.startBlock = readFrom
             readFrom = startBlock + self.lenBlock
-            case = 2
+            self.case = 2
         else:
             mid = int(readTo - self.startBlock)
             self.data = self.data[:, :mid]
-            updateFrom = 0
-            updateTo = self.startBlock - readFrom
+            self.updateFrom = 0
+            self.updateTo = self.startBlock - readFrom
             readTo = self.startBlock
             self.startBlock = readFrom
-            case = 3
-        return [False, int(readFrom), int(readTo), int(fromBlock), int(toBlock), int(updateFrom), int(updateTo), case]
+            self.case = 3
+        return [False, int(readFrom), int(readTo)]
 
-    def setData(self, EEG, from_time, to_time):
-        if from_time == 0 and to_time == self.lenBlock:
+    def setData(self, EEG):
+        if self.updateFrom == 0 and self.updateTo == self.lenBlock:
             self.data = EEG
-        elif from_time == 0:
+        elif self.updateFrom == 0:
             self.data = np.hstack((EEG, self.data))
         else:
             self.data = np.hstack((self.data, EEG))
 
-    def getData(self, from_time, to_time):
-        data = self.data[:, from_time: to_time]
-        return data
+    def getData(self):
+        data = self.data[:, self.fromBlock: self.toBlock]
+        labels = []
+        for label in self.labels:
+            if label[2] < self.startBlock + self.fromBlock:
+                continue
+            if label[2] >= self.startBlock + self.toBlock:
+                break
+            labels.append(label)
+        return data, labels
 
-    def initEEGData(self, lenFile, lenBlock):
-        self.data = np.array([])
+    def initEEGData(self, data, lenFile, lenBlock, nSample, lenWin, labels):
+        self.data = data
         self.lenFile = lenFile
         self.lenBlock = lenBlock
+        self.nSample = nSample
+        self.updateFrom = 0
+        self.updateTo = lenBlock
+        self.lenWin = lenWin
+        self.fromBlock = 0
+        self.toBlock = lenWin
+        self.labels = labels

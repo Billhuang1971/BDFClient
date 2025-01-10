@@ -26,57 +26,48 @@ class EEGController(QWidget):
         self.return_from=msg[5]
         self.mainLabel = mainLabel
         self.view = EEGView()
+        self.view.calcSen()
+        self.secondsSpan = 30
+        nWinBlock = 11
+        self.nSecWin, nDotSec = self.view.changeSecondsSpan(self.secondsSpan)
+        self.moveLen = self.nSecWin
+        self.view.ui.moveLength.setCurrentText(str(self.moveLen))
 
         self.client.openEEGFileResSig.connect(self.openEEGFileRes)
         self.client.loadDataDynamicalSig.connect(self.loadDataDynamicalRes)
         self.client.insertSampleSig.connect(self.insertSampleRes)
-        self.client.openEEGFile([self.patient_id, self.check_id, self.file_id])
+
+        self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, nDotSec, nWinBlock])
 
     def openEEGFileRes(self, REPData):
         if REPData[0] == '0':
             QMessageBox.information(self, '提示', REPData[2])
         else:
             msg = REPData[2]
+            print(msg)
             self.moving = True
+            self.nSample = msg[11]
             self.patientInfo = msg[0]
-            self.channels = msg[1]
-            self.index_channels = msg[2]
-            sample_rate = msg[3]
-            self.lenFile = msg[4]
-            self.duration = msg[5]
-            self.start_time = msg[6]
-            self.end_time = msg[7]
-            type_info = msg[8]
-            self.montage = msg[9]
+            self.channels = msg[3]
+            self.index_channels = msg[4]
+            sample_rate = msg[5]
+            self.lenFile = msg[6] // self.nSample
+            self.duration = msg[7]
+            self.start_time = msg[8]
+            self.end_time = msg[9]
+            type_info = msg[1]
+            self.montage = msg[2]
+            self.lenBlock = msg[10] // self.nSample
+            self.lenWin = msg[12]
+            data = msg[13]
+            labels = msg[14]
 
-            self.view.setTypeInfo(type_info)
+            self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time)
             self.data = EEGData()
-
+            self.data.initEEGData(data, self.lenFile, self.lenBlock, self.nSample, self.lenWin, labels)
             self.connetEvent()
-
-            self.view.updateYAxis(channels_name=self.channels)
-            self.view.setSampleRate(sample_rate)
-            self.view.setAxHscroll(self.duration)
-            self.view.showPatientInfo(self.patientInfo, self.file_name,
-                                        self.measure_date, self.start_time,
-                                        self.end_time)
-            self.view.show()
-            self.view.calc_sen()
-
-            self.lenWin = self.view.getLenWin()
-            self.moveLen = self.lenWin
-            self.toBlock = self.view.getIdx(self.lenWin)
-            self.lenBlock = self.view.getIdx(self.lenWin * 5)
-            self.updateTo = self.lenBlock
-            self.updateFrom = 0
-            self.fromBlock = 0
-            self.left_time = 0
-            self.right_time = min(self.lenWin, self.duration)
-            self.readFrom = 0
-            self.readTo = self.lenBlock
-            self.case = 1
-            self.data.initEEGData(self.lenFile, self.lenBlock)
-            self.client.loadDataDynamical(self.check_id, self.file_id, self.readFrom, self.readTo)
+            data, labels = self.data.getData()
+            self.view.refreshWin(data, labels, 0, self.nSecWin)
 
 
     def insertSampleRes(self):
@@ -89,9 +80,9 @@ class EEGController(QWidget):
         msg = REPData[3][2]
         data = msg[0]
         samples_info = msg[1]
-        self.data.setData(data, self.updateFrom, self.updateTo)
+        self.data.setData(data)
         self.view.updateSamples(self.readFrom, self.readTo, self.case, samples_info)
-        data = self.data.getData(self.fromBlock, self.toBlock)
+        data = self.data.getData()
         self.view.refreshWin(data, self.left_time, self.right_time)
 
     def connetEvent(self):
@@ -144,7 +135,6 @@ class EEGController(QWidget):
         if item is None:
             return
         row = item.row()
-        self.view.restorePreSampleColor()
         self.view.pickCurSample(row)
 
     def hideWave(self):

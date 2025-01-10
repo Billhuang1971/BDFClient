@@ -73,21 +73,10 @@ class EEGView(QWidget):
         self.state_lines = []
         self.sen = 0
 
-        self.create_paint_tools()
+        self.createPaintTools()
 
-    def setTypeInfo(self, type_info):
+    def initView(self, type_info, channels, sampleRate, duration, patientInfo, fileName, measureDate, startTime, endTime):
         self.type_info = type_info
-
-    def getLenWin(self):
-        return self.lenWin
-
-    def create_paint_tools(self):
-        self.fig = plt.figure()
-        self.canvas = FigureCanvas(self.fig)
-        self.ui.glCanvas.addWidget(self.canvas, 0, 0, 1, 1)
-        self.fig.subplots_adjust(left=0.05, right=0.95, top=0.99, bottom=0.01)
-        self.axes = plt.subplot2grid((33, 1), (2, 0), rowspan=30)
-        self.ax_hscroll = plt.subplot2grid((33, 1), (0, 0), rowspan=1)
 
         self.popMenu1 = QMenu(self.canvas)
         self.popMenu2 = QMenu(self.canvas)
@@ -115,7 +104,26 @@ class EEGView(QWidget):
                 continue
             sms[t[3]].addAction(action)
 
-    def calc_sen(self):
+        self.updateYAxis(channels_name=channels)
+        self.sample_rate = sampleRate
+        self.setAxHscroll(duration)
+        self.showPatientInfo(patientInfo, fileName,
+                                  measureDate, startTime,
+                                  endTime)
+
+    def getLenWin(self):
+        return self.lenWin
+
+    def createPaintTools(self):
+        self.fig = plt.figure()
+        self.canvas = FigureCanvas(self.fig)
+        self.ui.glCanvas.addWidget(self.canvas, 0, 0, 1, 1)
+        self.fig.subplots_adjust(left=0.05, right=0.95, top=0.99, bottom=0.01)
+        self.axes = plt.subplot2grid((33, 1), (2, 0), rowspan=30)
+        self.ax_hscroll = plt.subplot2grid((33, 1), (0, 0), rowspan=1)
+
+
+    def calcSen(self):
         axesL = self.axes.figure.subplotpars.left
         axesR = self.axes.figure.subplotpars.right
         axesT = self.axes.figure.subplotpars.top
@@ -125,15 +133,19 @@ class EEGView(QWidget):
         figureWidth = figureSize.width()
         figureHeight = figureSize.height()
         screen = QApplication.primaryScreen()
-        xDPI = screen.physicalDotsPerInchX()
-        yDPI = screen.physicalDotsPerInchY()
-        figureWidthMM = (figureWidth / xDPI) * 25.4
-        figureHeightMM = (figureHeight / yDPI) * 25.4
+        self.xDPI = screen.physicalDotsPerInchX()
+        self.yDPI = screen.physicalDotsPerInchY()
+        figureWidthMM = (figureWidth / self.xDPI) * 25.4
+        figureHeightMM = (figureHeight / self.yDPI) * 25.4
         self.axesXWidthMM = x_fraction * figureWidthMM
         self.axesYWidthMM = y_fraction * figureHeightMM
+
+    def changeSecondsSpan(self, secondsSpan):
+        self.secondsSpan = secondsSpan
+        self.ui.secondsSpan.setCurrentText(str(secondsSpan))
         self.lenWin = int(round(self.axesXWidthMM / self.secondsSpan))
-        self.ui.moveLength.setCurrentText(str(self.lenWin))
-        self.sen = (len(self.channels_name) + 1) / self.axesYWidthMM
+        px = int(round(secondsSpan * self.xDPI / 25.4))
+        return self.lenWin, px
 
     def secondsSpanChange(self, secondsSpan):
         self.secondsSpan = secondsSpan
@@ -152,12 +164,9 @@ class EEGView(QWidget):
         self.show_seconds_line = self.show_seconds_line is False
 
     def checkSecondsLine(self):
+        self.removeTimeLine()
         if self.show_seconds_line:
-            if len(self.time_lines) > 0:
-                self.removeTimeLine()
             self.paintTimeLine()
-        else:
-            self.removeTimeLine()
         self.canvas.draw()
 
     def paintTimeLine(self):
@@ -170,13 +179,10 @@ class EEGView(QWidget):
         self.time_lines = []
 
     def paintEEG(self):
-        x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate)
+        x = np.linspace(self.begin, self.end, self.data.shape[1])
         for i in range(len(self.channels_name)):
             self.axes.plot(x, self.data[i] + i + 1, color='black', label=self.channels_name[i], picker=True,
                            alpha=self.channels_alpha[self.channels_name[i]], linewidth=0.3)
-
-    def setSampleRate(self, sample_rate):
-        self.sample_rate = sample_rate
 
     def getIdx(self, time):
         return time * self.sample_rate
@@ -195,7 +201,7 @@ class EEGView(QWidget):
                 idx -= 1
             self.sample_info = sample_info + self.sample_info[idx + 1:]
 
-    def refreshWin(self, data, begin, end):
+    def refreshWin(self, data, labels, begin, end):
         self.data = data
         self.begin = begin
         self.end = end
@@ -543,6 +549,7 @@ class EEGView(QWidget):
         self.cur_sample_index = -1
 
     def pickCurSample(self, row):
+        self.restorePreSampleColor()
         self.cur_sample_index = row
         if self.is_status_showed is True and self.is_waves_showed is True:
             label = self.sample_list[self.cur_sample_index]
@@ -635,7 +642,6 @@ class EEGView(QWidget):
         label[4] = int(label[4])
         self.resetPickLabels()
         self.focusLines()
-        self.removeLines(['pp', 'pickedsegment'])
         if self.is_status_showed is True and self.is_waves_showed is True:
             for i in range(len(self.sample_list)):
                 if self.sample_list[i][2] == label[0] and self.sample_list[i][1] == label[1]:
