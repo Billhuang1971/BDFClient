@@ -27,7 +27,7 @@ from view.manual_form.combo_check_box2 import CheckableComboBox
 
 class manualQueryController(QWidget):
 
-    def __init__(self, appUtil=None, Widget=None, client=None, mainMenubar=None, mainLayout=None):
+    def __init__(self, appUtil=None, Widget=None, client=None, mainMenubar=None, mainLayout=None,page=None):
         super().__init__()
         self.appUtil= appUtil
         self.view = ManualView()

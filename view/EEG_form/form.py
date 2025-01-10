@@ -271,7 +271,6 @@ class Ui_EEGView(object):
 
         self.returnBtn = QtWidgets.QPushButton(self.groupBox2)
         self.returnBtn.setObjectName("returnBtn")
-        self.returnBtn.setDisabled(True)
         self.gridLayout_4.addWidget(self.returnBtn, 4, 0, 1, 1)
 
         self.gridLayout_1.addWidget(self.groupBox2, 0, 1, 1, 1)

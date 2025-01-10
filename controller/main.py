@@ -426,8 +426,6 @@ class MainController(QWidget):
             #self.m_controllers[controller_name] = self.controller
         elif controller_name == "clearLabelController":
             self.controller = clearLabelController(client=self.client, cAppUtil=self.cAppUtil)
-        elif controller_name == "EEGController":
-            self.controller = EEGController(client=self.client, appUtil=self.cAppUtil, msg=msg, mainLabel=self.view.label_4)
     def handle_controller_reload(self, controller_name):
         try:
             if controller_name in self.m_controllers.keys():
@@ -438,10 +436,77 @@ class MainController(QWidget):
             pass
 
     def switchToEEGPage(self, msg):
-        self.switch_page('EEGController', msg)
+        if self.sub_view is not None:
+            self.sub_view.close()
+        if self.controller is not None:
+            self.controller.exit()
+        self.controller = None
 
-    def switchFromEEGPage(self, msg:str):
-        self.switch_page(controller_name = msg)
+        self.controller = EEGController(client=self.client, appUtil=self.cAppUtil, msg=msg, mainLabel=self.view.label_4)
+        self.controller.switchFromEEG.connect(self.switchFromEEGPage)
+
+        self.sub_view = self.controller.view
+        while self.view.verticalLayout_1.count() > 1:
+            witem = self.view.verticalLayout_1.itemAt(self.view.verticalLayout_1.count() - 1)
+            witem.widget().hide()
+            self.view.verticalLayout_1.removeItem(witem)
+        self.sub_view.showMaximized()
+        self.view.verticalLayout_1.addWidget(self.sub_view)
+        self.previous_controller = 'EEGController'
+        self.view.label_4.setText("")
+    def switchFromEEGPage(self, msg):
+        controller_name=msg[0]
+        if self.sub_view is not None:
+            self.sub_view.close()
+        if self.controller is not None:
+            self.controller.exit()
+        self.controller = None
+
+        if controller_name == "manualQueryController":
+            self.controller = manualQueryController(appUtil=self.cAppUtil, Widget=self.view.label_4,
+                                                    client=self.client,
+                                                    mainMenubar=self.view.ui.menubar,
+                                                    mainLayout=self.view.verticalLayout_1,page=msg[1])
+        elif controller_name == "consultingController":
+            self.controller = consultingController(appUtil=self.cAppUtil,
+                                                   client=self.client,page=msg[1])
+            self.controller.switchToEEG.connect(self.switchToEEGPage)
+            self.m_controllers[controller_name] = self.controller
+        elif controller_name == "diagTrainingController":
+            self.controller = diagTrainingController(appUtil=self.cAppUtil, Widget=self.view.label_4,
+                                                     client=self.client,
+                                                     Widget2=self.view.label_5, mainMenubar=self.view.ui.menubar,
+                                                     mainLayout=self.view.verticalLayout_1)
+        elif controller_name == "diagTestController":
+            self.controller = diagTestController(appUtil=self.cAppUtil, Widget=self.view.label_4,
+                                                 client=self.client,
+                                                 mainMenubar=self.view.ui.menubar,
+                                                 mainLayout=self.view.verticalLayout_1)
+        elif controller_name == "diagAssessController":
+            self.controller = diagAssessController(appUtil=self.cAppUtil, Widget=self.view.label_4,
+                                                   client=self.client,
+                                                   mainMenubar=self.view.ui.menubar,
+                                                   mainLayout=self.view.verticalLayout_1)
+        elif controller_name == "reserchingController":
+            self.controller = reserchingController(appUtil=self.cAppUtil, Widget=self.view.label_4,
+                                                   client=self.client,
+                                                   mainMenubar=self.view.ui.menubar,
+                                                   mainLayout=self.view.verticalLayout_1)
+        elif controller_name == "reserchingQueryController":
+            self.controller = reserchingQueryController(appUtil=self.cAppUtil, Widget=self.view.label_4,
+                                                        client=self.client,
+                                                        mainMenubar=self.view.ui.menubar,
+                                                        mainLayout=self.view.verticalLayout_1)
+
+        self.sub_view = self.controller.view
+        while self.view.verticalLayout_1.count() > 1:
+            witem = self.view.verticalLayout_1.itemAt(self.view.verticalLayout_1.count() - 1)
+            witem.widget().hide()
+            self.view.verticalLayout_1.removeItem(witem)
+        self.sub_view.showMaximized()
+        self.view.verticalLayout_1.addWidget(self.sub_view)
+        self.previous_controller = controller_name
+        self.view.label_4.setText("")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

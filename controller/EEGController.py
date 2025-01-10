@@ -12,6 +12,7 @@ from model.EEGData import EEGData
 
 
 class EEGController(QWidget):
+    switchFromEEG = pyqtSignal(list)
     def __init__(self, client=None, appUtil=None, msg=None, mainLabel=None):
         super().__init__()
         self.client = client
@@ -22,6 +23,7 @@ class EEGController(QWidget):
         self.user_id = client.tUser[0]
         self.patient_id = msg[3]
         self.measure_date = msg[4]
+        self.return_from=msg[5]
         self.mainLabel = mainLabel
         self.view = EEGView()
 
@@ -112,6 +114,7 @@ class EEGController(QWidget):
         self.view.ui.hideState.clicked.connect(self.hideState)
         self.view.ui.secondsSpan.lineEdit().editingFinished.connect(self.secondsSpanChange)
         self.view.ui.moveLength.lineEdit().editingFinished.connect(self.moveLengthChange)
+        self.view.ui.returnBtn.clicked.connect(self.on_return_clicked)
 
         self.view.canvas.mpl_connect("pick_event", self.handlePickEvent)
         self.view.canvas.mpl_connect("button_release_event", self.doMouseReleaseEvent)
@@ -385,3 +388,8 @@ class EEGController(QWidget):
     def btnStateAnnotateClicked(self):
         self.view.changeStateAnnotateStatus()
         self.view.cancelSelect()
+    def on_return_clicked(self):
+        self.view.close()
+        self.switchFromEEG.emit(self.return_from)
+    def exit(self):
+        self.switchFromEEG.disconnect()

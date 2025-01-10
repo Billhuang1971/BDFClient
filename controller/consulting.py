@@ -10,7 +10,7 @@ from view.consulting import DiagListView, PrentryView
 
 class consultingController(QWidget):
     switchToEEG = pyqtSignal(list)
-    def __init__(self, appUtil=None, client=None):
+    def __init__(self, appUtil=None, client=None,page=None):
         super().__init__()
         self.view = DiagListView()
         self.client = client
@@ -46,6 +46,7 @@ class consultingController(QWidget):
     def exit(self):
         self.client.ct_get_diags_notDiagResSig.disconnect()
         self.client.ct_get_fileNameByIdDateResSig.disconnect()
+        self.switchToEEG.connect()
 
     def on_clicked_manual_query(self, diags_viewInfo, patient_name):
         self.check_id = diags_viewInfo[-4]
@@ -118,7 +119,7 @@ class consultingController(QWidget):
 
     def on_btnConfirm_clicked(self):
         self.prentryView.close()
-        self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date])
+        self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date,['consultingController','']])
 
     def on_btnReturn_clicked(self):
         self.prentryView.close()

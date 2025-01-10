@@ -13,6 +13,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_ClassifierForm(object):
     def setupUi(self, ClassifierForm):
+        style_sheet = """
+                           QPushButton{
+                               max-width: 30ex;
+                               max-height: 12ex;
+                           }    
+                       """
         ClassifierForm.setObjectName("ClassifierForm")
         ClassifierForm.resize(1080, 720)
         self.verticalLayout = QtWidgets.QVBoxLayout(ClassifierForm)
@@ -76,6 +82,7 @@ class Ui_ClassifierForm(object):
         self.btn_upload.setFont(font)
         self.btn_upload.setObjectName("btn_upload")
         self.horizontalLayout.addWidget(self.btn_upload)
+        self.btn_upload.setStyleSheet(style_sheet)
         #7
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
