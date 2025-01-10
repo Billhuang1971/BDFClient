@@ -123,9 +123,6 @@ class DiagListView(QWidget):
         except Exception as e:
             print('initTable', e)
 
-    #def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
-    #    reply = QMessageBox.information(self, '提示', '是否退出程序', QMessageBox.Yes | QMessageBox.No)
-    #    self.hide()
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     view = DiagListView()

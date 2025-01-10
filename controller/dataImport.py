@@ -2226,7 +2226,8 @@ class dataImportController(QWidget):
                     all_channel_data = []
                     for i in index_channels:
                         signal_data = edf_reader.readSignal(i)
-                        all_channel_data.append(signal_data)  # 将每个通道的数据加入到列表中
+                        signal_data_microvolts = signal_data * (pow(10, 6))  # 乘以10^6 转换为微伏特
+                        all_channel_data.append(signal_data_microvolts)  # 将转换后的信号数据加入列表
 
                     # 检查数据是否与通道数匹配
                     if len(all_channel_data) != len(filtered_signal_headers):

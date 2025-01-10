@@ -67,7 +67,7 @@ class EEGView(QWidget):
         self.secondsSpan = 30
         self.lenWin = 0
         self.sensitivity = 10
-        self.show_time_line = True
+        self.show_seconds_line = True
         self.time_lines = []
         self.wave_lines = []
         self.state_lines = []
@@ -148,14 +148,11 @@ class EEGView(QWidget):
         for xtl in self.axes.get_xticklabels():
             xtl.set_fontsize(10)
 
-    def isShowTimeLine(self):
-        self.show_time_line = self.show_time_line is False
-        return self.show_time_line
+    def changeSecondsLine(self):
+        self.show_seconds_line = self.show_seconds_line is False
 
-    def changeTimeLine(self):
-        self.show_time_line = self.show_time_line is False
-    def checkTimeLine(self):
-        if self.show_time_line:
+    def checkSecondsLine(self):
+        if self.show_seconds_line:
             if len(self.time_lines) > 0:
                 self.removeTimeLine()
             self.paintTimeLine()
@@ -205,7 +202,7 @@ class EEGView(QWidget):
         self.removeLines()
         self.updateXAxis()
         self.paintEEG()
-        self.checkTimeLine()
+        self.checkSecondsLine()
         self.filterSamples()
         self.paintWaves()
         self.paintStates()
@@ -225,11 +222,10 @@ class EEGView(QWidget):
 
     def changeShowWave(self):
         self.is_waves_showed = self.is_waves_showed is False
+        self.ui.hideWave.setChecked(self.is_waves_showed)
         if self.is_waves_showed:
-            self.ui.hideWave.setText("隐藏波形")
             self.paintWaves()
         else:
-            self.ui.hideWave.setText("显示波形")
             self.removeLines(self.wave_lines, True)
             self.wave_lines = []
             self.resetPickLabels()
@@ -240,10 +236,8 @@ class EEGView(QWidget):
     def changeShowState(self):
         self.is_status_showed = self.is_status_showed is False
         if self.is_status_showed:
-            self.ui.hideState.setText("隐藏状态")
             self.paintStates()
         else:
-            self.ui.hideState.setText("显示状态")
             for state in self.state_lines:
                 state.remove()
             self.state_lines = []
@@ -385,7 +379,7 @@ class EEGView(QWidget):
     def onAxhscrollClicked(self, begin):
         if self.scroll_position is not None:
             self.scroll_position.remove()
-        self.scroll_position = self.ax_hscroll.axvline(begin, color='r')
+        self.scroll_position = self.ax_hscroll.axvline(begin, color='r', linewidth=0.5)
         self.canvas.draw()
 
     def isBanWave(self):
@@ -450,7 +444,7 @@ class EEGView(QWidget):
         self.pick_second = None
 
     def removeLines(self, ch=None, sample=False):
-        if ch is None or len(ch) == 0:
+        if (ch is None or len(ch) == 0) and sample is False:
             lines = self.axes.get_lines()
             for l in lines:
                 l.remove()
