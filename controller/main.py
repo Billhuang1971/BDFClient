@@ -67,8 +67,7 @@ class MainController(QWidget):
         # 主界面模块视图
         self.view = MainView()
         self.view.show()
-        # 存放在内存中的控制器
-        self.m_controllers = dict()
+
         # 当前功能模块控制器
         self.controller = None
         # 当前子模块视图
@@ -100,12 +99,7 @@ class MainController(QWidget):
             self.sub_view = InitView()
             self.view.verticalLayout_1.addWidget(self.sub_view)
             self.controller.disconnect_login()
-            # self.sub_view = InitView()
-            # while self.view.verticalLayout_1.count() > 1:
-            #     witem = self.view.verticalLayout_1.itemAt(self.view.verticalLayout_1.count() - 1)
-            #     witem.widget().hide()
-            #     self.view.verticalLayout_1.removeItem(witem)
-            # self.view.verticalLayout_1.addWidget(self.sub_view)
+
         except Exception as e:
             print('userLogin', e)
 
@@ -267,11 +261,7 @@ class MainController(QWidget):
                                                     "当前正在[诊断学习]中，请先单击[诊断学习]窗口右边的”返回,再切换菜单项。",
                                                     QMessageBox.Yes)
                     return
-            # elif self.previous_controller == 'dataImportController':
-            #     if self.controller.file_loading == 1:
-            #         QMessageBox.information(self, "脑电文件上传", f"上传文件：{self.controller.file_path}进行中，请先[暂停]文件上传。",
-            #                                 QMessageBox.Yes)
-            #         return
+
 
             if self.sub_view is not None:
                 self.sub_view.close()
@@ -284,24 +274,13 @@ class MainController(QWidget):
             else:
                 self.generate_controller(controller_name)
 
-            # # 判断是否生成新的子控制器
-            # if controller_name not in self.m_controllers.keys():
-            #     self.generate_controller(controller_name)
-            # else:
-            #     self.controller = self.m_controllers[controller_name]
-            #     self.controller.exit()
-            #     self.generate_controller(controller_name)
 
-            #if controller_name not in self.m_controllers and controller_name != "LoginController":
             if self.controller is None:
                 QMessageBox.information(self, "系统提示", f'{controller_name}模块在开发中...,暂时不能使用.',
                                         QMessageBox.Yes)
                 return
             self.sub_view = self.controller.view
-            # try:
-            #     self.sub_view = self.m_controllers[controller_name].view
-            # except:
-            #     self.sub_view = self.controller.view
+
 
             while self.view.verticalLayout_1.count() > 1:
                 witem = self.view.verticalLayout_1.itemAt(self.view.verticalLayout_1.count() - 1)
@@ -318,122 +297,111 @@ class MainController(QWidget):
             self.controller.signal_login_user_info.connect(self.userLogin)
         elif controller_name == "pwdController":
             self.controller = pwdController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "montageController":
             self.controller = montageController(client=self.client, cAppUtil=self.cAppUtil)
-            self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "labelTypeController":
             self.controller = labelTypeController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "userManagerController":
             self.controller = userManagerController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "patientManagerController":
             self.controller = patientManagerController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "manualController":
             self.controller = manualController(appUtil=self.cAppUtil, Widget=self.view.label_4, client=self.client,
                                                mainMenubar=self.view.ui.menubar)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "manualQueryController":
             self.controller = manualQueryController(appUtil=self.cAppUtil, Widget=self.view.label_4,
                                                     client=self.client,
                                                     mainMenubar=self.view.ui.menubar,
                                                     mainLayout=self.view.verticalLayout_1)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "basicConfigController":
             self.controller = basicConfigController(client=self.client, cAppUtil=self.cAppUtil)
-            self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "consultingController":
             self.controller = consultingController(appUtil=self.cAppUtil,
                                                    client=self.client)
             self.controller.switchToEEG.connect(self.switchToEEGPage)
-            self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "diagTrainingController":
             self.controller = diagTrainingController(appUtil=self.cAppUtil, Widget=self.view.label_4,
                                                      client=self.client,
                                                      Widget2=self.view.label_5, mainMenubar=self.view.ui.menubar,
                                                      mainLayout=self.view.verticalLayout_1)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "diagTestController":
             self.controller = diagTestController(appUtil=self.cAppUtil, Widget=self.view.label_4,
                                                  client=self.client,
                                                  mainMenubar=self.view.ui.menubar,
                                                  mainLayout=self.view.verticalLayout_1)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "diagAssessController":
             self.controller = diagAssessController(appUtil=self.cAppUtil, Widget=self.view.label_4,
                                                    client=self.client,
                                                    mainMenubar=self.view.ui.menubar,
                                                    mainLayout=self.view.verticalLayout_1)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "reserchingController":
             self.controller = reserchingController(appUtil=self.cAppUtil, Widget=self.view.label_4,
                                                    client=self.client,
                                                    mainMenubar=self.view.ui.menubar,
                                                    mainLayout=self.view.verticalLayout_1)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "reserchingQueryController":
             self.controller = reserchingQueryController(appUtil=self.cAppUtil, Widget=self.view.label_4,
                                                         client=self.client,
                                                         mainMenubar=self.view.ui.menubar,
                                                         mainLayout=self.view.verticalLayout_1)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "dataImportController":
             self.controller = dataImportController(client=self.client, cAppUtil=self.cAppUtil,mainMenubar=self.view.ui.menubar)
             self.controller.switch_signal.connect(self.switch_signal.emit)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "configOptionsController":
             self.controller = configOptionsController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "createConsController":
             self.controller = createConsController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "createLessonController":
             self.controller = createLessonController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "taskSettingsController":
             self.controller = taskSettingsController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "sampleStateController":
             self.controller = sampleStateController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "setBuildController":
             self.controller = setBuildController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "algorithmController":
             self.controller = algorithmController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
-            # self.controller.is_reload_controller.connect(self.handle_controller_reload)
-        # elif controller_name == "detailLookController":
-        #     self.controller = detailLookController(client=self.client, cAppUtil=self.cAppUtil)
-        #     self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "modelTrainController":
             self.controller = modelTrainController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "classifierController":
             self.controller = classifierController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "modelTestController":
             self.controller = modelTestController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "autoController":
             self.controller = autoController(client=self.client, cAppUtil=self.cAppUtil)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "assessLabelController":
             self.controller = assessLabelController(appUtil=self.cAppUtil, Widget=self.view.label_4, client=self.client,
                                                     mainMenubar=self.view.ui.menubar)
-            #self.m_controllers[controller_name] = self.controller
+
         elif controller_name == "clearLabelController":
             self.controller = clearLabelController(client=self.client, cAppUtil=self.cAppUtil)
-    def handle_controller_reload(self, controller_name):
-        try:
-            if controller_name in self.m_controllers.keys():
-                self.m_controllers.pop(controller_name)
-                # print('true')
-            # self.m_controllers_view.pop(controller_name)
-        except:
-            pass
+
 
     def switchToEEGPage(self, msg):
         if self.sub_view is not None:
