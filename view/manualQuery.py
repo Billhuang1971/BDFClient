@@ -12,54 +12,10 @@ from view.manual_form.setting import Ui_Setting
 from view.manual_form.prentry import Ui_Prentry
 from view.manual_form.setBdf import Ui_SetBdf
 from view.manual_form.sign_info import Ui_diag_MainWindow
+from view.manual_form.diagList import Ui_diagList
+from view.manual_form.prentry import Ui_Prentry
 
 from PyQt5.QtWidgets import *
-class ManualView(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.ui = Ui_ManualForm()
-        self.ui.setupUi(self)
-        self.ui.btnSignInfo.setText("查看诊断信息...")
-
-    # 显示病人相关信息
-    def show_patient_info(self, patient, file_name, measure_date, start_time, end_time):
-        name = patient[0][1]
-        birth = str(patient[0][2])
-        sex = patient[0][3]
-        self.ui.labelPatientName.setText(name)
-        self.ui.labelPatientBirth.setText(birth)
-        self.ui.labelPatientSex.setText(sex)
-        self.ui.labelPatientMeasure.setText(str(measure_date))
-        self.ui.labelFileName.setText(file_name)
-        meas_time = str(start_time) + ' - ' + str(end_time)
-        self.ui.labelMeasureTime.setText(meas_time)
-
-
-    # 显示样本信息
-    def show_sample_detail(self, type_name='', channel='', lent='', begin='', end='', amp='', user_name=''):
-        self.ui.labelType.setText(type_name)
-        self.ui.labelChannel.setText(channel)
-        if lent != '':
-            lent = str(round(float(lent), 3))
-        self.ui.labelLength.setText(lent)
-        self.ui.labelBegin.setText(begin)
-        self.ui.labelEnd.setText(end)
-        if amp != '':
-            amp = str(round(float(amp), 3))
-        self.ui.labelAmp.setText(amp)
-        self.ui.labelRole.setText(user_name)
-
-class BdfSettingView(QWidget):
-    def __init__(self, ckMontage, dgroup, dgroup_filter,parent=None):
-        super().__init__(parent)
-        self.ui = Ui_SetBdf()
-        self.ui.setupUi(self, ckMontage, dgroup, dgroup_filter)
-
-class SettingView(QWidget):
-    def __init__(self, type_name, user_name, type_filter, user_filter,parent=None):
-        super().__init__(parent)
-        self.ui = Ui_Setting()
-        self.ui.setupUi(self, type_name, user_name, type_filter, user_filter)
 
 class PrentryView(QWidget):
     def __init__(self,  parent=None):
@@ -75,7 +31,7 @@ class sign_InfoView(QMainWindow,QWidget):
         self.ui = Ui_diag_MainWindow()
         self.ui.setupUi(self)
 
-class diag_diagnosedListView(QWidget):
+class ManualView(QWidget):
     page_control_signal = pyqtSignal(list)
     def __init__(self,parent=None):
         super().__init__(parent)

@@ -336,10 +336,8 @@ class MainController(QWidget):
                                                mainMenubar=self.view.ui.menubar)
             #self.m_controllers[controller_name] = self.controller
         elif controller_name == "manualQueryController":
-            self.controller = manualQueryController(appUtil=self.cAppUtil, Widget=self.view.label_4,
-                                                    client=self.client,
-                                                    mainMenubar=self.view.ui.menubar,
-                                                    mainLayout=self.view.verticalLayout_1)
+            self.controller = manualQueryController(appUtil=self.cAppUtil, client=self.client)
+            self.controller.switchToEEG.connect(self.switchToEEGPage)
             #self.m_controllers[controller_name] = self.controller
         elif controller_name == "basicConfigController":
             self.controller = basicConfigController(client=self.client, cAppUtil=self.cAppUtil)
@@ -465,10 +463,7 @@ class MainController(QWidget):
         self.controller = None
 
         if controller_name == "manualQueryController":
-            self.controller = manualQueryController(appUtil=self.cAppUtil, Widget=self.view.label_4,
-                                                    client=self.client,
-                                                    mainMenubar=self.view.ui.menubar,
-                                                    mainLayout=self.view.verticalLayout_1,page=msg[1])
+            self.controller = manualQueryController(appUtil=self.cAppUtil, client=self.client, page=msg[1])
         elif controller_name == "consultingController":
             self.controller = consultingController(appUtil=self.cAppUtil,
                                                    client=self.client,page=msg[1])

@@ -96,8 +96,6 @@ class EEGController(QWidget):
         self.view.ui.btnDown.clicked.connect(self.onBtnUpClicked)
         self.view.ui.btnUping.clicked.connect(self.onBtnUpingClicked)
         self.view.ui.btnDowning.clicked.connect(self.onBtnDowningClicked)
-        self.view.ui.btnBegin.clicked.connect(self.onBtnBeginClicked)
-        self.view.ui.btnEnd.clicked.connect(self.onBtnEndClicked)
         self.view.ui.editTime.editingFinished.connect(self.timeChange)
         self.view.ui.btnStateAnnotate.clicked.connect(self.btnStateAnnotateClicked)
         self.view.ui.secondsLine.clicked.connect(self.secondsLineClicked)
@@ -265,19 +263,6 @@ class EEGController(QWidget):
                 raise SystemError("PyThreadState_SetAsyncExc failed")
         except Exception as err:
             print(err)
-
-    def onBtnBeginClicked(self):
-        self.leftTime = 0
-        self.rightTime = self.nSecWin
-        self.view.changeTime(self.leftTime)
-        self.checkSolution()
-
-    def onBtnEndClicked(self):
-        self.leftTime = self.duration - self.nSecWin
-        self.rightTime = self.duration
-        self.view.changeTime(self.leftTime)
-        self.checkSolution()
-
 
     # 响应选中对象事件
     def handlePickEvent(self, event):
