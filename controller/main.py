@@ -255,7 +255,7 @@ class MainController(QWidget):
                 self.sub_view.close()
             if self.controller is not None:
                 self.controller.exit()
-            self.controller=None
+            self.controller = None
             self.generate_controller(controller_name)
             self.sub_view = InitView()
             self.view.verticalLayout_1.addWidget(self.sub_view)
