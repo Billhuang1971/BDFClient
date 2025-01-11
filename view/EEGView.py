@@ -630,7 +630,7 @@ class EEGView(QWidget):
         if self.pick_first == self.pick_second:
             return
         self.removeLines(['pp', 'pickedsegment'])
-        self.paintAWave(max(self.pick_first - self.begin * self.sample_rate, 0), min(self.lenWin * self.sample_rate, self.pick_second - self.begin * self.sample_rate), self.pick_label, 'pickedsegment', 'red')
+        self.paintAWave(max((self.pick_first - self.begin * self.sample_rate) // self.nSample, 0), min((self.lenWin * self.sample_rate) // self.nSample, (self.pick_second - self.begin * self.sample_rate) // self.nSample), self.pick_label, 'pickedsegment', 'red')
         self.canvas.draw()
 
     def clickSample(self, artist):
@@ -681,7 +681,7 @@ class EEGView(QWidget):
 
 
     def paintAWave(self, start, end, channel, label, color):
-        x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate)
+        x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate // self.nSample)
         idx = -1
         for i in range(len(self.channels_name)):
             if self.channels_name[i] == channel:

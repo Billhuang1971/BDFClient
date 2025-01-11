@@ -35,7 +35,7 @@ class DiagAssessView(QWidget):
         self.ui.labelFileName.setText(" ")
 
     # 显示病人相关信息
-    def show_patient_info(self, patient,student,qsum,asum,grade):
+    def show_patient_info(self, patient, student, qsum, asum, grade):
         name = patient[0][1]
         sex = patient[0][3]
         self.ui.labelPatientName.setText(name)

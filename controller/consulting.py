@@ -119,7 +119,7 @@ class consultingController(QWidget):
 
     def on_btnConfirm_clicked(self):
         self.prentryView.close()
-        self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date,['consultingController','']])
+        self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date, ['consultingController',''], "sample_info"])
 
     def on_btnReturn_clicked(self):
         self.prentryView.close()

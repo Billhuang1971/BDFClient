@@ -24,6 +24,7 @@ class EEGController(QWidget):
         self.patient_id = msg[3]
         self.measure_date = msg[4]
         self.return_from = msg[5]
+        self.tableName = msg[6]
         self.mainLabel = mainLabel
         self.view = EEGView()
 
@@ -41,7 +42,7 @@ class EEGController(QWidget):
         self.client.loadEEGDataSig.connect(self.loadEEGDataRes)
         self.client.insertSampleSig.connect(self.insertSampleRes)
 
-        self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, nDotSec, nWinBlock])
+        self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, nDotSec, nWinBlock, self.tableName])
 
     def openEEGFileRes(self, REPData):
         if REPData[0] == '0':
