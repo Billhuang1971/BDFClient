@@ -454,6 +454,8 @@ class MainController(QWidget):
         self.view.verticalLayout_1.addWidget(self.sub_view)
         self.previous_controller = 'EEGController'
         self.view.label_4.setText("")
+        self.controller.initEEG()
+
     def switchFromEEGPage(self, msg):
         controller_name=msg[0]
         if self.sub_view is not None:

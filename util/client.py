@@ -445,7 +445,7 @@ class client(QObject, socketClient):
 
     # EEG脑电图显示
     openEEGFileResSig = pyqtSignal(list)
-    loadDataDynamicalSig = pyqtSignal(list)
+    loadEEGDataSig = pyqtSignal(list)
     insertSampleSig = pyqtSignal(list)
 
 
@@ -467,12 +467,13 @@ class client(QObject, socketClient):
         msg = ["EEG", 0, self.tUser[0], REQdata]
         self.sendRequest(msg)
 
-    def loadDataDynamical(self, check_id, file_id, readFrom, readTo):
-        msg = ['EEG', 1, self.tUser[0], [self.macAddr, check_id, file_id, readFrom, readTo]]
+    def loadEEGData(self, REQdata):
+        REQdata.insert(0, self.macAddr)
+        msg = ['EEG', 1, self.tUser[0], REQdata]
         self.sendRequest(msg)
 
-    def loadDataDynamicalRes(self, REPmsg):
-        self.loadDataDynamicalSig.emit(list(REPmsg))
+    def loadEEGDataRes(self, REPmsg):
+        self.loadEEGDataSig.emit(list(REPmsg))
 
     ## dsj [ ===
 
@@ -4462,7 +4463,7 @@ class client(QObject, socketClient):
         elif REQmsg[0] == 'EEG' and REQmsg[1] == 0:
             self.openEEGFileRes(REQmsg)
         elif REQmsg[0] == 'EEG' and REQmsg[1] == 1:
-            self.loadDataDynamicalRes(REQmsg)
+            self.loadEEGDataRes(REQmsg)
 
         else:
             print(f"{REQmsg[0]}.{REQmsg[1]}未定义")

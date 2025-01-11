@@ -23,9 +23,13 @@ class EEGController(QWidget):
         self.user_id = client.tUser[0]
         self.patient_id = msg[3]
         self.measure_date = msg[4]
-        self.return_from=msg[5]
+        self.return_from = msg[5]
         self.mainLabel = mainLabel
         self.view = EEGView()
+
+
+    def initEEG(self):
+        self.view.show()
         self.view.calcSen()
         self.secondsSpan = 30
         nWinBlock = 11
@@ -34,7 +38,7 @@ class EEGController(QWidget):
         self.view.ui.moveLength.setCurrentText(str(self.moveLen))
 
         self.client.openEEGFileResSig.connect(self.openEEGFileRes)
-        self.client.loadDataDynamicalSig.connect(self.loadDataDynamicalRes)
+        self.client.loadEEGDataSig.connect(self.loadEEGDataRes)
         self.client.insertSampleSig.connect(self.insertSampleRes)
 
         self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, nDotSec, nWinBlock])
@@ -44,7 +48,6 @@ class EEGController(QWidget):
             QMessageBox.information(self, '提示', REPData[2])
         else:
             msg = REPData[2]
-            print(msg)
             self.moving = True
             self.nSample = msg[11]
             self.patientInfo = msg[0]
@@ -59,6 +62,8 @@ class EEGController(QWidget):
             self.montage = msg[2]
             self.lenBlock = msg[10] // self.nSample
             self.lenWin = msg[12]
+            self.leftTime = 0
+            self.rightTime = self.nSecWin
             data = msg[13]
             labels = msg[14]
 
@@ -67,7 +72,7 @@ class EEGController(QWidget):
             self.data.initEEGData(data, self.lenFile, self.lenBlock, self.nSample, self.lenWin, labels)
             self.connetEvent()
             data, labels = self.data.getData()
-            self.view.refreshWin(data, labels, 0, self.nSecWin)
+            self.view.refreshWin(data, labels, self.leftTime, self.rightTime, self.nSample)
 
 
     def insertSampleRes(self):
@@ -76,14 +81,13 @@ class EEGController(QWidget):
     def insertSample(self):
         pass
 
-    def loadDataDynamicalRes(self, REPData):
+    def loadEEGDataRes(self, REPData):
         msg = REPData[3][2]
         data = msg[0]
-        samples_info = msg[1]
-        self.data.setData(data)
-        self.view.updateSamples(self.readFrom, self.readTo, self.case, samples_info)
-        data = self.data.getData()
-        self.view.refreshWin(data, self.left_time, self.right_time)
+        labels = msg[1]
+        self.data.setData(data, labels)
+        data, labels = self.data.getData()
+        self.view.refreshWin(data, labels, self.leftTime, self.rightTime, self.nSample)
 
     def connetEvent(self):
         self.view.insertSample.connect(self.insertSample)
@@ -119,8 +123,6 @@ class EEGController(QWidget):
         self.updateTo = self.lenBlock
         self.updateFrom = 0
         self.fromBlock = 0
-        self.left_time = 0
-        self.right_time = min(self.lenWin, self.duration)
         self.readFrom = 0
         self.readTo = self.lenBlock
         self.case = 1
@@ -155,13 +157,13 @@ class EEGController(QWidget):
             return
         [h, m, s] = time.split(':')
         begin = int(h) * 3600 + int(m) * 60 + int(s)
-        if begin < 0 or begin + self.lenWin > self.duration:
+        if begin < 0 or begin + self.nSecWin > self.duration:
             self.view.ui.editTime.setText("00:00:00")
-            self.left_time = 0
-            self.right_time = self.lenWin
+            self.leftTime = 0
+            self.rightTime = self.nSecWin
         else:
-            self.left_time = begin
-            self.right_time = begin + self.lenWin
+            self.leftTime = begin
+            self.rightTime = begin + self.nSecWin
         self.checkSolution()
 
     def onBtnDowningClicked(self):
@@ -187,12 +189,12 @@ class EEGController(QWidget):
     def doDowning(self):
         while True:
             time.sleep(1)
-            self.left_time -= self.moveLen
-            self.right_time -= self.moveLen
-            if self.left_time < 0:
-                self.left_time = 0
-                self.right_time = self.lenWin
-                self.view.changeTime(self.left_time)
+            self.leftTime -= self.moveLen
+            self.rightTime -= self.moveLen
+            if self.leftTime < 0:
+                self.leftTime = 0
+                self.rightTime = self.nSecWin
+                self.view.changeTime(self.leftTime)
                 self.checkSolution()
                 self.view.ui.btnBegin.setDisabled(False)
                 self.view.ui.btnEnd.setDisabled(False)
@@ -203,7 +205,7 @@ class EEGController(QWidget):
                 self._async_raise(self.thread.ident, SystemExit)
                 return
             else:
-                self.view.changeTime(self.left_time)
+                self.view.changeTime(self.leftTime)
                 self.checkSolution()
 
     def onBtnUpingClicked(self):
@@ -229,12 +231,12 @@ class EEGController(QWidget):
     def doUping(self):
         while True:
             time.sleep(1)
-            self.left_time += self.moveLen
-            self.right_time += self.moveLen
-            if self.right_time > self.duration:
-                self.left_time = self.duration - self.lenWin
-                self.right_time = self.duration
-                self.view.changeTime(self.left_time)
+            self.leftTime += self.moveLen
+            self.rightTime += self.moveLen
+            if self.rightTime > self.duration:
+                self.leftTime = self.duration - self.nSecWin
+                self.rightTime = self.duration
+                self.view.changeTime(self.leftTime)
                 self.checkSolution()
                 self.view.ui.btnBegin.setDisabled(False)
                 self.view.ui.btnEnd.setDisabled(False)
@@ -245,7 +247,7 @@ class EEGController(QWidget):
                 self._async_raise(self.thread.ident, SystemExit)
                 return
             else:
-                self.view.changeTime(self.left_time)
+                self.view.changeTime(self.leftTime)
                 self.checkSolution()
 
     def _async_raise(self, tid, exctype):
@@ -264,15 +266,15 @@ class EEGController(QWidget):
             print(err)
 
     def onBtnBeginClicked(self):
-        self.left_time = 0
-        self.right_time = self.lenWin
-        self.view.changeTime(self.left_time)
+        self.leftTime = 0
+        self.rightTime = self.nSecWin
+        self.view.changeTime(self.leftTime)
         self.checkSolution()
 
     def onBtnEndClicked(self):
-        self.left_time = self.duration - self.lenWin
-        self.right_time = self.duration
-        self.view.changeTime(self.left_time)
+        self.leftTime = self.duration - self.nSecWin
+        self.rightTime = self.duration
+        self.view.changeTime(self.leftTime)
         self.checkSolution()
 
 
@@ -321,34 +323,26 @@ class EEGController(QWidget):
             # 点击在跳转滚动条上
             elif ax == EEGView.PICK_AXHSCROLL:
                 x = int(event.xdata)
-                if x + self.lenWin <= self.duration:
-                    self.left_time = x
-                    self.right_time = x + self.lenWin
+                if x + self.nSecWin <= self.duration:
+                    self.leftTime = x
+                    self.rightTime = x + self.nSecWin
                 else:
-                    self.left_time = max(0, self.duration - self.lenWin)
-                    self.right_time = self.duration
-                self.view.changeTime(self.left_time)
+                    self.leftTime = max(0, self.duration - self.nSecWin)
+                    self.rightTime = self.duration
+                self.view.changeTime(self.leftTime)
                 self.checkSolution()
         # 右键释放菜单
         elif event.button == 3:
             self.view.releaseMenu()
 
     def checkSolution(self):
-        self.view.onAxhscrollClicked(self.left_time)
-        inBlock, readFrom, readTo, fromBlock, toBlock, updateFrom, updateTo, case = self.data.queryRange(
-            self.view.getIdx(self.left_time), self.view.getIdx(self.lenWin))
+        self.view.onAxhscrollClicked(self.leftTime)
+        inBlock, readFrom, readTo, = self.data.queryRange(self.view.getIdx(self.leftTime) // self.nSample)
         if inBlock is False:
-            self.updateFrom = updateFrom
-            self.updateTo = updateTo
-            self.fromBlock = fromBlock
-            self.toBlock = toBlock
-            self.readFrom = readFrom
-            self.readTo = readTo
-            self.case = case
-            self.client.loadDataDynamical(self.check_id, self.file_id, self.readFrom, self.readTo)
+            self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.nSample, readTo * self.nSample, self.nSample])
         else:
-            data = self.data.getData(fromBlock, toBlock)
-            self.view.refreshWin(data, self.left_time, self.right_time)
+            data, labels = self.data.getData()
+            self.view.refreshWin(data, labels, self.leftTime, self.rightTime, self.nSample)
 
     def doScrollEvent(self, event):
         if event.button == "down":
@@ -357,21 +351,21 @@ class EEGController(QWidget):
             self.onBtnUpClicked()
 
     def onBtnUpClicked(self):
-        self.left_time -= self.moveLen
-        self.right_time -= self.moveLen
-        if self.left_time < 0:
-            self.right_time = self.lenWin
-            self.left_time = 0
-        self.view.changeTime(self.left_time)
+        self.leftTime -= self.moveLen
+        self.rightTime -= self.moveLen
+        if self.leftTime < 0:
+            self.rightTime = self.nSecWin
+            self.leftTime = 0
+        self.view.changeTime(self.leftTime)
         self.checkSolution()
 
     def onBtnDownClicked(self):
-        self.left_time += self.moveLen
-        self.right_time += self.moveLen
-        if self.right_time > self.duration:
-            self.right_time = self.duration
-            self.left_time = self.right_time - self.lenWin
-        self.view.changeTime(self.left_time)
+        self.leftTime += self.moveLen
+        self.rightTime += self.moveLen
+        if self.rightTime > self.duration:
+            self.rightTime = self.duration
+            self.leftTime = self.rightTime - self.nSecWin
+        self.view.changeTime(self.leftTime)
         self.checkSolution()
 
     def doKeyPressEvent(self, event):

@@ -22,26 +22,28 @@ class EEGData(object):
             self.toBlock = startWin - self.startBlock + self.lenWin
             self.case = 0
             return [True, None, None]
-        if startWin - (self.lenBlock - self.lenWin) / 2 < 0:
+        if startWin - (self.lenBlock - self.lenWin) // 2 < 0:
             readFrom = 0
             readTo = self.lenBlock
             self.fromBlock = startWin
             self.toBlock = self.fromBlock + self.lenWin
-        elif startWin + self.lenWin + (self.lenBlock - self.lenWin) / 2 > self.lenFile:
+        elif startWin + self.lenWin + (self.lenBlock - self.lenWin) // 2 > self.lenFile:
             readFrom = self.lenFile - self.lenBlock
             readTo = self.lenFile
             self.fromBlock = startWin - (self.lenFile - self.lenBlock)
             self.toBlock = self.fromBlock + self.lenWin
         else:
-            readFrom = startWin - (self.lenBlock - self.lenWin) / 2
-            readTo = startWin + self.lenWin + (self.lenBlock - self.lenWin) / 2
-            self.fromBlock = (self.lenBlock - self.lenWin) / 2
+            readFrom = startWin - (self.lenBlock - self.lenWin) // 2
+            readTo = startWin + self.lenWin + (self.lenBlock - self.lenWin) // 2
+            self.fromBlock = (self.lenBlock - self.lenWin) // 2
             self.toBlock = self.fromBlock + self.lenWin
         if self.startBlock + self.lenBlock <= readFrom or self.startBlock >= readTo:
             self.startBlock = readFrom
             self.case = 1
             return [False, int(readFrom), int(readTo)]
         if self.startBlock + self.lenBlock < readTo:
+            self.case = 2
+            self.labels = [label for label in self.labels if label[2] >= readFrom]
             mid = int(readFrom - self.startBlock)
             self.data = self.data[:, mid:]
             self.updateFrom = self.lenBlock - readFrom + self.startBlock
@@ -49,24 +51,32 @@ class EEGData(object):
             startBlock = self.startBlock
             self.startBlock = readFrom
             readFrom = startBlock + self.lenBlock
-            self.case = 2
         else:
+            self.case = 3
+            self.labels = [label for label in self.labels if label[2] < readTo]
             mid = int(readTo - self.startBlock)
             self.data = self.data[:, :mid]
             self.updateFrom = 0
             self.updateTo = self.startBlock - readFrom
             readTo = self.startBlock
             self.startBlock = readFrom
-            self.case = 3
+
         return [False, int(readFrom), int(readTo)]
 
-    def setData(self, EEG):
+    def setData(self, EEG, labels):
         if self.updateFrom == 0 and self.updateTo == self.lenBlock:
             self.data = EEG
         elif self.updateFrom == 0:
             self.data = np.hstack((EEG, self.data))
         else:
             self.data = np.hstack((self.data, EEG))
+        if self.case == 1:
+            self.labels = labels
+        elif self.case == 2:
+            self.labels.extend(labels)
+        elif self.case == 3:
+            self.labels = labels.extend(self.labels)
+
 
     def getData(self):
         data = self.data[:, self.fromBlock: self.toBlock]

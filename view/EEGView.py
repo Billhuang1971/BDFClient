@@ -75,7 +75,7 @@ class EEGView(QWidget):
 
         self.createPaintTools()
 
-    def initView(self, type_info, channels, sampleRate, duration, patientInfo, fileName, measureDate, startTime, endTime):
+    def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime):
         self.type_info = type_info
 
         self.popMenu1 = QMenu(self.canvas)
@@ -179,7 +179,7 @@ class EEGView(QWidget):
         self.time_lines = []
 
     def paintEEG(self):
-        x = np.linspace(self.begin, self.end, self.data.shape[1])
+        x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate // self.nSample)
         for i in range(len(self.channels_name)):
             self.axes.plot(x, self.data[i] + i + 1, color='black', label=self.channels_name[i], picker=True,
                            alpha=self.channels_alpha[self.channels_name[i]], linewidth=0.3)
@@ -201,7 +201,8 @@ class EEGView(QWidget):
                 idx -= 1
             self.sample_info = sample_info + self.sample_info[idx + 1:]
 
-    def refreshWin(self, data, labels, begin, end):
+    def refreshWin(self, data, labels, begin, end, nSample):
+        self.nSample = nSample
         self.data = data
         self.begin = begin
         self.end = end
