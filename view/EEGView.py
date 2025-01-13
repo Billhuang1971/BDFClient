@@ -123,7 +123,7 @@ class EEGView(QWidget):
         self.ax_hscroll = plt.subplot2grid((33, 1), (0, 0), rowspan=1)
 
 
-    def calcSen(self):
+    def calcSen(self, secondsSpan):
         axesL = self.axes.figure.subplotpars.left
         axesR = self.axes.figure.subplotpars.right
         axesT = self.axes.figure.subplotpars.top
@@ -139,12 +139,14 @@ class EEGView(QWidget):
         figureHeightMM = (figureHeight / self.yDPI) * 25.4
         self.axesXWidthMM = x_fraction * figureWidthMM
         self.axesYWidthMM = y_fraction * figureHeightMM
+        return self.changeSecondsSpan(secondsSpan)
 
     def changeSecondsSpan(self, secondsSpan):
         self.secondsSpan = secondsSpan
         self.ui.secondsSpan.setCurrentText(str(secondsSpan))
         self.lenWin = int(round(self.axesXWidthMM / self.secondsSpan))
         px = int(round(secondsSpan * self.xDPI / 25.4))
+        self.nDotWin = self.lenWin * px
         return self.lenWin, px
 
     def secondsSpanChange(self, secondsSpan):
@@ -376,14 +378,17 @@ class EEGView(QWidget):
             xhtl.set_fontsize(10)
 
         l = 0
-        while l <= duration:
+        while l <= self.nDotWin:
             if labelBit[l]:
                 r = l + 1
-                while r <= duration and labelBit[r] is False:
+                while r <= self.nDotWin:
+                    if labelBit[r]:
+                        break
                     r += 1
                 if r == duration + 1:
                     break
-                    self.ax_hscroll.axvspan(l, r, facecolor="green", alpha=0.3)
+                self.ax_hscroll.axvspan(l * duration / self.nDotWin, r * duration / self.nDotWin, facecolor="green", alpha=0.5)
+                l = r + 1
             else:
                 l += 1
 

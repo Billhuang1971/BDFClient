@@ -25,6 +25,7 @@ class EEGController(QWidget):
         self.measure_date = msg[4]
         self.return_from = msg[5]
         self.tableName = msg[6]
+        self.pUid = msg[7]
         self.mainLabel = mainLabel
         self.view = EEGView()
         self.speed = {
@@ -35,20 +36,18 @@ class EEGController(QWidget):
         self.speedText = "1x"
 
 
-    def initEEG(self):
+    def startEEG(self):
         self.view.show()
-        self.view.calcSen()
         self.secondsSpan = 30
+        self.nSecWin, nDotSec = self.view.calcSen(self.secondsSpan)
         nWinBlock = 11
-        self.nSecWin, nDotSec = self.view.changeSecondsSpan(self.secondsSpan)
         self.moveLen = self.nSecWin
         self.view.ui.moveLength.setCurrentText(str(self.moveLen))
 
         self.client.openEEGFileResSig.connect(self.openEEGFileRes)
         self.client.loadEEGDataSig.connect(self.loadEEGDataRes)
         self.client.insertSampleSig.connect(self.insertSampleRes)
-
-        self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, nDotSec, nWinBlock, self.tableName])
+        self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, nDotSec, nWinBlock, self.tableName, self.pUid])
 
     def openEEGFileRes(self, REPData):
         if REPData[0] == '0':
@@ -74,7 +73,6 @@ class EEGController(QWidget):
             data = msg[13]
             labels = msg[14]
             labelBit = msg[15]
-
 
             self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit)
             self.data = EEGData()
@@ -328,12 +326,9 @@ class EEGController(QWidget):
         self.view.onAxhscrollClicked(self.leftTime)
         inBlock, readFrom, readTo, = self.data.queryRange(self.view.getIdx(self.leftTime) // self.nSample)
         if inBlock is False:
-            if self.moving:
-                self.loading = True
             self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.nSample, readTo * self.nSample, self.nSample, self.tableName])
         else:
             data, labels = self.data.getData()
-            print("data", data.shape)
             self.view.refreshWin(data, labels, self.leftTime, self.rightTime, self.nSample)
 
     def doScrollEvent(self, event):

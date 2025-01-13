@@ -64,7 +64,6 @@ class EEGData(object):
         return [False, int(readFrom), int(readTo)]
 
     def setData(self, EEG, labels):
-        print("setData", self.data.shape, "EEG", EEG.shape)
         if self.updateFrom == 0 and self.updateTo == self.lenBlock:
             self.data = EEG
         elif self.updateFrom == 0:
@@ -80,7 +79,6 @@ class EEGData(object):
 
 
     def getData(self):
-        print("getData", self.data.shape)
         data = self.data[:, self.fromBlock: self.toBlock]
         labels = []
         for label in self.labels:
