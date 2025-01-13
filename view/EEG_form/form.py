@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, QRegExp
 from PyQt5.QtGui import QRegExpValidator, QIntValidator
-from PyQt5.QtWidgets import QPushButton, QFrame, QSizePolicy
+from PyQt5.QtWidgets import QPushButton, QFrame, QSizePolicy, QLabel, QHBoxLayout
 
 
 class Ui_EEGView(object):
@@ -42,24 +42,33 @@ class Ui_EEGView(object):
         self.groupBox.setObjectName("groupBox")
         self.glBtn = QtWidgets.QGridLayout(self.groupBox)
         self.glBtn.setObjectName("glBtn")
-        self.btnBegin = QtWidgets.QPushButton(self.groupBox)
-        self.btnBegin.setObjectName("btnBegin")
-        self.glBtn.addWidget(self.btnBegin, 0, 0, 1, 2)
+        # self.btnBegin = QtWidgets.QPushButton(self.groupBox)
+        # self.btnBegin.setObjectName("btnBegin")
+        # self.glBtn.addWidget(self.btnBegin, 0, 0, 1, 2)
         self.btnDowning = QtWidgets.QPushButton(self.groupBox)
         self.btnDowning.setObjectName("btnDowning")
-        self.glBtn.addWidget(self.btnDowning, 0, 2, 1, 2)
+        self.glBtn.addWidget(self.btnDowning, 0, 4, 1, 2)
         self.btnDown = QtWidgets.QPushButton(self.groupBox)
         self.btnDown.setObjectName("btnDown")
-        self.glBtn.addWidget(self.btnDown, 0, 4, 1, 2)
+        self.glBtn.addWidget(self.btnDown, 0, 0, 1, 2)
         self.btnUp = QtWidgets.QPushButton(self.groupBox)
         self.btnUp.setObjectName("btnUp")
-        self.glBtn.addWidget(self.btnUp, 0, 6, 1, 2)
+        self.glBtn.addWidget(self.btnUp, 0, 2, 1, 2)
         self.btnUping = QtWidgets.QPushButton(self.groupBox)
         self.btnUping.setObjectName("btnUping")
         self.glBtn.addWidget(self.btnUping, 0, 8, 1, 2)
-        self.btnEnd = QtWidgets.QPushButton(self.groupBox)
-        self.btnEnd.setObjectName("btnEnd")
-        self.glBtn.addWidget(self.btnEnd, 0, 10, 1, 2)
+        self.moveSpeed = QtWidgets.QComboBox(self.groupBox)
+        self.moveSpeed.setObjectName("moveSpeed")
+        self.moveSpeed.setFixedWidth(int(self.moveSpeed.sizeHint().width() * 0.7))
+        self.moveSpeed.setEditable(False)
+        self.moveSpeed.setValidator(QIntValidator())
+        self.glBtn.addWidget(self.moveSpeed, 0, 6, 1, 1)
+        self.moveSpeed.addItem("1x")
+        self.moveSpeed.addItem("2x")
+        self.moveSpeed.addItem("3x")
+        # self.btnEnd = QtWidgets.QPushButton(self.groupBox)
+        # self.btnEnd.setObjectName("btnEnd")
+        # self.glBtn.addWidget(self.btnEnd, 0, 10, 1, 2)
 
         vline1 = QFrame()
         vline1.setFrameShape(QFrame.VLine)
@@ -82,11 +91,12 @@ class Ui_EEGView(object):
         self.glBtn.addWidget(self.secondsSpanText, 0, 15, 1, 1)
         self.secondsSpan = QtWidgets.QComboBox(self.groupBox)
         self.secondsSpan.setObjectName("secondsSpan")
+        self.secondsSpan.setFixedWidth(int(self.secondsSpan.sizeHint().width() * 0.7))
         self.secondsSpan.setEditable(True)
         self.secondsSpan.setValidator(QIntValidator())
         self.glBtn.addWidget(self.secondsSpan, 0, 16, 1, 1)
 
-        self.editTime.setFixedWidth(self.secondsSpan.sizeHint().width())
+        self.editTime.setFixedWidth(int(self.secondsSpan.sizeHint().width() * 0.8))
 
         self.moveLengthText = QtWidgets.QLabel(self.groupBox)
         self.moveLengthText.setObjectName("moveLengthText")
@@ -96,13 +106,16 @@ class Ui_EEGView(object):
         self.moveLength.setObjectName("moveLength")
         self.moveLength.setEditable(True)
         self.moveLength.setValidator(QIntValidator())
+        self.moveLength.setFixedWidth(int(self.moveLength.sizeHint().width() * 0.7))
         self.glBtn.addWidget(self.moveLength, 0, 18, 1, 1)
         self.sensitivityText = QtWidgets.QLabel(self.groupBox)
         self.sensitivityText.setObjectName("sensitivityText")
+
         self.sensitivityText.setAlignment(Qt.AlignCenter)
         self.glBtn.addWidget(self.sensitivityText, 0, 19, 1, 1)
         self.sensitivity = QtWidgets.QComboBox(self.groupBox)
         self.sensitivity.setObjectName("sensitivity")
+        self.sensitivity.setFixedWidth(int(self.sensitivity.sizeHint().width() * 0.7))
         self.sensitivity.setEditable(True)
         self.sensitivity.setValidator(QIntValidator())
         self.glBtn.addWidget(self.sensitivity, 0, 20, 1, 1)
@@ -113,13 +126,64 @@ class Ui_EEGView(object):
         self.glBtn.addWidget(vline4, 0, 21, 1, 1)
 
         self.subtractAverage = QtWidgets.QRadioButton(self.groupBox)
+
         self.subtractAverage.setObjectName("subtractAverage")
         self.subtractAverage.setChecked(True)
         self.subtractAverage.setAutoExclusive(False)
+        self.subtractAverage.setLayoutDirection(Qt.RightToLeft)
+        self.subtractAverage.setStyleSheet("""
+                QRadioButton::indicator {
+                        width: 10px; 
+                        height: 10px; 
+                        border-radius: 5px; 
+                        border: 0.25px solid darkgray; 
+                        background: white; 
+                    }
+
+                    QRadioButton::indicator:checked {   
+                        border: 0.25px solid lightgray; 
+                        background: qradialgradient(  
+                        cx: 0.5, cy: 0.5, fx: 0.5, fy: 0.5, 
+                        radius: 0.7, 
+                        stop: 0 black, 
+                        stop: 0.6 rgba(255, 255, 255, 0.9),   
+                        stop: 1 rgba(255, 255, 255, 0)  
+                    );  
+                    }
+
+                    QRadioButton::indicator:disabled {
+                        border: 1px solid lightgray; 
+                        background: lightgray;
+                    }""")
 
         self.glBtn.addWidget(self.subtractAverage, 0, 22, 1, 1)
 
         self.secondsLine = QtWidgets.QRadioButton(self.groupBox)
+        self.secondsLine.setLayoutDirection(Qt.RightToLeft)
+        self.secondsLine.setStyleSheet("""
+                QRadioButton::indicator {
+                        width: 10px; 
+                        height: 10px; 
+                        border-radius: 5px;
+                        border: 0.25px solid darkgray; 
+                        background: white; 
+                    }
+
+                    QRadioButton::indicator:checked {   
+                        border: 0.25px solid lightgray; 
+                        background: qradialgradient(  
+                        cx: 0.5, cy: 0.5, fx: 0.5, fy: 0.5, 
+                        radius: 0.7, 
+                        stop: 0 black, 
+                        stop: 0.6 rgba(255, 255, 255, 0.9), 
+                        stop: 1 rgba(255, 255, 255, 0) 
+                    );  
+                    }
+
+                    QRadioButton::indicator:disabled {
+                        border: 1px solid lightgray; /
+                        background: lightgray; 
+                    }""")
         self.secondsLine.setObjectName("secondsLine")
         self.secondsLine.setChecked(True)
         self.secondsLine.setAutoExclusive(False)
@@ -209,20 +273,83 @@ class Ui_EEGView(object):
         self.glSample = QtWidgets.QGridLayout(self.gbSample)
         self.glSample.setObjectName("glSample")
 
-        self.hideWave = QtWidgets.QRadioButton(self.gbSample)
-        self.hideWave.setObjectName("hideWave")
+        self.waveLayout = QHBoxLayout()  # 创建一个水平布局
+        #self.waveLayout.setSpacing(1)  # 设置控件之间的间距为 5
+        self.hideWaveText = QLabel("波形")
+        self.hideWaveText.setMaximumWidth(30)
+        self.waveLayout.addWidget(self.hideWaveText)
+        #self.glSample.addWidget(self.hideWaveText, 1, 0, 1, 1)
 
+        self.hideWave = QtWidgets.QRadioButton(self.gbSample)
+        #self.hideWave.setLayoutDirection(Qt.RightToLeft)
+        self.hideWave.setObjectName("hideWave")
+        self.hideWave.setStyleSheet("""
+                QRadioButton::indicator {
+                        width: 10px; 
+                        height: 10px;
+                        border-radius: 5px;
+                        border: 0.25px solid darkgray; 
+                        background: white; 
+                    }
+
+                    QRadioButton::indicator:checked {   
+                        border: 0.25px solid lightgray; 
+                        background: qradialgradient(  
+                        cx: 0.5, cy: 0.5, fx: 0.5, fy: 0.5,   
+                        radius: 0.7, 
+                        stop: 0 black, 
+                        stop: 0.6 rgba(255, 255, 255, 0.9), 
+                        stop: 1 rgba(255, 255, 255, 0) 
+                    );  
+                    }
+
+                    QRadioButton::indicator:disabled {
+                        border: 1px solid lightgray;
+                        background: lightgray; 
+                    }""")
         self.hideWave.setChecked(True)
         self.hideWave.setAutoExclusive(False)
-        self.glSample.addWidget(self.hideWave, 1, 0, 1, 1)
+        self.waveLayout.addWidget(self.hideWave)
 
+        self.glSample.addLayout(self.waveLayout, 1, 0, 1, 1)
 
+        self.stateLayout = QHBoxLayout()  # 创建一个水平布局
+        self.hideStateText = QLabel("状态")
+        # self.waveLayout.setSpacing(1)  # 设置控件之间的间距为 5
+        self.hideStateText.setMaximumWidth(30)
+        self.stateLayout.addWidget(self.hideStateText)
+        #self.glSample.addWidget(self.hideStateText, 1, 2, 1, 1)
         self.hideState = QtWidgets.QRadioButton(self.gbSample)
         self.hideState.setObjectName("hideState")
 
+        self.hideState.setStyleSheet("""
+                QRadioButton::indicator {
+                        width: 10px; 
+                        height: 10px; 
+                        border-radius: 5px; 
+                        border: 0.25px solid darkgray; 
+                        background: white; 
+                    }
+
+                    QRadioButton::indicator:checked {   
+                        border: 0.25px solid lightgray; 
+                        background: qradialgradient(  
+                        cx: 0.5, cy: 0.5, fx: 0.5, fy: 0.5,
+                        radius: 0.7, 
+                        stop: 0 black,
+                        stop: 0.6 rgba(255, 255, 255, 0.9), 
+                        stop: 1 rgba(255, 255, 255, 0) 
+                    );  
+                    }
+
+                    QRadioButton::indicator:disabled {
+                        border: 1px solid lightgray; 
+                        background: lightgray; 
+                    }""")
         self.hideState.setChecked(True)
         self.hideState.setAutoExclusive(False)
-        self.glSample.addWidget(self.hideState, 1, 1, 1, 1)
+        self.stateLayout.addWidget(self.hideState)
+        self.glSample.addLayout(self.stateLayout, 1, 1, 1, 1)
 
         self.labelMeasureTimeInfo = QtWidgets.QLabel(self.gbPatientInfo)
         self.labelMeasureTimeInfo.setObjectName("labelMeasureTimeInfo")
@@ -307,12 +434,12 @@ class Ui_EEGView(object):
     def retranslateUi(self, ManualForm):
         _translate = QtCore.QCoreApplication.translate
         self.returnBtn.setText(_translate("Return", "返回"))
-        self.btnBegin.setText(_translate("Begin", "|<"))
+        #self.btnBegin.setText(_translate("Begin", "|<"))
         self.btnDowning.setText(_translate("Scroll Backward", "<<"))
         self.btnDown.setText(_translate("Backward", "<"))
         self.btnUp.setText(_translate("Forward", ">"))
         self.btnUping.setText(_translate("Scroll Forward", ">>"))
-        self.btnEnd.setText(_translate("End", ">|"))
+        #self.btnEnd.setText(_translate("End", ">|"))
         self.editTimeText.setText(_translate("EditTime Text", " 窗口位置:"))
         self.editTime.setText("00:00:00")
         self.secondsLine.setText(_translate("Seconds Line", "秒线 "))
@@ -358,5 +485,5 @@ class Ui_EEGView(object):
         self.labelAmp.setText("")
 
         self.gbSample.setTitle(_translate("Sample", "样本操作"))
-        self.hideWave.setText(_translate("hideWave", "波形 "))
-        self.hideState.setText(_translate("hideState", "状态 "))
+        self.hideWave.setText(_translate("hideWave", " "))
+        self.hideState.setText(_translate("hideState", " "))
