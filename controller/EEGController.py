@@ -27,6 +27,12 @@ class EEGController(QWidget):
         self.tableName = msg[6]
         self.mainLabel = mainLabel
         self.view = EEGView()
+        self.speed = {
+            "1x": 3,
+            "2x": 1.5,
+            "3x": 1
+        }
+        self.speedText = "1x"
 
 
     def initEEG(self):
@@ -49,7 +55,7 @@ class EEGController(QWidget):
             QMessageBox.information(self, '提示', REPData[2])
         else:
             msg = REPData[2]
-            self.moving = True
+            self.moving = False
             self.nSample = msg[11]
             self.patientInfo = msg[0]
             self.channels = msg[3]
@@ -67,6 +73,7 @@ class EEGController(QWidget):
             self.rightTime = self.nSecWin
             data = msg[13]
             labels = msg[14]
+
 
             self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time)
             self.data = EEGData()
@@ -90,12 +97,14 @@ class EEGController(QWidget):
         data, labels = self.data.getData()
         self.view.refreshWin(data, labels, self.leftTime, self.rightTime, self.nSample)
 
+
     def connetEvent(self):
         self.view.insertSample.connect(self.insertSample)
         self.view.ui.btnUp.clicked.connect(self.onBtnDownClicked)
         self.view.ui.btnDown.clicked.connect(self.onBtnUpClicked)
         self.view.ui.btnUping.clicked.connect(self.onBtnUpingClicked)
         self.view.ui.btnDowning.clicked.connect(self.onBtnDowningClicked)
+        self.view.ui.moveSpeed.currentIndexChanged.connect(self.onMoveSpeedChanged)
         self.view.ui.editTime.editingFinished.connect(self.timeChange)
         self.view.ui.btnStateAnnotate.clicked.connect(self.btnStateAnnotateClicked)
         self.view.ui.secondsLine.clicked.connect(self.secondsLineClicked)
@@ -112,6 +121,9 @@ class EEGController(QWidget):
         self.view.canvas.mpl_connect("key_press_event", self.doKeyPressEvent)
         self.view.canvas.setFocusPolicy(Qt.ClickFocus)
         self.view.canvas.setFocus()
+
+    def onMoveSpeedChanged(self):
+        self.speedText = self.view.ui.moveSpeed.currentText()
 
     def secondsSpanChange(self):
         secondsSpan = self.view.ui.secondsSpan.lineEdit().text()
@@ -166,9 +178,7 @@ class EEGController(QWidget):
         self.checkSolution()
 
     def onBtnDowningClicked(self):
-        if self.moving:
-            self.view.ui.btnBegin.setDisabled(True)
-            self.view.ui.btnEnd.setDisabled(True)
+        if self.moving is False:
             self.view.ui.btnUp.setDisabled(True)
             self.view.ui.btnDown.setDisabled(True)
             self.view.ui.btnUping.setDisabled(True)
@@ -176,18 +186,16 @@ class EEGController(QWidget):
             self.thread = threading.Thread(target=self.doDowning)
             self.thread.start()
         else:
-            self.view.ui.btnBegin.setDisabled(False)
-            self.view.ui.btnEnd.setDisabled(False)
             self.view.ui.btnUp.setDisabled(False)
             self.view.ui.btnDown.setDisabled(False)
             self.view.ui.btnUping.setDisabled(False)
             self.view.ui.btnDowning.setText("<<")
-            self._async_raise(self.thread.ident, SystemExit)
+            self.stopThread()
         self.moving = self.moving is False
 
     def doDowning(self):
         while True:
-            time.sleep(1)
+            time.sleep(self.speed[self.speedText])
             self.leftTime -= self.moveLen
             self.rightTime -= self.moveLen
             if self.leftTime < 0:
@@ -195,22 +203,20 @@ class EEGController(QWidget):
                 self.rightTime = self.nSecWin
                 self.view.changeTime(self.leftTime)
                 self.checkSolution()
-                self.view.ui.btnBegin.setDisabled(False)
-                self.view.ui.btnEnd.setDisabled(False)
                 self.view.ui.btnUp.setDisabled(False)
                 self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnUping.setDisabled(False)
                 self.view.ui.btnDowning.setText("<<")
-                self._async_raise(self.thread.ident, SystemExit)
+                self.stopThread()
                 return
             else:
                 self.view.changeTime(self.leftTime)
                 self.checkSolution()
+    def stopThread(self):
+        self._async_raise(self.thread.ident, SystemExit)
 
     def onBtnUpingClicked(self):
-        if self.moving:
-            self.view.ui.btnBegin.setDisabled(True)
-            self.view.ui.btnEnd.setDisabled(True)
+        if self.moving is False:
             self.view.ui.btnUp.setDisabled(True)
             self.view.ui.btnDown.setDisabled(True)
             self.view.ui.btnDowning.setDisabled(True)
@@ -218,18 +224,16 @@ class EEGController(QWidget):
             self.thread = threading.Thread(target=self.doUping)
             self.thread.start()
         else:
-            self.view.ui.btnBegin.setDisabled(False)
-            self.view.ui.btnEnd.setDisabled(False)
             self.view.ui.btnUp.setDisabled(False)
             self.view.ui.btnDown.setDisabled(False)
             self.view.ui.btnDowning.setDisabled(False)
             self.view.ui.btnUping.setText(">>")
-            self._async_raise(self.thread.ident, SystemExit)
+            self.stopThread()
         self.moving = self.moving is False
 
     def doUping(self):
         while True:
-            time.sleep(1)
+            time.sleep(self.speed[self.speedText])
             self.leftTime += self.moveLen
             self.rightTime += self.moveLen
             if self.rightTime > self.duration:
@@ -237,13 +241,11 @@ class EEGController(QWidget):
                 self.rightTime = self.duration
                 self.view.changeTime(self.leftTime)
                 self.checkSolution()
-                self.view.ui.btnBegin.setDisabled(False)
-                self.view.ui.btnEnd.setDisabled(False)
                 self.view.ui.btnUp.setDisabled(False)
                 self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnDowning.setDisabled(False)
                 self.view.ui.btnUping.setText(">>")
-                self._async_raise(self.thread.ident, SystemExit)
+                self.stopThread()
                 return
             else:
                 self.view.changeTime(self.leftTime)
@@ -325,9 +327,12 @@ class EEGController(QWidget):
         self.view.onAxhscrollClicked(self.leftTime)
         inBlock, readFrom, readTo, = self.data.queryRange(self.view.getIdx(self.leftTime) // self.nSample)
         if inBlock is False:
-            self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.nSample, readTo * self.nSample, self.nSample])
+            if self.moving:
+                self.loading = True
+            self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.nSample, readTo * self.nSample, self.nSample, self.tableName])
         else:
             data, labels = self.data.getData()
+            print("data", data.shape)
             self.view.refreshWin(data, labels, self.leftTime, self.rightTime, self.nSample)
 
     def doScrollEvent(self, event):

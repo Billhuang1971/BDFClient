@@ -4463,6 +4463,7 @@ class client(QObject, socketClient):
         elif REQmsg[0] == 'EEG' and REQmsg[1] == 0:
             self.openEEGFileRes(REQmsg)
         elif REQmsg[0] == 'EEG' and REQmsg[1] == 1:
+            print("yes")
             self.loadEEGDataRes(REQmsg)
 
         else:
