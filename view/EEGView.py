@@ -75,8 +75,9 @@ class EEGView(QWidget):
 
         self.createPaintTools()
 
-    def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit):
+    def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, nSample):
         self.type_info = type_info
+        self.nSample = nSample
 
         self.popMenu1 = QMenu(self.canvas)
         self.popMenu2 = QMenu(self.canvas)
@@ -203,8 +204,7 @@ class EEGView(QWidget):
                 idx -= 1
             self.sample_info = sample_info + self.sample_info[idx + 1:]
 
-    def refreshWin(self, data, labels, begin, end, nSample):
-        self.nSample = nSample
+    def refreshWin(self, data, labels, begin, end):
         self.data = data
         self.begin = begin
         self.end = end

@@ -74,12 +74,12 @@ class EEGController(QWidget):
             labels = msg[14]
             labelBit = msg[15]
 
-            self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit)
+            self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.nSample)
             self.data = EEGData()
             self.data.initEEGData(data, self.lenFile, self.lenBlock, self.nSample, self.lenWin, labels)
             self.connetEvent()
             data, labels = self.data.getData()
-            self.view.refreshWin(data, labels, self.leftTime, self.rightTime, self.nSample)
+            self.view.refreshWin(data, labels, self.leftTime, self.rightTime)
 
 
     def insertSampleRes(self):
@@ -326,10 +326,10 @@ class EEGController(QWidget):
         self.view.onAxhscrollClicked(self.leftTime)
         inBlock, readFrom, readTo, = self.data.queryRange(self.view.getIdx(self.leftTime) // self.nSample)
         if inBlock is False:
-            self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.nSample, readTo * self.nSample, self.nSample, self.tableName])
+            self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.nSample, readTo * self.nSample, self.nSample, self.tableName, self.pUid])
         else:
             data, labels = self.data.getData()
-            self.view.refreshWin(data, labels, self.leftTime, self.rightTime, self.nSample)
+            self.view.refreshWin(data, labels, self.leftTime, self.rightTime)
 
     def doScrollEvent(self, event):
         if event.button == "down":
