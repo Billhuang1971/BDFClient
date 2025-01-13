@@ -518,7 +518,7 @@ class EEGView(QWidget):
         self.checkPickLabels(label)
         self.focusLines()
         self.restorePreSampleColor()
-        self.pick_first = int(event.ind[0] + self.begin * self.sample_rate)
+        self.pick_first = int(event.ind[0] + self.begin * self.sample_rate // self.nSample)
         self.pick_X = mouseevent.xdata
         self.pick_Y = mouseevent.ydata
         self.pick_channel = label
@@ -614,7 +614,7 @@ class EEGView(QWidget):
     def showSecondPoint(self, event):
         artist = event.artist
         self.pick_label = artist.get_label()
-        x = int(event.ind[0] + self.begin * self.sample_rate)
+        x = int(event.ind[0] + self.begin * self.sample_rate // self.nSample)
         if self.pick_second:
             mid = (self.pick_first + self.pick_second) // 2
             if x > mid:
@@ -630,7 +630,7 @@ class EEGView(QWidget):
         if self.pick_first == self.pick_second:
             return
         self.removeLines(['pp', 'pickedsegment'])
-        self.paintAWave(max((self.pick_first - self.begin * self.sample_rate) // self.nSample, 0), min((self.lenWin * self.sample_rate) // self.nSample, (self.pick_second - self.begin * self.sample_rate) // self.nSample), self.pick_label, 'pickedsegment', 'red')
+        self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.nSample, 0), min(self.lenWin * self.sample_rate // self.nSample, self.pick_second - self.begin * self.sample_rate // self.nSample), self.pick_label, 'pickedsegment', 'red')
         self.canvas.draw()
 
     def clickSample(self, artist):

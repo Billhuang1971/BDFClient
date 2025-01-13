@@ -307,13 +307,13 @@ class MainController(QWidget):
             self.controller = manualController(appUtil=self.cAppUtil, Widget=self.view.label_4, client=self.client)
             self.m_controllers[controller_name] = self.controller
         elif controller_name == "manualQueryController":
-            self.controller = manualQueryController(appUtil=self.cAppUtil, Widget=self.view.label_4, client=self.client)
+            self.controller = manualQueryController(appUtil=self.cAppUtil, client=self.client)
             self.m_controllers[controller_name] = self.controller
         elif controller_name == "basicConfigController":
             self.controller = basicConfigController(client=self.client, cAppUtil=self.cAppUtil)
             self.m_controllers[controller_name] = self.controller
         elif controller_name == "consultingController":
-            self.controller = consultingController(appUtil=self.cAppUtil, Widget=self.view.label_4, client=self.client)
+            self.controller = consultingController(appUtil=self.cAppUtil, client=self.client)
             self.m_controllers[controller_name] = self.controller
         elif controller_name == "diagTrainingController":
             self.controller = diagTrainingController(appUtil=self.cAppUtil, Widget=self.view.label_4,

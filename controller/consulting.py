@@ -1,8 +1,3 @@
-import inspect
-import ctypes
-
-from PyQt5 import QtCore
-
 from PyQt5.Qt import *
 
 from view.consulting import DiagListView, PrentryView

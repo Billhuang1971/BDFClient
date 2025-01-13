@@ -1,8 +1,7 @@
 import sys
 from functools import partial
 
-from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 
 from view.manual_form.diagList import Ui_diagList
