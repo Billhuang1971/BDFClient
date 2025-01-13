@@ -73,9 +73,10 @@ class EEGController(QWidget):
             self.rightTime = self.nSecWin
             data = msg[13]
             labels = msg[14]
+            labelBit = msg[15]
 
 
-            self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time)
+            self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit)
             self.data = EEGData()
             self.data.initEEGData(data, self.lenFile, self.lenBlock, self.nSample, self.lenWin, labels)
             self.connetEvent()

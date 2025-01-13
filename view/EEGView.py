@@ -75,7 +75,7 @@ class EEGView(QWidget):
 
         self.createPaintTools()
 
-    def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime):
+    def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit):
         self.type_info = type_info
 
         self.popMenu1 = QMenu(self.canvas)
@@ -106,7 +106,7 @@ class EEGView(QWidget):
 
         self.updateYAxis(channels_name=channels)
         self.sample_rate = sampleRate
-        self.setAxHscroll(duration)
+        self.setAxHscroll(duration, labelBit)
         self.showPatientInfo(patientInfo, fileName,
                                   measureDate, startTime,
                                   endTime)
@@ -357,7 +357,7 @@ class EEGView(QWidget):
         self.fig.subplots_adjust(left=0.07)
         self.fig.subplots_adjust(right=0.97)
 
-    def setAxHscroll(self, duration):
+    def setAxHscroll(self, duration, labelBit):
         self.ax_hscroll.set_xlim(0, duration)
         self.ax_hscroll.get_yaxis().set_visible(False)
         hsel_patch = mpl.patches.Rectangle((0, 0), duration,
@@ -374,6 +374,18 @@ class EEGView(QWidget):
         self.ax_hscroll.set_xticklabels(hxlabels)
         for xhtl in self.ax_hscroll.get_xticklabels():
             xhtl.set_fontsize(10)
+
+        l = 0
+        while l <= duration:
+            if labelBit[l]:
+                r = l + 1
+                while r <= duration and labelBit[r] is False:
+                    r += 1
+                if r == duration + 1:
+                    break
+                    self.ax_hscroll.axvspan(l, r, facecolor="green", alpha=0.3)
+            else:
+                l += 1
 
 
     def clickAxStatus(self, ax):
