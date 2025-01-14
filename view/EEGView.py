@@ -205,29 +205,32 @@ class EEGView(QWidget):
             self.sample_info = sample_info + self.sample_info[idx + 1:]
 
     def refreshWin(self, data, labels, begin, end):
-        self.data = data
-        self.begin = begin
-        self.end = end
-        self.removeLines()
-        self.updateXAxis()
-        self.paintEEG()
-        self.checkSecondsLine()
-        self.filterSamples()
-        self.paintWaves()
-        self.paintStates()
-        if self.pick_first is not None:
-            if self.pick_second is None:
-                if self.pick_first >= self.begin * self.sample_rate and self.pick_first < self.end * self.sample_rate:
-                    self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
-            else:
-                if (self.pick_first >= self.begin * self.sample_rate and self.pick_first < self.end * self.sample_rate) or (self.pick_second >= self.begin * self.sample_rate and self.pick_second < self.end * self.sample_rate) or (self.pick_first < self.begin * self.sample_rate and self.pick_second >= self.end * self.sample_rate):
-                    self.paintAWave(max(self.pick_first - self.begin * self.sample_rate, 0),
-                                    min(self.lenWin * self.sample_rate, self.pick_second - self.begin * self.sample_rate),
-                                    self.pick_label, 'pickedsegment', 'red')
+        try:
+            self.data = data
+            self.begin = begin
+            self.end = end
+            self.removeLines()
+            self.updateXAxis()
+            self.paintEEG()
+            self.checkSecondsLine()
+            self.filterSamples()
+            self.paintWaves()
+            self.paintStates()
+            if self.pick_first is not None:
+                if self.pick_second is None:
+                    if self.pick_first >= self.begin * self.sample_rate and self.pick_first < self.end * self.sample_rate:
+                        self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
+                else:
+                    if (self.pick_first >= self.begin * self.sample_rate and self.pick_first < self.end * self.sample_rate) or (self.pick_second >= self.begin * self.sample_rate and self.pick_second < self.end * self.sample_rate) or (self.pick_first < self.begin * self.sample_rate and self.pick_second >= self.end * self.sample_rate):
+                        self.paintAWave(max(self.pick_first - self.begin * self.sample_rate, 0),
+                                        min(self.lenWin * self.sample_rate, self.pick_second - self.begin * self.sample_rate),
+                                        self.pick_label, 'pickedsegment', 'red')
 
-        self.canvas.draw()
-        self.showLabels()
-        self.showCurLabel()
+            self.canvas.draw()
+            self.showLabels()
+            self.showCurLabel()
+        except Exception as e:
+            print("refreshWin", e)
 
     def changeShowWave(self):
         self.is_waves_showed = self.is_waves_showed is False

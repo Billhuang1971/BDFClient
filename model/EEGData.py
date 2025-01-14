@@ -64,30 +64,38 @@ class EEGData(object):
         return [False, int(readFrom), int(readTo)]
 
     def setData(self, EEG, labels):
-        if self.updateFrom == 0 and self.updateTo == self.lenBlock:
-            self.data = EEG
-        elif self.updateFrom == 0:
-            self.data = np.hstack((EEG, self.data))
-        else:
-            self.data = np.hstack((self.data, EEG))
-        if self.case == 1:
-            self.labels = labels
-        elif self.case == 2:
-            self.labels.extend(labels)
-        elif self.case == 3:
-            self.labels = labels.extend(self.labels)
+        try:
+            if self.updateFrom == 0 and self.updateTo == self.lenBlock:
+                self.data = EEG
+            elif self.updateFrom == 0:
+                self.data = np.hstack((EEG, self.data))
+            else:
+                self.data = np.hstack((self.data, EEG))
+            if labels is None or len(labels) == 0:
+                return
+            if self.case == 1:
+                self.labels = labels
+            elif self.case == 2:
+                self.labels.extend(labels)
+            elif self.case == 3:
+                self.labels = labels.extend(self.labels)
+        except Exception as e:
+            print("setData", e)
 
 
     def getData(self):
-        data = self.data[:, self.fromBlock: self.toBlock]
-        labels = []
-        for label in self.labels:
-            if label[2] < self.startBlock + self.fromBlock:
-                continue
-            if label[2] >= self.startBlock + self.toBlock:
-                break
-            labels.append(label)
-        return data, labels
+        try:
+            data = self.data[:, self.fromBlock: self.toBlock]
+            labels = []
+            for label in self.labels:
+                if label[2] < self.startBlock + self.fromBlock:
+                    continue
+                if label[2] >= self.startBlock + self.toBlock:
+                    break
+                labels.append(label)
+            return data, labels
+        except Exception as e:
+            print("getData", e)
 
     def initEEGData(self, data, lenFile, lenBlock, nSample, lenWin, labels):
         self.data = data

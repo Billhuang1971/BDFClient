@@ -37,49 +37,54 @@ class EEGController(QWidget):
 
 
     def startEEG(self):
-        self.view.show()
-        self.secondsSpan = 30
-        self.nSecWin, nDotSec = self.view.calcSen(self.secondsSpan)
-        nWinBlock = 11
-        self.moveLen = self.nSecWin
-        self.view.ui.moveLength.setCurrentText(str(self.moveLen))
+        try:
+            self.view.show()
+            self.secondsSpan = 30
+            self.nSecWin, nDotSec = self.view.calcSen(self.secondsSpan)
+            nWinBlock = 11
+            self.moveLen = self.nSecWin
+            self.view.ui.moveLength.setCurrentText(str(self.moveLen))
 
-        self.client.openEEGFileResSig.connect(self.openEEGFileRes)
-        self.client.loadEEGDataSig.connect(self.loadEEGDataRes)
-        self.client.insertSampleSig.connect(self.insertSampleRes)
-        self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, nDotSec, nWinBlock, self.tableName, self.pUid])
-
+            self.client.openEEGFileResSig.connect(self.openEEGFileRes)
+            self.client.loadEEGDataSig.connect(self.loadEEGDataRes)
+            self.client.insertSampleSig.connect(self.insertSampleRes)
+            self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, nDotSec, nWinBlock, self.tableName, self.pUid])
+        except Exception as e:
+            print("startEEG", e)
     def openEEGFileRes(self, REPData):
-        if REPData[0] == '0':
-            QMessageBox.information(self, '提示', REPData[2])
-        else:
-            msg = REPData[2]
-            self.moving = False
-            self.nSample = msg[11]
-            self.patientInfo = msg[0]
-            self.channels = msg[3]
-            self.index_channels = msg[4]
-            sample_rate = msg[5]
-            self.lenFile = msg[6] // self.nSample
-            self.duration = msg[7]
-            self.start_time = msg[8]
-            self.end_time = msg[9]
-            type_info = msg[1]
-            self.montage = msg[2]
-            self.lenBlock = msg[10] // self.nSample
-            self.lenWin = msg[12]
-            self.leftTime = 0
-            self.rightTime = self.nSecWin
-            data = msg[13]
-            labels = msg[14]
-            labelBit = msg[15]
+        try:
+            if REPData[0] == '0':
+                QMessageBox.information(self, '提示', REPData[2])
+            else:
+                msg = REPData[2]
+                self.moving = False
+                self.nSample = msg[11]
+                self.patientInfo = msg[0]
+                self.channels = msg[3]
+                self.index_channels = msg[4]
+                sample_rate = msg[5]
+                self.lenFile = msg[6] // self.nSample
+                self.duration = msg[7]
+                self.start_time = msg[8]
+                self.end_time = msg[9]
+                type_info = msg[1]
+                self.montage = msg[2]
+                self.lenBlock = msg[10] // self.nSample
+                self.lenWin = msg[12]
+                self.leftTime = 0
+                self.rightTime = self.nSecWin
+                data = msg[13]
+                labels = msg[14]
+                labelBit = msg[15]
 
-            self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.nSample)
-            self.data = EEGData()
-            self.data.initEEGData(data, self.lenFile, self.lenBlock, self.nSample, self.lenWin, labels)
-            self.connetEvent()
-            data, labels = self.data.getData()
-            self.view.refreshWin(data, labels, self.leftTime, self.rightTime)
+                self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.nSample)
+                self.data = EEGData()
+                self.data.initEEGData(data, self.lenFile, self.lenBlock, self.nSample, self.lenWin, labels)
+                self.connetEvent()
+                data, labels = self.data.getData()
+                self.view.refreshWin(data, labels, self.leftTime, self.rightTime)
+        except Exception as e:
+            print("openEEGFileRes", e)
 
 
     def insertSampleRes(self):
@@ -89,12 +94,15 @@ class EEGController(QWidget):
         pass
 
     def loadEEGDataRes(self, REPData):
-        msg = REPData[3][2]
-        data = msg[0]
-        labels = msg[1]
-        self.data.setData(data, labels)
-        data, labels = self.data.getData()
-        self.view.refreshWin(data, labels, self.leftTime, self.rightTime, self.nSample)
+        try:
+            msg = REPData[3][2]
+            data = msg[0]
+            labels = msg[1]
+            self.data.setData(data, labels)
+            data, labels = self.data.getData()
+            self.view.refreshWin(data, labels, self.leftTime, self.rightTime)
+        except Exception as e:
+            print("loadEEGDataRes", e)
 
 
     def connetEvent(self):
@@ -140,8 +148,11 @@ class EEGController(QWidget):
         self.client.loadDataDynamical(self.check_id, self.file_id, self.readFrom, self.readTo)
 
     def moveLengthChange(self):
-        moveLength = self.view.ui.moveLength.lineEdit().text()
-        self.moveLen = int(moveLength)
+        try:
+            moveLength = self.view.ui.moveLength.lineEdit().text()
+            self.moveLen = int(moveLength)
+        except Exception as e:
+            print("moveLengthChange", e)
 
     def onSampleClicked(self, item=None):
         if item is None:
@@ -160,95 +171,111 @@ class EEGController(QWidget):
         self.view.checkSecondsLine()
 
     def timeChange(self):
-        reg = QRegExp(r"^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$")
-        time = self.view.ui.editTime.text()
-        if not reg.exactMatch(time):
-            self.view.ui.editTime.setText("00:00:00")
-            return
-        [h, m, s] = time.split(':')
-        begin = int(h) * 3600 + int(m) * 60 + int(s)
-        if begin < 0 or begin + self.nSecWin > self.duration:
-            self.view.ui.editTime.setText("00:00:00")
-            self.leftTime = 0
-            self.rightTime = self.nSecWin
-        else:
-            self.leftTime = begin
-            self.rightTime = begin + self.nSecWin
-        self.checkSolution()
-
-    def onBtnDowningClicked(self):
-        if self.moving is False:
-            self.view.ui.btnUp.setDisabled(True)
-            self.view.ui.btnDown.setDisabled(True)
-            self.view.ui.btnUping.setDisabled(True)
-            self.view.ui.btnDowning.setText("■")
-            self.thread = threading.Thread(target=self.doDowning)
-            self.thread.start()
-        else:
-            self.view.ui.btnUp.setDisabled(False)
-            self.view.ui.btnDown.setDisabled(False)
-            self.view.ui.btnUping.setDisabled(False)
-            self.view.ui.btnDowning.setText("<<")
-            self.stopThread()
-        self.moving = self.moving is False
-
-    def doDowning(self):
-        while True:
-            time.sleep(self.speed[self.speedText])
-            self.leftTime -= self.moveLen
-            self.rightTime -= self.moveLen
-            if self.leftTime < 0:
+        try:
+            reg = QRegExp(r"^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$")
+            time = self.view.ui.editTime.text()
+            if not reg.exactMatch(time):
+                self.view.ui.editTime.setText("00:00:00")
+                return
+            [h, m, s] = time.split(':')
+            begin = int(h) * 3600 + int(m) * 60 + int(s)
+            if begin < 0 or begin + self.nSecWin > self.duration:
+                self.view.ui.editTime.setText("00:00:00")
                 self.leftTime = 0
                 self.rightTime = self.nSecWin
-                self.view.changeTime(self.leftTime)
-                self.checkSolution()
+            else:
+                self.leftTime = begin
+                self.rightTime = begin + self.nSecWin
+            self.checkSolution()
+        except Exception as e:
+            print("timeChange", e)
+
+    def onBtnDowningClicked(self):
+        try:
+            if self.moving is False:
+                self.view.ui.btnUp.setDisabled(True)
+                self.view.ui.btnDown.setDisabled(True)
+                self.view.ui.btnUping.setDisabled(True)
+                self.view.ui.btnDowning.setText("■")
+                self.thread = threading.Thread(target=self.doDowning)
+                self.thread.start()
+            else:
                 self.view.ui.btnUp.setDisabled(False)
                 self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnUping.setDisabled(False)
                 self.view.ui.btnDowning.setText("<<")
                 self.stopThread()
-                return
-            else:
-                self.view.changeTime(self.leftTime)
-                self.checkSolution()
+            self.moving = self.moving is False
+        except Exception as e:
+            print("onBtnDowningClicked", e)
+
+    def doDowning(self):
+        try:
+            while True:
+                time.sleep(self.speed[self.speedText])
+                self.leftTime -= self.moveLen
+                self.rightTime -= self.moveLen
+                if self.leftTime < 0:
+                    self.leftTime = 0
+                    self.rightTime = self.nSecWin
+                    self.view.changeTime(self.leftTime)
+                    self.checkSolution()
+                    self.view.ui.btnUp.setDisabled(False)
+                    self.view.ui.btnDown.setDisabled(False)
+                    self.view.ui.btnUping.setDisabled(False)
+                    self.view.ui.btnDowning.setText("<<")
+                    self.stopThread()
+                    return
+                else:
+                    self.view.changeTime(self.leftTime)
+                    self.checkSolution()
+        except Exception as e:
+            print("doDowning", e)
+
     def stopThread(self):
         self._async_raise(self.thread.ident, SystemExit)
 
     def onBtnUpingClicked(self):
-        if self.moving is False:
-            self.view.ui.btnUp.setDisabled(True)
-            self.view.ui.btnDown.setDisabled(True)
-            self.view.ui.btnDowning.setDisabled(True)
-            self.view.ui.btnUping.setText("■")
-            self.thread = threading.Thread(target=self.doUping)
-            self.thread.start()
-        else:
-            self.view.ui.btnUp.setDisabled(False)
-            self.view.ui.btnDown.setDisabled(False)
-            self.view.ui.btnDowning.setDisabled(False)
-            self.view.ui.btnUping.setText(">>")
-            self.stopThread()
-        self.moving = self.moving is False
-
-    def doUping(self):
-        while True:
-            time.sleep(self.speed[self.speedText])
-            self.leftTime += self.moveLen
-            self.rightTime += self.moveLen
-            if self.rightTime > self.duration:
-                self.leftTime = self.duration - self.nSecWin
-                self.rightTime = self.duration
-                self.view.changeTime(self.leftTime)
-                self.checkSolution()
+        try:
+            if self.moving is False:
+                self.view.ui.btnUp.setDisabled(True)
+                self.view.ui.btnDown.setDisabled(True)
+                self.view.ui.btnDowning.setDisabled(True)
+                self.view.ui.btnUping.setText("■")
+                self.thread = threading.Thread(target=self.doUping)
+                self.thread.start()
+            else:
                 self.view.ui.btnUp.setDisabled(False)
                 self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnDowning.setDisabled(False)
                 self.view.ui.btnUping.setText(">>")
                 self.stopThread()
-                return
-            else:
-                self.view.changeTime(self.leftTime)
-                self.checkSolution()
+            self.moving = self.moving is False
+        except Exception as e:
+            print("onBtnUpingClicked", e)
+
+    def doUping(self):
+        try:
+            while True:
+                time.sleep(self.speed[self.speedText])
+                self.leftTime += self.moveLen
+                self.rightTime += self.moveLen
+                if self.rightTime > self.duration:
+                    self.leftTime = self.duration - self.nSecWin
+                    self.rightTime = self.duration
+                    self.view.changeTime(self.leftTime)
+                    self.checkSolution()
+                    self.view.ui.btnUp.setDisabled(False)
+                    self.view.ui.btnDown.setDisabled(False)
+                    self.view.ui.btnDowning.setDisabled(False)
+                    self.view.ui.btnUping.setText(">>")
+                    self.stopThread()
+                    return
+                else:
+                    self.view.changeTime(self.leftTime)
+                    self.checkSolution()
+        except Exception as e:
+            print("doUping", e)
 
     def _async_raise(self, tid, exctype):
         try:
@@ -267,69 +294,78 @@ class EEGController(QWidget):
 
     # 响应选中对象事件
     def handlePickEvent(self, event):
-        mouseevent = event.mouseevent
-        artist = event.artist
-        if self.view.isBanWave() or mouseevent.button != 1:
-            return
-
-        # 鼠标左键
-        # 点击y轴标签
-        if isinstance(artist, mpl.text.Text):
-            pl = artist.get_text()
-            if pl == 'Reset':
-                self.view.resetPickLabels()
-            else:
-                self.view.checkPickLabels(pl)
-            self.view.focusLines()
-            # 点击线、点
-        elif isinstance(artist, mpl.lines.Line2D):
-            label = artist.get_label()
-            # 点击点
-            if label == "pp":
+        try:
+            mouseevent = event.mouseevent
+            artist = event.artist
+            if self.view.isBanWave() or mouseevent.button != 1:
                 return
-            # 点击线
-            if len(label.split('|')) == 1:
-                pick_dot = self.view.clickPointStatus(label)
-                # 第一个点
-                if pick_dot == EEGView.PICK_FIRST:
-                    self.view.showFirstPoint(event)
-                # 第二个点，在同一个通道上
-                elif pick_dot == EEGView.PICK_SECOND:
-                    self.view.showSecondPoint(event)
-            # 点击样本
-            else:
-                self.view.clickSample(artist)
+
+            # 鼠标左键
+            # 点击y轴标签
+            if isinstance(artist, mpl.text.Text):
+                pl = artist.get_text()
+                if pl == 'Reset':
+                    self.view.resetPickLabels()
+                else:
+                    self.view.checkPickLabels(pl)
+                self.view.focusLines()
+                # 点击线、点
+            elif isinstance(artist, mpl.lines.Line2D):
+                label = artist.get_label()
+                # 点击点
+                if label == "pp":
+                    return
+                # 点击线
+                if len(label.split('|')) == 1:
+                    pick_dot = self.view.clickPointStatus(label)
+                    # 第一个点
+                    if pick_dot == EEGView.PICK_FIRST:
+                        self.view.showFirstPoint(event)
+                    # 第二个点，在同一个通道上
+                    elif pick_dot == EEGView.PICK_SECOND:
+                        self.view.showSecondPoint(event)
+                # 点击样本
+                else:
+                    self.view.clickSample(artist)
+        except Exception as e:
+            print("handlePickEvent", e)
 
     def doMouseReleaseEvent(self, event):
-        # 左键
-        if event.button == 1:
-            ax = self.view.clickAxStatus(event.inaxes)
-            # 点击在脑电图axes中
-            if ax == EEGView.PICK_AXES:
-                self.view.drawStateLine(event)
-            # 点击在跳转滚动条上
-            elif ax == EEGView.PICK_AXHSCROLL:
-                x = int(event.xdata)
-                if x + self.nSecWin <= self.duration:
-                    self.leftTime = x
-                    self.rightTime = x + self.nSecWin
-                else:
-                    self.leftTime = max(0, self.duration - self.nSecWin)
-                    self.rightTime = self.duration
-                self.view.changeTime(self.leftTime)
-                self.checkSolution()
-        # 右键释放菜单
-        elif event.button == 3:
-            self.view.releaseMenu()
+        try:
+            # 左键
+            if event.button == 1:
+                ax = self.view.clickAxStatus(event.inaxes)
+                # 点击在脑电图axes中
+                if ax == EEGView.PICK_AXES:
+                    self.view.drawStateLine(event)
+                # 点击在跳转滚动条上
+                elif ax == EEGView.PICK_AXHSCROLL:
+                    x = int(event.xdata)
+                    if x + self.nSecWin <= self.duration:
+                        self.leftTime = x
+                        self.rightTime = x + self.nSecWin
+                    else:
+                        self.leftTime = max(0, self.duration - self.nSecWin)
+                        self.rightTime = self.duration
+                    self.view.changeTime(self.leftTime)
+                    self.checkSolution()
+            # 右键释放菜单
+            elif event.button == 3:
+                self.view.releaseMenu()
+        except Exception as e:
+            print("doMouseReleaseEvent", e)
 
     def checkSolution(self):
-        self.view.onAxhscrollClicked(self.leftTime)
-        inBlock, readFrom, readTo, = self.data.queryRange(self.view.getIdx(self.leftTime) // self.nSample)
-        if inBlock is False:
-            self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.nSample, readTo * self.nSample, self.nSample, self.tableName, self.pUid])
-        else:
-            data, labels = self.data.getData()
-            self.view.refreshWin(data, labels, self.leftTime, self.rightTime)
+        try:
+            self.view.onAxhscrollClicked(self.leftTime)
+            inBlock, readFrom, readTo, = self.data.queryRange(self.view.getIdx(self.leftTime) // self.nSample)
+            if inBlock is False:
+                self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.nSample, readTo * self.nSample, self.nSample, self.tableName, self.pUid])
+            else:
+                data, labels = self.data.getData()
+                self.view.refreshWin(data, labels, self.leftTime, self.rightTime)
+        except Exception as e:
+            print("checkSolution", e)
 
     def doScrollEvent(self, event):
         if event.button == "down":
@@ -338,22 +374,28 @@ class EEGController(QWidget):
             self.onBtnUpClicked()
 
     def onBtnUpClicked(self):
-        self.leftTime -= self.moveLen
-        self.rightTime -= self.moveLen
-        if self.leftTime < 0:
-            self.rightTime = self.nSecWin
-            self.leftTime = 0
-        self.view.changeTime(self.leftTime)
-        self.checkSolution()
+        try:
+            self.leftTime -= self.moveLen
+            self.rightTime -= self.moveLen
+            if self.leftTime < 0:
+                self.rightTime = self.nSecWin
+                self.leftTime = 0
+            self.view.changeTime(self.leftTime)
+            self.checkSolution()
+        except Exception as e:
+            print("onBtnUpClicked", e)
 
     def onBtnDownClicked(self):
-        self.leftTime += self.moveLen
-        self.rightTime += self.moveLen
-        if self.rightTime > self.duration:
-            self.rightTime = self.duration
-            self.leftTime = self.rightTime - self.nSecWin
-        self.view.changeTime(self.leftTime)
-        self.checkSolution()
+        try:
+            self.leftTime += self.moveLen
+            self.rightTime += self.moveLen
+            if self.rightTime > self.duration:
+                self.rightTime = self.duration
+                self.leftTime = self.rightTime - self.nSecWin
+            self.view.changeTime(self.leftTime)
+            self.checkSolution()
+        except Exception as e:
+            print("onBtnDownClicked", e)
 
     def doKeyPressEvent(self, event):
         if event.key == 'escape':
@@ -368,8 +410,10 @@ class EEGController(QWidget):
     def btnStateAnnotateClicked(self):
         self.view.changeStateAnnotateStatus()
         self.view.cancelSelect()
+
     def on_return_clicked(self):
         self.view.close()
         self.switchFromEEG.emit(self.return_from)
+
     def exit(self):
         self.switchFromEEG.disconnect()
