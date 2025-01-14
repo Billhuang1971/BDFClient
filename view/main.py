@@ -80,7 +80,14 @@ class MainView(QMainWindow):
     # 允许使用菜单选项
     def enabel_function_button(self):
         self.ui.menubar.setEnabled(True)
-
+    def updateForEEG(self,sub_view):
+        while self.verticalLayout_1.count() > 1:
+            witem = self.verticalLayout_1.itemAt(self.verticalLayout_1.count() - 1)
+            witem.widget().hide()
+            self.verticalLayout_1.removeItem(witem)
+        sub_view.showMaximized()
+        self.verticalLayout_1.addWidget(sub_view)
+        self.label_4.setText("")
     # 设置用户的姓名和身份、工具栏访问权限
     def setUserPermission(self, client):
         self.client = client

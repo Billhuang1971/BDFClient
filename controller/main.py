@@ -414,14 +414,7 @@ class MainController(QWidget):
         self.controller.switchFromEEG.connect(self.switchFromEEGPage)
 
         self.sub_view = self.controller.view
-        while self.view.verticalLayout_1.count() > 1:
-            witem = self.view.verticalLayout_1.itemAt(self.view.verticalLayout_1.count() - 1)
-            witem.widget().hide()
-            self.view.verticalLayout_1.removeItem(witem)
-        self.sub_view.showMaximized()
-        self.view.verticalLayout_1.addWidget(self.sub_view)
-        self.previous_controller = 'EEGController'
-        self.view.label_4.setText("")
+        self.view.updateForEEG(self.sub_view)
         self.controller.startEEG()
 
     def switchFromEEGPage(self, msg):
@@ -433,15 +426,11 @@ class MainController(QWidget):
         self.controller = None
 
         if controller_name == "manualQueryController":
-            self.controller = manualQueryController(appUtil=self.cAppUtil, Widget=self.view.label_4,
-                                                    client=self.client,
-                                                    mainMenubar=self.view.ui.menubar,
-                                                    mainLayout=self.view.verticalLayout_1,page=msg[1])
+            self.controller = manualQueryController(appUtil=self.cAppUtil, client=self.client,page=msg[1])
         elif controller_name == "consultingController":
             self.controller = consultingController(appUtil=self.cAppUtil,
                                                    client=self.client,page=msg[1])
             self.controller.switchToEEG.connect(self.switchToEEGPage)
-            self.m_controllers[controller_name] = self.controller
         elif controller_name == "diagTrainingController":
             self.controller = diagTrainingController(appUtil=self.cAppUtil, Widget=self.view.label_4,
                                                      client=self.client,
@@ -469,14 +458,7 @@ class MainController(QWidget):
                                                         mainLayout=self.view.verticalLayout_1)
 
         self.sub_view = self.controller.view
-        while self.view.verticalLayout_1.count() > 1:
-            witem = self.view.verticalLayout_1.itemAt(self.view.verticalLayout_1.count() - 1)
-            witem.widget().hide()
-            self.view.verticalLayout_1.removeItem(witem)
-        self.sub_view.showMaximized()
-        self.view.verticalLayout_1.addWidget(self.sub_view)
-        self.previous_controller = controller_name
-        self.view.label_4.setText("")
+        self.view.updateForEEG(self.sub_view)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

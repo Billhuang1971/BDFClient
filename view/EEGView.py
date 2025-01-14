@@ -55,6 +55,7 @@ class EEGView(QWidget):
         self.end = None
         self.User = None
         self.data = None
+        self.labels=[]
         self.channels_name = []
         self.userInfo = None
         self.state_left = None
@@ -205,32 +206,30 @@ class EEGView(QWidget):
             self.sample_info = sample_info + self.sample_info[idx + 1:]
 
     def refreshWin(self, data, labels, begin, end):
-        try:
-            self.data = data
-            self.begin = begin
-            self.end = end
-            self.removeLines()
-            self.updateXAxis()
-            self.paintEEG()
-            self.checkSecondsLine()
-            self.filterSamples()
-            self.paintWaves()
-            self.paintStates()
-            if self.pick_first is not None:
-                if self.pick_second is None:
-                    if self.pick_first >= self.begin * self.sample_rate and self.pick_first < self.end * self.sample_rate:
-                        self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
-                else:
-                    if (self.pick_first >= self.begin * self.sample_rate and self.pick_first < self.end * self.sample_rate) or (self.pick_second >= self.begin * self.sample_rate and self.pick_second < self.end * self.sample_rate) or (self.pick_first < self.begin * self.sample_rate and self.pick_second >= self.end * self.sample_rate):
-                        self.paintAWave(max(self.pick_first - self.begin * self.sample_rate, 0),
-                                        min(self.lenWin * self.sample_rate, self.pick_second - self.begin * self.sample_rate),
-                                        self.pick_label, 'pickedsegment', 'red')
+        self.data = data
+        self.begin = begin
+        self.end = end
+        self.labels=labels
+        self.removeLines()
+        self.updateXAxis()
+        self.paintEEG()
+        self.checkSecondsLine()
+        self.filterSamples()
+        self.paintWaves()
+        self.paintStates()
+        if self.pick_first is not None:
+            if self.pick_second is None:
+                if self.pick_first >= self.begin * self.sample_rate and self.pick_first < self.end * self.sample_rate:
+                    self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
+            else:
+                if (self.pick_first >= self.begin * self.sample_rate and self.pick_first < self.end * self.sample_rate) or (self.pick_second >= self.begin * self.sample_rate and self.pick_second < self.end * self.sample_rate) or (self.pick_first < self.begin * self.sample_rate and self.pick_second >= self.end * self.sample_rate):
+                    self.paintAWave(max(self.pick_first - self.begin * self.sample_rate, 0),
+                                    min(self.lenWin * self.sample_rate, self.pick_second - self.begin * self.sample_rate),
+                                    self.pick_label, 'pickedsegment', 'red')
 
-            self.canvas.draw()
-            self.showLabels()
-            self.showCurLabel()
-        except Exception as e:
-            print("refreshWin", e)
+        self.canvas.draw()
+        self.showLabels()
+        self.showCurLabel()
 
     def changeShowWave(self):
         self.is_waves_showed = self.is_waves_showed is False
@@ -261,7 +260,7 @@ class EEGView(QWidget):
     def showLabels(self):
         list = []
         if self.is_status_showed is True and self.is_waves_showed is True:
-            list = self.sample_list
+            list = self.labels
         elif self.is_status_showed is True:
             list = self.states
         elif self.is_waves_showed is True:
@@ -286,11 +285,11 @@ class EEGView(QWidget):
                 if c == 0:
                     item = QTableWidgetItem(
                         str(time.strftime('%H:%M:%S',
-                                          time.gmtime(int(list[r][1])))))
+                                          time.gmtime(int(list[r][1]/(self.sample_rate/self.nSample))))))
                 else:
                     type_name = ""
                     for type in self.type_info:
-                        if type[0] == list[r][5]:
+                        if type[0] == list[r][3]:
                             type_name = type[1]
                             break
                     item = QTableWidgetItem(str(type_name))
@@ -310,8 +309,9 @@ class EEGView(QWidget):
             return
         keys = [x[0] for x in self.type_info]
         for state in self.states:
-            idx = keys.index(state[5])
+            idx = keys.index(state[3])
             description = self.type_info[idx][3]
+            type_name=self.type_info[idx][1]
             if description == '正常状态':
                 color = 'green'
             elif description == '异常状态':
@@ -321,18 +321,18 @@ class EEGView(QWidget):
             self.paintAState(state, color)
 
     def paintAState(self, state, color):
-        label = str(state[2]) + "|" + str(state[1]) + "|" + str(state[3]) + "|" + str(state[4]) + "|" + str(state[5])
-        self.state_lines.append(self.axes.axvspan(state[1], state[3], label=label, facecolor=color, alpha=0.3, picker=True))
+        label = str(state[0]) + "|" + str(state[3]) + "|" + str(state[1]) + "|" + str(state[2])
+        x0=state[1]/(self.sample_rate//self.nSample)
+        x1=state[2]/(self.sample_rate//self.nSample)
+        self.state_lines.append(self.axes.axvspan(x0, x1, label=label, facecolor=color, alpha=0.3, picker=True))
+
+
 
     def filterSamples(self):
-        self.sample_list = []
         self.waves = []
         self.states = []
-        for sample in self.sample_info:
-            if sample[3] < self.begin or sample[1] >= self.end:
-                continue
-            self.sample_list.append(sample)
-            if sample[2] == 'all':
+        for sample in self.labels:
+            if sample[0] == 'all':
                 self.states.append(sample)
             else:
                 self.waves.append(sample)
@@ -342,10 +342,10 @@ class EEGView(QWidget):
             return
         for wave in self.waves:
             color = 'blue'
-            l = (wave[1] - self.begin) * self.sample_rate if wave[1] > self.begin else 0
-            r = (wave[3] - self.begin) * self.sample_rate if wave[3] < self.end else (self.end - self.begin) * self.sample_rate
-            label = str(wave[2]) + "|" + str(wave[1]) + "|" + str(wave[3]) + "|" + str(wave[4]) + "|" + str(wave[5]) + "|" + str(wave[6])
-            self.paintAWave(l, r, wave[2], label, color)
+            l = (wave[1] - (self.begin*self.sample_rate//self.nSample)) if wave[1] > (self.begin*self.sample_rate//self.nSample) else 0
+            r = (wave[2] - (self.begin*self.sample_rate//self.nSample))  if wave[2] < (self.end*self.sample_rate//self.nSample) else (self.end - self.begin) * (self.sample_rate//self.nSample)
+            label = str(wave[0]) + "|" + str(wave[3]) + "|" + str(wave[1]) + "|" + str(wave[2])
+            self.paintAWave(l, r, wave[0], label, color)
 
     def updateYAxis(self, channels_name=[]):
         self.channels_name = channels_name
@@ -472,6 +472,9 @@ class EEGView(QWidget):
 
     def removeLines(self, ch=None, sample=False):
         if (ch is None or len(ch) == 0) and sample is False:
+            for state in self.state_lines:
+                state.remove()
+            self.state_lines = []
             lines = self.axes.get_lines()
             for l in lines:
                 l.remove()
@@ -481,6 +484,7 @@ class EEGView(QWidget):
             label = l.get_label() if sample else l.get_label().split('|')[0]
             if label in ch:
                 l.remove()
+
 
     def clickPointStatus(self, label):
         if self.pick_first is None:
