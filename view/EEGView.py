@@ -238,7 +238,7 @@ class EEGView(QWidget):
             self.paintWaves()
         else:
             self.removeLines(self.wave_lines, True)
-            self.wave_lines = []
+            self.wave_lines = [] 
             self.resetPickLabels()
             self.focusLines()
         self.canvas.draw()
