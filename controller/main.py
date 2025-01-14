@@ -3,7 +3,6 @@ from PyQt5.QtCore import pyqtSignal
 from controller.EEGController import EEGController
 from controller.classifier import classifierController
 from controller.algorithm import algorithmController
-from controller.consulting import consultingController
 from controller.diagAssess import diagAssessController
 from controller.diagTraining import diagTrainingController
 from controller.diagTest import diagTestController
@@ -12,15 +11,6 @@ from controller.modelTest import modelTestController
 from controller.reserchingQuery import reserchingQueryController
 from controller.sampleState import sampleStateController
 from controller.userManager import userManagerController
-from controller.createCons import createConsController
-from controller.basicConfig import basicConfigController
-from controller.configOptions import configOptionsController
-from controller.labelType import labelTypeController
-from controller.montage import montageController
-from controller.setBuild import setBuildController
-from controller.createLesson import createLessonController
-from controller.dataImport import dataImportController
-from controller.patientManager import patientManagerController
 from controller.reserching import reserchingController
 from controller.modelTrain import modelTrainController
 from view.main import MainView
@@ -315,10 +305,8 @@ class MainController(QWidget):
                                                mainMenubar=self.view.ui.menubar)
 
         elif controller_name == "manualQueryController":
-            self.controller = manualQueryController(appUtil=self.cAppUtil, Widget=self.view.label_4,
-                                                    client=self.client,
-                                                    mainMenubar=self.view.ui.menubar,
-                                                    mainLayout=self.view.verticalLayout_1)
+            self.controller = manualQueryController(appUtil=self.cAppUtil, client=self.client)
+            self.controller.switchToEEG.connect(self.switchToEEGPage)
 
         elif controller_name == "basicConfigController":
             self.controller = basicConfigController(client=self.client, cAppUtil=self.cAppUtil)
@@ -433,13 +421,10 @@ class MainController(QWidget):
         self.controller = None
 
         if controller_name == "manualQueryController":
-            self.controller = manualQueryController(appUtil=self.cAppUtil, Widget=self.view.label_4,
-                                                    client=self.client,
-                                                    mainMenubar=self.view.ui.menubar,
-                                                    mainLayout=self.view.verticalLayout_1,page=msg[1])
+            self.controller = manualQueryController(appUtil=self.cAppUtil, client=self.client, page=msg[1])
         elif controller_name == "consultingController":
             self.controller = consultingController(appUtil=self.cAppUtil,
-                                                   client=self.client,page=msg[1])
+                                                   client=self.client, page=msg[1])
             self.controller.switchToEEG.connect(self.switchToEEGPage)
             self.m_controllers[controller_name] = self.controller
         elif controller_name == "diagTrainingController":
