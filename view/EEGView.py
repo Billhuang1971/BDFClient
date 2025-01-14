@@ -567,7 +567,10 @@ class EEGView(QWidget):
             sample = self.waves[self.cur_sample_index]
         else:
             return
-        self.changeSampleColor(sample, 'blue')
+        if sample[0]=='all':
+            self.changeSampleColor(sample, 'green')
+        else:
+            self.changeSampleColor(sample, 'blue')
         self.showCurLabel()
         for col in range(self.ui.tableWidget.columnCount()):
             self.ui.tableWidget.item(self.cur_sample_index, col).setSelected(False)
@@ -725,7 +728,7 @@ class EEGView(QWidget):
         lines = self.axes.get_lines()
         if sample[0]=='all':
             for s in self.state_lines:
-                s.set_facecolor('red')
+                s.set_facecolor(color)
             self.canvas.draw()
         else:
             for l in lines:
