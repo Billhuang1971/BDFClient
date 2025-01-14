@@ -45,7 +45,6 @@ class EEGView(QWidget):
         self.pick_second = None
         self.cur_sample_index = -1
         self.sample_info = []
-        self.sample_list = []
         self.waves = []
         self.states = []
         self.channels_alpha = {}
@@ -315,9 +314,9 @@ class EEGView(QWidget):
             if description == '正常状态':
                 color = 'green'
             elif description == '异常状态':
-                color = 'red'
+                color = 'green'
             else:
-                color = 'dodgerblue'
+                color = 'green'#'dodgerblue'
             self.paintAState(state, color)
 
     def paintAState(self, state, color):
@@ -475,6 +474,7 @@ class EEGView(QWidget):
             for state in self.state_lines:
                 state.remove()
             self.state_lines = []
+            self.wave_lines  =   []
             lines = self.axes.get_lines()
             for l in lines:
                 l.remove()
@@ -554,9 +554,9 @@ class EEGView(QWidget):
         if self.cur_sample_index < 0:
             return
         if self.is_status_showed is True and self.is_waves_showed is True:
-            if self.cur_sample_index >= len(self.sample_list):
+            if self.cur_sample_index >= len(self.labels):
                 return
-            sample = self.sample_list[self.cur_sample_index]
+            sample = self.labels[self.cur_sample_index]
         elif self.is_status_showed is True:
             if self.cur_sample_index >= len(self.states):
                 return
@@ -574,55 +574,57 @@ class EEGView(QWidget):
         self.cur_sample_index = -1
 
     def pickCurSample(self, row):
-        self.restorePreSampleColor()
+        self.restorePreSampleColor() #恢复前一个选中的线条颜色
         self.cur_sample_index = row
         if self.is_status_showed is True and self.is_waves_showed is True:
-            label = self.sample_list[self.cur_sample_index]
-            if label[2] == "all":
-                b_t = time.strftime('%H:%M:%S', time.gmtime(label[1]))
-                e_t = time.strftime('%H:%M:%S', time.gmtime(label[3]))
+            label = self.labels[self.cur_sample_index]
+            if label[0] == "all":
+                b_t = time.strftime('%H:%M:%S', time.gmtime(label[1]//(self.sample_rate//self.nSample)))
+                e_t = time.strftime('%H:%M:%S', time.gmtime(label[2]//(self.sample_rate//self.nSample)))
                 type_name = ""
                 for type in self.type_info:
-                    if type[0] == label[5]:
+                    if type[0] == label[3]:
                         type_name = type[1]
                         break
-                self.showCurLabel(type_name, label[2], str(label[3] - label[1]), str(b_t), str(e_t), "")
-            else:
+                #在右下角显示当前选中样本信息
+                self.showCurLabel(type_name, label[0], str((label[2] - label[1])/(self.sample_rate//self.nSample)), str(b_t), str(e_t), "")
                 self.changeSampleColor(label, 'red')
-                b_t = time.strftime('%H:%M:%S', time.gmtime(label[1]))
-                e_t = time.strftime('%H:%M:%S', time.gmtime(label[3]))
+            else:
+                self.changeSampleColor(label, 'red') #改变当前选中线条颜色
+                b_t = time.strftime('%H:%M:%S', time.gmtime(label[1]//(self.sample_rate//self.nSample)))
+                e_t = time.strftime('%H:%M:%S', time.gmtime(label[2]//(self.sample_rate//self.nSample)))
                 type_name = ""
                 for type in self.type_info:
-                    if type[0] == label[5]:
+                    if type[0] == label[3]:
                         type_name = type[1]
                         break
                 idx = 0
                 for i in range(len(self.channels_name)):
-                    if self.channels_name[i] == label[2]:
+                    if self.channels_name[i] == label[0]:
                         idx = i
                         break
-                l = int(max(0, (label[1] - self.begin) * self.sample_rate))
-                r = int(min((label[3] - label[1]) * self.sample_rate, self.lenWin * self.sample_rate))
+                l = int((label[1] - (self.begin * (self.sample_rate//self.nSample))))
+                r = int((label[2] - (self.begin * (self.sample_rate//self.nSample))))
                 m = np.max(self.data[idx, l:r])
-                self.showCurLabel(type_name, label[2], str(label[3] - label[1]), str(b_t), str(e_t), str(m))
+                self.showCurLabel(type_name, label[0], str((label[2] - label[1])/(self.sample_rate//self.nSample)), str(b_t), str(e_t), str(m))
         elif self.is_status_showed is True:
             label = self.states[self.cur_sample_index]
-            b_t = time.strftime('%H:%M:%S', time.gmtime(label[1]))
-            e_t = time.strftime('%H:%M:%S', time.gmtime(label[3]))
+            b_t = time.strftime('%H:%M:%S', time.gmtime(label[1]//(self.sample_rate//self.nSample)))
+            e_t = time.strftime('%H:%M:%S', time.gmtime(label[2]//(self.sample_rate//self.nSample)))
             type_name = ""
             for type in self.type_info:
-                if type[0] == label[5]:
+                if type[0] == label[3]:
                     type_name = type[1]
                     break
-            self.showCurLabel(type_name, label[2], str(label[3] - label[1]), str(b_t), str(e_t), "")
+            self.showCurLabel(type_name, label[0], str((label[2] - label[1])/(self.sample_rate//self.nSample)), str(b_t), str(e_t), "")
         elif self.is_waves_showed is True:
             label = self.waves[self.cur_sample_index]
             self.changeSampleColor(label, 'red')
-            b_t = time.strftime('%H:%M:%S', time.gmtime(label[1]))
-            e_t = time.strftime('%H:%M:%S', time.gmtime(label[3]))
+            b_t = time.strftime('%H:%M:%S', time.gmtime(label[1]//(self.sample_rate//self.nSample)))
+            e_t = time.strftime('%H:%M:%S', time.gmtime(label[2]//(self.sample_rate//self.nSample)))
             type_name = ""
             for type in self.type_info:
-                if type[0] == label[5]:
+                if type[0] == label[3]:
                     type_name = type[1]
                     break
             idx = 0
@@ -630,10 +632,10 @@ class EEGView(QWidget):
                 if self.channels_name[i] == label[2]:
                     idx = i
                     break
-            l = int(max(0, (label[1] - self.begin) * self.sample_rate))
-            r = int(min((label[3] - label[1]) * self.sample_rate, self.lenWin * self.sample_rate))
+            l = int(max(0, (label[1] - (self.begin * (self.sample_rate // self.nSample)))))
+            r = int(min((label[2] - label[1]), self.lenWin * (self.sample_rate // self.nSample)))
             m = np.max(self.data[idx, l:r])
-            self.showCurLabel(type_name, label[2], str(label[3] - label[1]), str(b_t), str(e_t), str(m))
+            self.showCurLabel(type_name, label[0], str((label[2] - label[1])/(self.sample_rate//self.nSample)), str(b_t), str(e_t), str(m))
 
     def showSecondPoint(self, event):
         artist = event.artist
@@ -668,11 +670,11 @@ class EEGView(QWidget):
         self.resetPickLabels()
         self.focusLines()
         if self.is_status_showed is True and self.is_waves_showed is True:
-            for i in range(len(self.sample_list)):
-                if self.sample_list[i][2] == label[0] and self.sample_list[i][1] == label[1]:
+            for i in range(len(self.labels)):
+                if self.labels[i][2] == label[0] and self.labels[i][1] == label[1]:
                     self.cur_sample_index = i
                     break
-            if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.sample_list):
+            if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.labels):
                 self.ui.tableWidget.selectRow(self.cur_sample_index)
         elif self.is_waves_showed is True:
             for i in range(len(self.waves)):
@@ -719,14 +721,19 @@ class EEGView(QWidget):
 
 
     def changeSampleColor(self, sample, color):
-        s_label = str(sample[2]) + "|" + str(sample[1]) + "|" + str(sample[3]) + "|" + str(sample[4]) + "|" + str(sample[5]) + "|" + str(sample[6])
+        s_label = str(sample[0]) + "|" + str(sample[3]) + "|" + str(sample[1]) + "|" + str(sample[2])
         lines = self.axes.get_lines()
-        for l in lines:
-            label = l.get_label()
-            if label == s_label:
-                l.set_color(color)
-                break
-        self.canvas.draw()
+        if sample[0]=='all':
+            for s in self.state_lines:
+                s.set_facecolor('red')
+            self.canvas.draw()
+        else:
+            for l in lines:
+                label = l.get_label()
+                if label == s_label:
+                    l.set_color(color)
+                    break
+            self.canvas.draw()
 
     def cancelSelect(self):
         self.state_left = None
