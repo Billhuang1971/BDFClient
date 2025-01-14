@@ -20,8 +20,6 @@ class EEGView(QWidget):
     STATE_ANNOTATE = 0
     WAVE_ANNOTATE = 1
 
-    insertSample = pyqtSignal(list)
-
     def __init__(self):
         super().__init__()
         self.ui = Ui_EEGView()
@@ -76,41 +74,21 @@ class EEGView(QWidget):
         self.createPaintTools()
 
     def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, nSample):
-        self.type_info = type_info
-        self.nSample = nSample
+        try:
+            self.type_info = type_info
+            self.nSample = nSample
 
-        self.popMenu1 = QMenu(self.canvas)
-        self.popMenu2 = QMenu(self.canvas)
-        cancelAction = QAction("取消选择", self, triggered=self.cancelSelect)
-        self.popMenu1.addAction(cancelAction)
-        self.popMenu1.addSeparator()
-        self.popMenu2.addAction(cancelAction)
-        self.popMenu2.addSeparator()
-        delAction = QAction("删除样本", self, triggered=self.delSample)
-        self.popMenu1.addAction(delAction)
-        self.popMenu1.addSeparator()
-        self.popMenu2.addAction(delAction)
-        self.popMenu2.addSeparator()
-        # 向右键菜单栏添加波形和状态
-        sms = {}
-        groups = ['正常波形', '异常波形', '伪迹波形', '正常状态', '异常状态', '伪迹状态']
-        for g in groups[:3]:
-            sms[g] = self.popMenu1.addMenu(g)
-        for g in groups[3:]:
-            sms[g] = self.popMenu2.addMenu(g)
-        for t in self.type_info:
-            action = QAction(t[1], self)
-            action.triggered.connect(lambda chk, t=t: self.actDispatch(t))
-            if sms.get(t[3]) is None:
-                continue
-            sms[t[3]].addAction(action)
+            self.popMenu1 = QMenu(self.canvas)
+            self.popMenu2 = QMenu(self.canvas)
 
-        self.updateYAxis(channels_name=channels)
-        self.sample_rate = sampleRate
-        self.setAxHscroll(duration, labelBit)
-        self.showPatientInfo(patientInfo, fileName,
-                                  measureDate, startTime,
-                                  endTime)
+            self.updateYAxis(channels_name=channels)
+            self.sample_rate = sampleRate
+            self.setAxHscroll(duration, labelBit)
+            self.showPatientInfo(patientInfo, fileName,
+                                      measureDate, startTime,
+                                      endTime)
+        except Exception as e:
+            print("initView", e)
 
     def getLenWin(self):
         return self.lenWin
@@ -208,7 +186,7 @@ class EEGView(QWidget):
         self.data = data
         self.begin = begin
         self.end = end
-        self.labels=labels
+        self.labels = labels
         self.removeLines()
         self.updateXAxis()
         self.paintEEG()
@@ -237,7 +215,7 @@ class EEGView(QWidget):
             self.paintWaves()
         else:
             self.removeLines(self.wave_lines, True)
-            self.wave_lines = [] 
+            self.wave_lines = []
             self.resetPickLabels()
             self.focusLines()
         self.canvas.draw()
@@ -379,18 +357,20 @@ class EEGView(QWidget):
         for xhtl in self.ax_hscroll.get_xticklabels():
             xhtl.set_fontsize(10)
 
+
+        idx = []
+        for l in range(self.nDotWin + 1):
+            if labelBit[l]:
+                idx.append(l)
+
         l = 0
         while l <= self.nDotWin:
             if labelBit[l]:
                 r = l + 1
-                while r <= self.nDotWin:
-                    if labelBit[r]:
-                        break
+                while r <= self.nDotWin and labelBit[r]:
                     r += 1
-                if r == duration + 1:
-                    break
-                self.ax_hscroll.axvspan(l * duration / self.nDotWin, r * duration / self.nDotWin, facecolor="green", alpha=0.5)
-                l = r + 1
+                self.ax_hscroll.axvspan(l * duration / self.nDotWin, (r - 1) * duration / self.nDotWin, facecolor="green", alpha=0.5)
+                l = r
             else:
                 l += 1
 
@@ -758,40 +738,43 @@ class EEGView(QWidget):
         self.resetPickLabels()
         self.focusLines()
 
-    def actDispatch(self, type):
+    def checkMenuAction(self, type):
         self.removeLines(['pp', 'pickedsegment'])
+        self.focusLines()
         if self.states_annotate:
             if self.state_left is None or self.state_right is None:
                 QMessageBox.information(self.view, ' ', "无效选择")
-            else:
-                state = ["all", self.state_left // self.sample_rate, self.state_right // self.sample_rate, type[0]]
+                return 0, []
+            label = ["all", self.state_left, self.state_right, type[0]]
             self.state_left = None
             self.state_right = None
+            self.state_left_line.remove()
+            self.state_right_line.remove()
             self.state_left_line = None
             self.state_right_line = None
-            return
+            return 1, label
         if self.pick_second is not None:
-            begin = self.pick_first // self.sample_rate
-            end = self.pick_second // self.sample_rate
-            wave = [type[1], begin, end, type[0]]
-            idx = 0
-            for sample in self.sample_info:
-                if sample[1] > begin:
-                    break
-                idx += 1
-            self.sample_info.insert(idx, wave)
-        elif self.cur_sample_index >= 0 and ():
-            pass
-        else:
-            QMessageBox.information(self.view, ' ', "无效选择")
-        self.pick_channel = None
-        self.pick_first = None
-        self.pick_second = None
-        self.restorePreSampleColor()
-        self.focusLines()
+            begin = self.pick_first * self.nSample
+            end = self.pick_second * self.nSample
+            label = [self.pick_channel, begin, end, type[0]]
+            self.pick_second = None
+            self.pick_first = None
+            self.pick_channel = None
+            return 1, label
+        if self.is_waves_showed and self.is_status_showed:
+            if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.labels):
+                return 2, self.labels[self.cur_sample_index]
+        elif self.is_waves_showed:
+            if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.waves):
+                return 2, self.waves[self.cur_sample_index]
+        elif self.is_status_showed:
+            if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.states):
+                return 2, self.states[self.cur_sample_index]
 
-    def delSample(self):
-        pass
+        QMessageBox.information(self.view, ' ', "无效选择")
+        return 0, []
+
+
 
     def updateLabel(self, type):
         pass

@@ -51,6 +51,7 @@ class EEGController(QWidget):
             self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, nDotSec, nWinBlock, self.tableName, self.pUid])
         except Exception as e:
             print("startEEG", e)
+
     def openEEGFileRes(self, REPData):
         try:
             if REPData[0] == '0':
@@ -78,20 +79,21 @@ class EEGController(QWidget):
                 labelBit = msg[15]
 
                 self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.nSample)
+                self.connetEvent(type_info)
+
                 self.data = EEGData()
                 self.data.initEEGData(data, self.lenFile, self.lenBlock, self.nSample, self.lenWin, labels)
-                self.connetEvent()
                 data, labels = self.data.getData()
                 self.view.refreshWin(data, labels, self.leftTime, self.rightTime)
         except Exception as e:
             print("openEEGFileRes", e)
 
 
-    def insertSampleRes(self):
-        pass
+    def insertSampleRes(self, REPData):
+        if REPData[3][0] == '0':
+            QMessageBox.information(self, '提示', "插入样本失败")
+            return
 
-    def insertSample(self):
-        pass
 
     def loadEEGDataRes(self, REPData):
         try:
@@ -105,8 +107,7 @@ class EEGController(QWidget):
             print("loadEEGDataRes", e)
 
 
-    def connetEvent(self):
-        self.view.insertSample.connect(self.insertSample)
+    def connetEvent(self, type_info):
         self.view.ui.btnUp.clicked.connect(self.onBtnDownClicked)
         self.view.ui.btnDown.clicked.connect(self.onBtnUpClicked)
         self.view.ui.btnUping.clicked.connect(self.onBtnUpingClicked)
@@ -128,6 +129,46 @@ class EEGController(QWidget):
         self.view.canvas.mpl_connect("key_press_event", self.doKeyPressEvent)
         self.view.canvas.setFocusPolicy(Qt.ClickFocus)
         self.view.canvas.setFocus()
+
+        cancelAction = QAction("取消选择", self, triggered=self.view.cancelSelect)
+        self.view.popMenu1.addAction(cancelAction)
+        self.view.popMenu1.addSeparator()
+        self.view.popMenu2.addAction(cancelAction)
+        self.view.popMenu2.addSeparator()
+        delAction = QAction("删除样本", self, triggered=self.delSample)
+        self.view.popMenu1.addAction(delAction)
+        self.view.popMenu1.addSeparator()
+        self.view.popMenu2.addAction(delAction)
+        self.view.popMenu2.addSeparator()
+        # 向右键菜单栏添加波形和状态
+        sms = {}
+        groups = ['正常波形', '异常波形', '伪迹波形', '正常状态', '异常状态', '伪迹状态']
+        for g in groups[:3]:
+            sms[g] = self.view.popMenu1.addMenu(g)
+        for g in groups[3:]:
+            sms[g] = self.view.popMenu2.addMenu(g)
+        for t in type_info:
+            action = QAction(t[1], self)
+            action.triggered.connect(lambda chk, t=t: self.handleMenuAction(t))
+            if sms.get(t[3]) is None:
+                continue
+            sms[t[3]].addAction(action)
+
+    def handleMenuAction(self, t):
+        try:
+            cmd, label = self.view.checkMenuAction(t)
+            if cmd == 0:
+                return
+            if cmd == 1:
+                label.extend([self.check_id, self.file_id, self.user_id])
+                self.client.insertSample([label, self.tableName])
+            # else:
+            #
+        except Exception as e:
+            print("handleMenuAction", e)
+
+    def delSample(self):
+        pass
 
     def onMoveSpeedChanged(self):
         self.speedText = self.view.ui.moveSpeed.currentText()

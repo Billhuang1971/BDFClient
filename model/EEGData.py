@@ -88,9 +88,9 @@ class EEGData(object):
             data = self.data[:, self.fromBlock: self.toBlock]
             labels = []
             for label in self.labels:
-                if label[1] < self.startBlock + self.fromBlock:
+                if label[1] < self.startBlock + self.fromBlock and label[2] < self.startBlock + self.fromBlock:
                     continue
-                if label[2] >= self.startBlock + self.toBlock:
+                if label[1] >= self.startBlock + self.toBlock:
                     break
                 labels.append(label)
             return data, labels
