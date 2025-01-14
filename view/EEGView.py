@@ -739,8 +739,6 @@ class EEGView(QWidget):
         self.focusLines()
 
     def checkMenuAction(self, type):
-        self.removeLines(['pp', 'pickedsegment'])
-        self.focusLines()
         if self.states_annotate:
             if self.state_left is None or self.state_right is None:
                 QMessageBox.information(self.view, ' ', "无效选择")
@@ -752,8 +750,11 @@ class EEGView(QWidget):
             self.state_right_line.remove()
             self.state_left_line = None
             self.state_right_line = None
+            self.canvas.draw()
             return 1, label
         if self.pick_second is not None:
+            self.resetPickLabels()
+            self.focusLines()
             begin = self.pick_first * self.nSample
             end = self.pick_second * self.nSample
             label = [self.pick_channel, begin, end, type[0]]
