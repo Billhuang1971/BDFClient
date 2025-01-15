@@ -24,14 +24,16 @@ from view.manual_form.combo_check_box2 import CheckableComboBox
 
 class manualQueryController(QWidget):
     switchToEEG = pyqtSignal(list)
-    def __init__(self, appUtil=None, client=None, page=None):
+    def __init__(self, appUtil=None, client=None, page_number=None):
         super().__init__()
         self.appUtil = appUtil
         self.view = ManualView()
         self.client = client
         self.User = self.client.tUser
-
-        self.curPageIndex = 1
+        if page_number==None:
+            self.curPageIndex = 1
+        else:
+            self.curPageIndex=page_number
         self.pageRows = 12
         self.curPageMax = 1
         self.check_id = None
@@ -85,7 +87,6 @@ class manualQueryController(QWidget):
         # self.client.mq_init_SampleListResSig.disconnect()
         # self.client.mq_get_diagResSig.disconnect()
         # self.client.mq_pagingResSig.disconnect()
-        self.switchToEEG.disconnect()
 
 
     def mq_paging(self,page_to):
@@ -306,7 +307,7 @@ class manualQueryController(QWidget):
     # prentryView选择文件后，点击确认按钮载入数据显示图像
     def on_btnConfirm_clicked(self):
         self.prentryView.close()
-        self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date, ['manualQueryController',''], "sample_info", self.client.tUser[0]])
+        self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date, ['manualQueryController',self.curPageIndex], "sample_info", self.client.tUser[0]])
 
 
     # prentryView返回按钮

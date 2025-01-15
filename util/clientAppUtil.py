@@ -117,7 +117,10 @@ class clientAppUtil():
 
     def isNull(self, filepath):
         if not os.path.exists(filepath):  # 判断路径是否存在
-            return False
+            # 路径不存在
+            os.makedirs(filepath, exist_ok=True)  # 创建路径
+            print(f"文件夹已创建: {filepath}")
+            return True
         if os.path.isdir(filepath):  # 如果是文件夹
             return not os.listdir(filepath)  # 文件夹为空返回True
         if os.path.isfile(filepath):  # 如果是文件

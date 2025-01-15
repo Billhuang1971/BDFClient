@@ -88,6 +88,8 @@ class EEGData(object):
         try:
             data = self.data[:, self.fromBlock: self.toBlock]
             labels = []
+            if self.labels is None or len(self.labels) == 0:
+                return data, labels
             for label in self.labels:
                 if label[1] < self.startBlock + self.fromBlock and label[2] < self.startBlock + self.fromBlock:
                     continue
@@ -112,10 +114,8 @@ class EEGData(object):
 
     def insertSample(self, label):
         idx = 0
-        print(self.labels)
         while idx < len(self.labels):
             if label[1] < self.labels[idx][1] or (label[1] == self.labels[idx][1] and label[2] < self.labels[idx][2]):
                 break
             idx += 1
         self.labels.insert(idx, label)
-        print(self.labels)
