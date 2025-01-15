@@ -745,7 +745,27 @@ class EEGView(QWidget):
             if self.state_left is None or self.state_right is None:
                 QMessageBox.information(self.view, ' ', "无效选择")
                 return 0, []
-            state = ["all", self.state_left, self.state_right, type[0]]
+            begin = self.state_left // self.nSample
+            end = self.state_right // self.nSample
+            state = ["all", begin, end, type[0]]
+            idx = 0
+            while idx < len(self.labels):
+                if state[1] < self.labels[idx][1] or (state[1] == self.labels[idx][1] and state[2] < self.labels[idx][2]):
+                    break
+                idx += 1
+            self.labels.insert(idx, state)
+            idx = 0
+            while idx < len(self.states):
+                if state[1] < self.states[idx][1] or (state[1] == self.states[idx][1] and state[2] < self.states[idx][2]):
+                    break
+                idx += 1
+            self.states.insert(idx, state)
+            self.paintAState(state, "green")
+            lBit = (self.state_left // self.sample_rate) * self.nDotWin // self.duration
+            rBit = (self.state_right // self.sample_rate) * self.nDotWin // self.duration
+            self.labelBit[lBit: rBit] = True
+            self.paintLabelBit()
+            self.showLabels()
             self.state_left = None
             self.state_right = None
             self.state_left_line.remove()
@@ -758,7 +778,6 @@ class EEGView(QWidget):
             begin = self.pick_first
             end = self.pick_second
             wave = [self.pick_channel, begin, end, type[0]]
-            print(wave)
             idx = 0
             while idx < len(self.labels):
                 if wave[1] < self.labels[idx][1] or (wave[1] == self.labels[idx][1] and wave[2] < self.labels[idx][2]):
