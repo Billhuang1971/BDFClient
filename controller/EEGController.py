@@ -90,9 +90,13 @@ class EEGController(QWidget):
 
 
     def insertSampleRes(self, REPData):
-        if REPData[3][0] == '0':
-            QMessageBox.information(self, '提示', "插入样本失败")
-            return
+        try:
+            if REPData[3][0] == '0':
+                QMessageBox.information(self, '提示', "插入样本失败")
+            else:
+                QMessageBox.information(self, '提示', "插入样本成功")
+        except Exception as e:
+            print("insertSampleRes", e)
 
 
     def loadEEGDataRes(self, REPData):
@@ -160,6 +164,11 @@ class EEGController(QWidget):
             if cmd == 0:
                 return
             if cmd == 1:
+                print(label)
+                self.data.insertSample(label)
+                label[1] = label[1] * self.nSample
+                label[2] = label[2] * self.nSample
+                print(label)
                 label.extend([self.check_id, self.file_id, self.user_id])
                 self.client.insertSample([label, self.tableName])
             # else:

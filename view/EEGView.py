@@ -69,6 +69,7 @@ class EEGView(QWidget):
         self.time_lines = []
         self.wave_lines = []
         self.state_lines = []
+        self.axHscrollSpan = []
         self.sen = 0
 
         self.createPaintTools()
@@ -340,6 +341,8 @@ class EEGView(QWidget):
         self.fig.subplots_adjust(right=0.97)
 
     def setAxHscroll(self, duration, labelBit):
+        self.duration = duration
+        self.labelBit = labelBit
         self.ax_hscroll.set_xlim(0, duration)
         self.ax_hscroll.get_yaxis().set_visible(False)
         hsel_patch = mpl.patches.Rectangle((0, 0), duration,
@@ -356,24 +359,23 @@ class EEGView(QWidget):
         self.ax_hscroll.set_xticklabels(hxlabels)
         for xhtl in self.ax_hscroll.get_xticklabels():
             xhtl.set_fontsize(10)
+        self.paintLabelBit()
 
-
-        idx = []
-        for l in range(self.nDotWin + 1):
-            if labelBit[l]:
-                idx.append(l)
+    def paintLabelBit(self):
+        for span in self.axHscrollSpan:
+            span.remove()
+        self.axHscrollSpan = []
 
         l = 0
         while l <= self.nDotWin:
-            if labelBit[l]:
+            if self.labelBit[l]:
                 r = l + 1
-                while r <= self.nDotWin and labelBit[r]:
+                while r <= self.nDotWin and self.labelBit[r]:
                     r += 1
-                self.ax_hscroll.axvspan(l * duration / self.nDotWin, (r - 1) * duration / self.nDotWin, facecolor="green", alpha=0.5)
+                self.axHscrollSpan.append(self.ax_hscroll.axvspan(l * self.duration / self.nDotWin, (r - 1) * self.duration / self.nDotWin, facecolor="green", alpha=0.5))
                 l = r
             else:
                 l += 1
-
 
     def clickAxStatus(self, ax):
         if ax == self.axes:
@@ -743,7 +745,7 @@ class EEGView(QWidget):
             if self.state_left is None or self.state_right is None:
                 QMessageBox.information(self.view, ' ', "无效选择")
                 return 0, []
-            label = ["all", self.state_left, self.state_right, type[0]]
+            state = ["all", self.state_left, self.state_right, type[0]]
             self.state_left = None
             self.state_right = None
             self.state_left_line.remove()
@@ -751,17 +753,41 @@ class EEGView(QWidget):
             self.state_left_line = None
             self.state_right_line = None
             self.canvas.draw()
-            return 1, label
+            return 1, state
         if self.pick_second is not None:
+            begin = self.pick_first
+            end = self.pick_second
+            wave = [self.pick_channel, begin, end, type[0]]
+            print(wave)
+            idx = 0
+            while idx < len(self.labels):
+                if wave[1] < self.labels[idx][1] or (wave[1] == self.labels[idx][1] and wave[2] < self.labels[idx][2]):
+                    break
+                idx += 1
+            self.labels.insert(idx, wave)
+            idx = 0
+            while idx < len(self.waves):
+                if wave[1] < self.waves[idx][1] or (wave[1] == self.waves[idx][1] and wave[2] < self.waves[idx][2]):
+                    break
+                idx += 1
+            self.waves.insert(idx, wave)
+            color = 'blue'
+            l = (wave[1] - (self.begin * self.sample_rate // self.nSample)) if wave[1] > (self.begin * self.sample_rate // self.nSample) else 0
+            r = (wave[2] - (self.begin * self.sample_rate // self.nSample)) if wave[2] < (self.end * self.sample_rate // self.nSample) else (self.end - self.begin) * (self.sample_rate // self.nSample)
+            label = str(wave[0]) + "|" + str(wave[3]) + "|" + str(wave[1]) + "|" + str(wave[2])
             self.resetPickLabels()
             self.focusLines()
-            begin = self.pick_first * self.nSample
-            end = self.pick_second * self.nSample
-            label = [self.pick_channel, begin, end, type[0]]
+            self.paintAWave(l, r, wave[0], label, color)
+            lBit = (begin * self.nSample // self.sample_rate) * self.nDotWin // self.duration
+            rBit = (end * self.nSample // self.sample_rate) * self.nDotWin // self.duration
+            self.labelBit[lBit: rBit] = True
+            self.paintLabelBit()
+            self.canvas.draw()
+            self.showLabels()
             self.pick_second = None
             self.pick_first = None
             self.pick_channel = None
-            return 1, label
+            return 1, wave
         if self.is_waves_showed and self.is_status_showed:
             if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.labels):
                 return 2, self.labels[self.cur_sample_index]
