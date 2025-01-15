@@ -475,8 +475,15 @@ class client(QObject, socketClient):
     def loadEEGDataRes(self, REPmsg):
         self.loadEEGDataSig.emit(list(REPmsg))
 
-    ## dsj [ ===
+    def insertSample(self, REQdata):
+        REQdata.insert(0, self.macAddr)
+        msg = ['EEG', 2, self.tUser[0], REQdata]
+        self.sendRequest(msg)
 
+    def insertSampleRes(self, REPmsg):
+        self.insertSampleSig.emit(list(REPmsg))
+
+    ## dsj [ ===
     # 学习评估/提取课程学习测试内容
     def da_get_ClassContents(self, REQdata):
         REQdata.insert(0, self.macAddr)
@@ -4464,6 +4471,8 @@ class client(QObject, socketClient):
             self.openEEGFileRes(REQmsg)
         elif REQmsg[0] == 'EEG' and REQmsg[1] == 1:
             self.loadEEGDataRes(REQmsg)
+        elif REQmsg[0] == 'EEG' and REQmsg[1] == 2:
+            self.insertSampleRes(REQmsg)
 
         else:
             print(f"{REQmsg[0]}.{REQmsg[1]}未定义")

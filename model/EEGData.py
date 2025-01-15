@@ -71,14 +71,15 @@ class EEGData(object):
                 self.data = np.hstack((EEG, self.data))
             else:
                 self.data = np.hstack((self.data, EEG))
-            if labels is None or len(labels) == 0:
-                return
+
             if self.case == 1:
                 self.labels = labels
             elif self.case == 2:
-                self.labels.extend(labels)
+                if (labels != None and len(labels) > 0):
+                    self.labels.extend(labels)
             elif self.case == 3:
-                self.labels = labels.extend(self.labels)
+                if (labels != None and len(labels) > 0):
+                    self.labels = labels.extend(self.labels)
         except Exception as e:
             print("setData", e)
 
@@ -87,10 +88,12 @@ class EEGData(object):
         try:
             data = self.data[:, self.fromBlock: self.toBlock]
             labels = []
+            if self.labels is None or len(self.labels) == 0:
+                return data, labels
             for label in self.labels:
-                if label[1] < self.startBlock + self.fromBlock:
+                if label[1] < self.startBlock + self.fromBlock and label[2] < self.startBlock + self.fromBlock:
                     continue
-                if label[2] >= self.startBlock + self.toBlock:
+                if label[1] >= self.startBlock + self.toBlock:
                     break
                 labels.append(label)
             return data, labels
@@ -108,3 +111,11 @@ class EEGData(object):
         self.fromBlock = 0
         self.toBlock = lenWin
         self.labels = labels
+
+    def insertSample(self, label):
+        idx = 0
+        while idx < len(self.labels):
+            if label[1] < self.labels[idx][1] or (label[1] == self.labels[idx][1] and label[2] < self.labels[idx][2]):
+                break
+            idx += 1
+        self.labels.insert(idx, label)
