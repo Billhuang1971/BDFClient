@@ -757,6 +757,33 @@ class dataImportController(QWidget):
             with self.processing_lock:
                 self.is_processing = False  # 重置状态
 
+    def standardize_channels(self, channels):
+        """
+        标准化导联名称：
+        1. 将导联名称转为大写；
+        2. 去掉最后一个空格之前的内容（如果存在）。
+        3. 如果包含 '-' 且不包含 '-REF'，将 '-' 替换为 '_'；
+        4. 如果不包含 '-REF'，则在末尾加上 '-REF'；
+        """
+        new_channels = []
+        for ch in channels:
+            temp = ch.upper()  # 转为大写
+            if ' ' in temp:  # 去掉最后一个空格之前的内容
+                temp = temp[temp.rfind(' ') + 1:]
+
+            # 如果包含 '-' 且不包含 '-REF'，将 '-' 替换为 '_'
+            if temp.find('-') > 0 and temp.find('-REF') < 0:
+                temp = temp.replace("-", "_")
+
+            # 如果不包含 '-REF'，在末尾加上 '-REF'
+            if '-REF' not in temp:
+                temp = temp + '-REF'
+
+            # 添加到新列表
+            new_channels.append(temp)
+
+        return new_channels
+
 
     def process_bdf(self, userConfig_info, filename):
         # 初始化进度条
@@ -771,6 +798,14 @@ class dataImportController(QWidget):
         notch = userConfig_info[1]
         low_pass = userConfig_info[2]
         high_pass = userConfig_info[3]
+
+        # 1020标准头皮电极通道列表
+        standard_1020_channels = [
+            'Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'T3', 'C3', 'Cz', 'C4', 'T4', 'T5', 'P3', 'Pz', 'P4', 'P6',
+            'O1', 'O2'
+        ]
+
+        is_ieeg = True  # 默认为颅内脑电
 
         try:
             raw = mne.io.read_raw_bdf(filename)
@@ -787,43 +822,39 @@ class dataImportController(QWidget):
                     physical_mins.append(physical_min)
                     physical_maxs.append(physical_max)
                     print(f"Channel {i}: Physical Min = {physical_min}, Physical Max = {physical_max}")
+
+                # 判断是否为头皮脑电
+                channels = raw.info['ch_names']
+                for ch in channels:
+                    if any(ch.upper().startswith(eeg_ch.upper()) for eeg_ch in standard_1020_channels):
+                        is_ieeg = False
+                        break
+
                 # 从列表里把最大值和最小值拎出来
                 Physical_Min = min(physical_mins)
                 Physical_Max = max(physical_maxs)
+                # 关闭文件
+                f.close()
         except Exception as e:
             print('raw read error', e)
             return
+
         try:
             freq = raw.info['sfreq']
             duration = int(raw.n_times // freq)
             meas_date = raw.info['meas_date']
             if isinstance(meas_date, tuple):
                 meas_date = datetime.datetime.fromtimestamp(meas_date)
-            # 12/24 bdf文件 通道名映射逻辑
+
+            # 获取导联名称并进行标准化处理
             channels = raw.info['ch_names']
-            dict_ch = {}  # 映射字典
-            for ch in channels:
-                temp = ch
-                if temp.find('-') > 0 and temp.find('-REF') < 0 and temp.find('-AV') < 0:
-                    temp = temp.replace("-", "_")
-                dict_ch[ch] = temp
-            raw.rename_channels(dict_ch)
-            channels = [dict_ch[ch] for ch in channels]  # 映射后的通道名
+            new_channels = self.standardize_channels(channels)  # 调用标准化函数
 
-            # 选择包含 'EEG' 前缀的通道
-            include_channel = mne.pick_channels_regexp(channels, 'EEG')
-            if not include_channel:  # 如果没有 'EEG' 前缀的通道，则不进行重映射
-                channels = raw.ch_names
-            else:
-                # 通道名称
-                channels = mne.pick_info(raw.info, include_channel)['ch_names']
-                # 通道名映射，去除前缀（‘EEG F3-REF' -> 'F3-REF')
-                dict_ch = {ch: ch.split(' ')[-1] for ch in channels}
-                raw.rename_channels(dict_ch)
-                channels = [dict_ch[ch] for ch in channels]
+            # 重命名导联
+            raw.rename_channels(dict(zip(channels, new_channels)))  # 原通道和新通道
 
-            raw.pick_channels(channels)
-            index_channels = mne.pick_channels(raw.info['ch_names'], include=channels)
+            # 获取映射后的通道名列表
+            channels = new_channels
 
             stack_size = 3600
             turn = math.ceil(duration / stack_size)
@@ -841,10 +872,12 @@ class dataImportController(QWidget):
                                                                     # sample_frequency=sampling_rate,
                                                                     prefiler=prefilter
                                                                     )
+            # 创建文件头
             header = pyedflib.highlevel.make_header(startdate=meas_date)
-            with pyedflib.EdfWriter(self.file_path, file_type=pyedflib.FILETYPE_BDF, n_channels=len(channels)) as f:
-                f.setSignalHeaders(signal_headers)
-                f.setHeader(header)
+            header['recording_additional'] = "EEG" if not is_ieeg else "IEEG"
+            with pyedflib.EdfWriter(self.file_path, file_type=pyedflib.FILETYPE_BDF, n_channels=len(channels)) as writer:
+                writer.setSignalHeaders(signal_headers)
+                writer.setHeader(header)
                 for i in range(turn):
                     raw_copy = raw.copy()
                     start = i * stack_size
@@ -857,11 +890,15 @@ class dataImportController(QWidget):
                     t_raw.filter(l_freq=high_pass, h_freq=low_pass)  # 带通滤波
                     t_raw.notch_filter(freqs=notch)
                     t_raw.resample(sampling_rate, npad='auto')
-                    t_signals, t_times = t_raw[index_channels, :]
+                    # channels应该是索引或通道的名称列表，而不是字符串列表。如果channels是导联名称列表，应该用mne.pick_channels来获取对应的索引
+                    # t_signals, t_times = t_raw[channels, :]
+                    # 获取选定通道的数据
+                    index_channels = mne.pick_channels(t_raw.info['ch_names'], include=channels)
+                    t_signals, t_times = t_raw[index_channels, :]  # 按通道提取信号数据
                     del t_raw
 
                     t_signals = t_signals * (pow(10, 6))
-                    f.writeSamples(t_signals)
+                    writer.writeSamples(t_signals)
                     del t_signals
 
                     temp = math.ceil(100 / turn)
@@ -871,6 +908,22 @@ class dataImportController(QWidget):
                         self.progress_value = 100
                     # 每个turn更新进度条
                     self.progressBarView.updateProgressBar(self.progress_value)
+                # 关闭文件
+                writer.close()
+                # BDF文件标志的查看方法
+                # 打开 BDF 文件
+                with pyedflib.EdfReader(self.file_path) as reader:
+                    # 内部属性包含 recording 字段
+                    recording_field = reader.recording
+                    print("Recording Field:", recording_field)
+                # 转换为字符串
+                recording_str = recording_field.decode("ascii")
+                # 提取最后一个部分（按空格分割后取最后一个部分）
+                recording_additional = recording_str.split()[-1]
+                print("Extracted Recording Additional Info:", recording_additional)
+
+                # 关闭文件
+                reader.close()
 
                 # 处理完成关闭进度条
                 self.progressBarView.close()
@@ -878,6 +931,8 @@ class dataImportController(QWidget):
                 # self.is_processing = False
                 # 释放信号，正式上传脑电文件
                 self.uploadFileSig.emit()
+
+
         except Exception as e:
             print('process_bdf', e)
             return
@@ -2155,6 +2210,12 @@ class dataImportController(QWidget):
 
     def convert_edf_to_bdf(self):
         try:
+            # 生成转换后的 BDF 文件名
+            directory, filename = os.path.split(self.from_filepath)
+            filename_without_extension = os.path.splitext(filename)[0]
+            new_filename = f"{filename_without_extension}.bdf"
+            self.convert_filepath = os.path.join(directory, new_filename)
+
             # 使用MNE读取EDF文件并提取注释
             raw = mne.io.read_raw_edf(self.from_filepath, preload=True)
             annotations = raw.annotations  # 提取注释（事件信息）
@@ -2203,11 +2264,6 @@ class dataImportController(QWidget):
                         'sample_frequency': edf_reader.getSampleFrequency(i)
                     })
 
-                # 生成转换后的 BDF 文件名
-                directory, filename = os.path.split(self.from_filepath)
-                filename_without_extension = os.path.splitext(filename)[0]
-                new_filename = f"{filename_without_extension}.bdf"
-                self.convert_filepath = os.path.join(directory, new_filename)
 
                 # 创建BDF头文件
                 bdf_header = pyedflib.highlevel.make_header(
