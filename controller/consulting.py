@@ -41,7 +41,6 @@ class consultingController(QWidget):
     def exit(self):
         self.client.ct_get_diags_notDiagResSig.disconnect()
         self.client.ct_get_fileNameByIdDateResSig.disconnect()
-        self.switchToEEG.disconnect()
 
     def on_clicked_manual_query(self, diags_viewInfo, patient_name):
         self.check_id = diags_viewInfo[-4]
