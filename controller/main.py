@@ -395,6 +395,7 @@ class MainController(QWidget):
         if self.sub_view is not None:
             self.sub_view.close()
         if self.controller is not None:
+            self.controller.switchToEEG.disconnect()
             self.controller.exit()
         self.controller = None
 
@@ -410,11 +411,13 @@ class MainController(QWidget):
         if self.sub_view is not None:
             self.sub_view.close()
         if self.controller is not None:
+            self.controller.switchFromEEG.disconnect()
             self.controller.exit()
         self.controller = None
 
         if controller_name == "manualQueryController":
-            self.controller = manualQueryController(appUtil=self.cAppUtil, client=self.client, page=msg[1])
+            self.controller = manualQueryController(appUtil=self.cAppUtil, client=self.client, page_number=msg[1])
+            self.controller.switchToEEG.connect(self.switchToEEGPage)
         elif controller_name == "consultingController":
             self.controller = consultingController(appUtil=self.cAppUtil,
                                                    client=self.client, page=msg[1])

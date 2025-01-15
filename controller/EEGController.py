@@ -414,6 +414,3 @@ class EEGController(QWidget):
     def on_return_clicked(self):
         self.view.close()
         self.switchFromEEG.emit(self.return_from)
-
-    def exit(self):
-        self.switchFromEEG.disconnect()
