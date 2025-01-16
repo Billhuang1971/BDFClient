@@ -71,6 +71,7 @@ class EEGView(QWidget):
         self.state_lines = []
         self.axHscrollSpan = []
         self.sen = 0
+        self.moveLength = 0
 
         self.createPaintTools()
 
@@ -78,6 +79,8 @@ class EEGView(QWidget):
         try:
             self.type_info = type_info
             self.nSample = nSample
+            self.begin = 0
+            self.end = self.lenWin
 
             self.popMenu1 = QMenu(self.canvas)
             self.popMenu2 = QMenu(self.canvas)
@@ -127,7 +130,55 @@ class EEGView(QWidget):
         self.lenWin = int(round(self.axesXWidthMM / self.secondsSpan))
         px = int(round(secondsSpan * self.xDPI / 25.4))
         self.nDotWin = self.lenWin * px
+        self.begin = 0
+        self.end = self.lenWin
         return self.lenWin, px
+
+    def setMoveLength(self, moveLength):
+        self.moveLength = moveLength
+        self.ui.moveLength.setCurrentText(str(moveLength))
+
+    def stopPaintLabel(self):
+        self.curShowWaves = self.is_waves_showed
+        self.curShowStates = self.is_status_showed
+        self.is_waves_showed = False
+        self.is_status_showed = False
+
+    def startPaintLabel(self):
+        self.is_waves_showed = self.curShowWaves
+        self.is_status_showed = self.curShowStates
+
+    def doDowning(self):
+        self.begin -= self.moveLength
+        self.end -= self.moveLength
+        cmd = True
+        if self.begin < 0:
+            self.begin = 0
+            self.end = self.lenWin
+            cmd = False
+        self.changeTime()
+        return cmd, self.begin * self.sample_rate // self.nSample
+
+    def doUping(self):
+        self.begin += self.moveLength
+        self.end += self.moveLength
+        cmd = True
+        if self.end > self.duration:
+            self.begin = self.duration - self.lenWin
+            self.end = self.duration
+            cmd = False
+        self.changeTime()
+        return cmd, self.begin * self.sample_rate // self.nSample
+
+    def timeChange(self, begin):
+        if begin < 0 or begin + self.lenWin > self.duration:
+            self.view.ui.editTime.setText("00:00:00")
+            self.beign = 0
+            self.end = self.lenWin
+        else:
+            self.begin = begin
+            self.end = begin + self.lenWin
+        return self.begin * self.sample_rate // self.nSample
 
     def secondsSpanChange(self, secondsSpan):
         self.secondsSpan = secondsSpan
@@ -252,10 +303,8 @@ class EEGView(QWidget):
         adjusted_data,y_positions=adjust_signal_position(data,g_spacing,0,len(self.channels_name),len(self.channels_name))
         y_lim=(29 + 1) * g_spacing
 
-    def refreshWin(self, data, labels, begin, end):
+    def refreshWin(self, data, labels):
         self.data = data
-        self.begin = begin
-        self.end = end
         self.labels = labels
         self.removeLines()
         self.updateXAxis()
@@ -453,10 +502,37 @@ class EEGView(QWidget):
             return EEGView.PICK_AXHSCROLL
         return EEGView.PICK_NO_AX
 
-    def onAxhscrollClicked(self, begin):
+    def onAxhscrollClicked(self, x):
+        if x + self.lenWin <= self.duration:
+            self.begin = x
+            self.end = x + self.lenWin
+        else:
+            self.begin = max(0, self.duration - self.lenWin)
+            self.end = self.duration
+        return self.begin * self.sample_rate // self.nSample
+
+    def onBtnUpClicked(self):
+        self.begin -= self.moveLength
+        self.end -= self.moveLength
+        if self.begin < 0:
+            self.end = self.lenWin
+            self.begin = 0
+        self.changeTime()
+        return self.begin * self.sample_rate // self.nSample
+
+    def onBtnDownClicked(self):
+        self.begin += self.moveLength
+        self.end += self.moveLength
+        if self.end > self.duration:
+            self.end = self.duration
+            self.begin = self.begin - self.lenWin
+        self.changeTime()
+        return self.begin * self.sample_rate // self.nSample
+
+    def changeAxStatus(self):
         if self.scroll_position is not None:
             self.scroll_position.remove()
-        self.scroll_position = self.ax_hscroll.axvline(begin, color='r', linewidth=0.5)
+        self.scroll_position = self.ax_hscroll.axvline(self.begin, color='r', linewidth=0.5)
         self.canvas.draw()
 
     def isBanWave(self):
@@ -525,7 +601,7 @@ class EEGView(QWidget):
             for state in self.state_lines:
                 state.remove()
             self.state_lines = []
-            self.wave_lines  =   []
+            self.wave_lines = []
             lines = self.axes.get_lines()
             for l in lines:
                 l.remove()
@@ -878,7 +954,13 @@ class EEGView(QWidget):
         if self.is_waves_showed and self.is_status_showed:
             if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.labels):
                 self.labels[self.cur_sample_index][3] = type[0]
-                # for
+                if self.labels[self.cur_sample_index][0] == 'all':
+                    pass
+                else:
+                    for wave in self.waves:
+                        if wave[0] == self.labels[self.cur_sample_index][0] and wave[1] == self.labels[self.cur_sample_index][1] and wave[2] == self.labels[self.cur_sample_index][2]:
+                            wave[3] = type[0]
+                            break
                 self.showLabels()
                 return 2, self.labels[self.cur_sample_index]
         elif self.is_waves_showed:
@@ -935,5 +1017,5 @@ class EEGView(QWidget):
             amp = str(round(float(amp), 3))
         self.ui.labelAmp.setText(amp)
 
-    def changeTime(self, x):
-        self.ui.editTime.setText(time.strftime("%H:%M:%S", time.gmtime(x)))
+    def changeTime(self):
+        self.ui.editTime.setText(time.strftime("%H:%M:%S", time.gmtime(self.begin)))
