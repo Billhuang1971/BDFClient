@@ -357,7 +357,9 @@ class EEGView(QWidget):
             self.focusLines()
         self.canvas.draw()
         self.showLabels()
-
+    def restartShow(self):
+        self.paintWaves()
+        self.paintStates()
     def changeShowState(self):
         self.is_status_showed = self.is_status_showed is False
         if self.is_status_showed:

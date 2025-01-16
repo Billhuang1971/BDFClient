@@ -294,6 +294,7 @@ class EEGController(QWidget):
                 self.view.ui.btnDowning.setDisabled(False)
                 self.view.ui.btnUping.setText(">>")
                 self.view.startPaintLabel()
+                self.view.restartShow()
                 self.stopThread()
             self.moving = self.moving is False
         except Exception as e:
