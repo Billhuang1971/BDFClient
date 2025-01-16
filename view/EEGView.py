@@ -71,7 +71,6 @@ class EEGView(QWidget):
         self.state_lines = []
         self.axHscrollSpan = []
         self.sen = 0
-        self.moveLength = 0
 
         self.createPaintTools()
 
@@ -79,8 +78,6 @@ class EEGView(QWidget):
         try:
             self.type_info = type_info
             self.nSample = nSample
-            self.begin = 0
-            self.end = self.lenWin
 
             self.popMenu1 = QMenu(self.canvas)
             self.popMenu2 = QMenu(self.canvas)
@@ -130,8 +127,6 @@ class EEGView(QWidget):
         self.lenWin = int(round(self.axesXWidthMM / self.secondsSpan))
         px = int(round(secondsSpan * self.xDPI / 25.4))
         self.nDotWin = self.lenWin * px
-        self.begin = 0
-        self.end = self.lenWin
         return self.lenWin, px
 
     def setMoveLength(self, moveLength):
@@ -304,6 +299,29 @@ class EEGView(QWidget):
         y_lim=(29 + 1) * g_spacing
 
     def refreshWin(self, data, labels):
+    def remove_mean(data, lowlim, highlim, g_submean):
+        """
+        如果 g.submean 是 'on'，从信号中去除均值。
+
+        参数:
+        data -- EEG信号数据，格式为 (通道数, 时间点数)
+        lowlim -- 数据开始点
+        highlim -- 数据结束点
+        g_submean -- 是否去均值操作
+
+        返回:
+        data_no_mean -- 去均值后的EEG数据
+        """
+        if g_submean == 'on':
+            # 计算每个通道在指定区间的均值
+            mean_data = np.mean(data[:, lowlim:highlim], axis=1)
+            # 从每个通道的信号中减去均值
+            data_no_mean = data - mean_data[:, np.newaxis]
+        else:
+            data_no_mean = data  # 不进行去均值操作
+
+        return data_no_mean
+    def refreshWin(self, data, labels, begin, end):
         self.data = data
         self.labels = labels
         self.removeLines()
@@ -417,7 +435,7 @@ class EEGView(QWidget):
             self.paintAState(state, color)
 
     def paintAState(self, state, color):
-        label = str(state[0]) + "|" + str(state[3]) + "|" + str(state[1]) + "|" + str(state[2])
+        label = str(state[0]) + "|" + str(state[1]) + "|" + str(state[2]) + "|" + str(state[3])
         x0=state[1]/(self.sample_rate//self.nSample)
         x1=state[2]/(self.sample_rate//self.nSample)
         self.state_lines.append(self.axes.axvspan(x0, x1, label=label, facecolor=color, alpha=0.3, picker=True))
@@ -937,7 +955,7 @@ class EEGView(QWidget):
             color = 'blue'
             l = (wave[1] - (self.begin * self.sample_rate // self.nSample)) if wave[1] > (self.begin * self.sample_rate // self.nSample) else 0
             r = (wave[2] - (self.begin * self.sample_rate // self.nSample)) if wave[2] < (self.end * self.sample_rate // self.nSample) else (self.end - self.begin) * (self.sample_rate // self.nSample)
-            label = str(wave[0]) + "|" + str(wave[3]) + "|" + str(wave[1]) + "|" + str(wave[2])
+            label = str(wave[0]) + "|" + str(wave[1]) + "|" + str(wave[2]) + "|" + str(wave[3])
             self.resetPickLabels()
             self.focusLines()
             self.paintAWave(l, r, wave[0], label, color)

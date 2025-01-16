@@ -1,4 +1,4 @@
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
 
 from controller.EEGController import EEGController
 from controller.classifier import classifierController
@@ -56,6 +56,7 @@ class MainController(QWidget):
 
         # 主界面模块视图
         self.view = MainView()
+        self.view.setWindowFlags(self.windowFlags() & ~Qt.WindowMaximizeButtonHint)
         self.view.show()
 
         # 当前功能模块控制器
@@ -398,10 +399,8 @@ class MainController(QWidget):
             self.controller.switchToEEG.disconnect()
             self.controller.exit()
         self.controller = None
-
         self.controller = EEGController(client=self.client, appUtil=self.cAppUtil, msg=msg, mainLabel=self.view.label_4)
         self.controller.switchFromEEG.connect(self.switchFromEEGPage)
-
         self.sub_view = self.controller.view
         self.view.updateForEEG(self.sub_view)
         self.controller.startEEG()
