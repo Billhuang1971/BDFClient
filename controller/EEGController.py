@@ -448,6 +448,16 @@ class EEGController(QWidget):
         self.switchFromEEG.emit(self.return_from)
     def subtractAverage(self):
         self.view.remove_mean(self.leftTime,self.rightTime,'on')
+    def processSampleName(self, type_info):
+        # 遍历数据,grouped_states={'正常波形':[正常波形名]}
+        grouped_states = {}
+        # 遍历 type_info 列表并分组
+        for id, name, _, state_type in type_info:
+            if state_type not in grouped_states:
+                grouped_states[state_type] = []
+            grouped_states[state_type].append((name))  # 存储 ID 和名称
+            self.sampleFilter.append(name)
+        return grouped_states
     def onSampleBtnClicked(self):
         grouped_states = self.processSampleName(self.view.type_info)
         sampleMessage = QDialogSample(grouped_states, self.sampleFilter)
