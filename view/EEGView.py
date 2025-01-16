@@ -288,12 +288,12 @@ class EEGView(QWidget):
         self.paintStates()
         if self.pick_first is not None:
             if self.pick_second is None:
-                if self.pick_first >= self.begin * self.sample_rate and self.pick_first < self.end * self.sample_rate:
+                if self.pick_first >= self.begin * self.sample_rate // self.nSample and self.pick_first < self.end * self.sample_rate // self.nSample:
                     self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
             else:
-                if (self.pick_first >= self.begin * self.sample_rate and self.pick_first < self.end * self.sample_rate) or (self.pick_second >= self.begin * self.sample_rate and self.pick_second < self.end * self.sample_rate) or (self.pick_first < self.begin * self.sample_rate and self.pick_second >= self.end * self.sample_rate):
-                    self.paintAWave(max(self.pick_first - self.begin * self.sample_rate, 0),
-                                    min(self.lenWin * self.sample_rate, self.pick_second - self.begin * self.sample_rate),
+                if (self.pick_first >= self.begin * self.sample_rate // self.nSample and self.pick_first < self.end * self.sample_rate // self.nSample) or (self.pick_second >= self.begin * self.sample_rate // self.nSample and self.pick_second < self.end * self.sample_rate // self.nSample) or (self.pick_first < self.begin * self.sample_rate // self.nSample and self.pick_second >= self.end * self.sample_rate // self.nSample):
+                    self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.nSample, 0),
+                                    min(self.lenWin * self.sample_rate // self.nSample, self.pick_second - self.begin * self.sample_rate // self.nSample),
                                     self.pick_label, 'pickedsegment', 'red')
 
         self.canvas.draw()
@@ -640,7 +640,7 @@ class EEGView(QWidget):
             sample = self.waves[self.cur_sample_index]
         else:
             return
-        if sample[0]=='all':
+        if sample[0] == 'all':
             self.changeSampleColor(sample, 'green')
         else:
             self.changeSampleColor(sample, 'blue')
@@ -710,6 +710,7 @@ class EEGView(QWidget):
                     break
             l = int(max(0, (label[1] - (self.begin * (self.sample_rate // self.nSample)))))
             r = int(min((label[2] - label[1]), self.lenWin * (self.sample_rate // self.nSample)))
+
             m = np.max(self.data[idx, l:r])
             self.showCurLabel(type_name, label[0], str((label[2] - label[1])/(self.sample_rate//self.nSample)), str(b_t), str(e_t), str(m))
 
@@ -737,24 +738,22 @@ class EEGView(QWidget):
 
     def clickSample(self, artist):
         label = artist.get_label()
-        self.restorePreSampleColor()
         label = label.split('|')
         label[1] = int(label[1])
         label[2] = int(label[2])
         label[3] = int(label[3])
-        label[4] = int(label[4])
         self.resetPickLabels()
         self.focusLines()
         if self.is_status_showed is True and self.is_waves_showed is True:
             for i in range(len(self.labels)):
-                if self.labels[i][2] == label[0] and self.labels[i][1] == label[1]:
+                if self.labels[i] == label:
                     self.cur_sample_index = i
                     break
             if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.labels):
                 self.ui.tableWidget.selectRow(self.cur_sample_index)
         elif self.is_waves_showed is True:
             for i in range(len(self.waves)):
-                if self.waves[i][2] == label[0] and self.waves[i][1] == label[1]:
+                if self.waves[i] == label:
                     self.cur_sample_index = i
                     break
             if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.waves):
@@ -767,7 +766,7 @@ class EEGView(QWidget):
         e_t = time.strftime('%H:%M:%S', time.gmtime(label[2]))
         type_name = ""
         for type in self.type_info:
-            if type[0] == label[4]:
+            if type[0] == label[3]:
                 type_name = type[1]
                 break
         idx = 0
@@ -775,8 +774,8 @@ class EEGView(QWidget):
             if self.channels_name[i] == label[0]:
                 idx = i
                 break
-        l = int(max(0, (label[1] - self.begin) * self.sample_rate))
-        r = int(min((label[2] - label[1]) * self.sample_rate, self.lenWin * self.sample_rate))
+        l = int(max(0, label[1] - self.begin * self.sample_rate // self.nSample))
+        r = int(min(label[2] - label[1], self.lenWin * self.sample_rate // self.nSample))
         m = np.max(self.data[idx, l:r])
         self.showCurLabel(type_name, label[0], str(label[2] - label[1]), str(b_t), str(e_t), str(m))
         self.canvas.draw()
@@ -799,7 +798,7 @@ class EEGView(QWidget):
     def changeSampleColor(self, sample, color):
         s_label = str(sample[0]) + "|" + str(sample[1]) + "|" + str(sample[2]) + "|" + str(sample[3])
         lines = self.axes.get_lines()
-        if sample[0]=='all':
+        if sample[0] == 'all':
             for s in self.state_lines:
                 s.set_facecolor(color)
             self.canvas.draw()
@@ -900,6 +899,9 @@ class EEGView(QWidget):
             return 1, wave
         if self.is_waves_showed and self.is_status_showed:
             if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.labels):
+                self.labels[self.cur_sample_index][3] = type[0]
+                # for
+                self.showLabels()
                 return 2, self.labels[self.cur_sample_index]
         elif self.is_waves_showed:
             if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.waves):

@@ -1,4 +1,4 @@
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
 
 from controller.EEGController import EEGController
 from controller.classifier import classifierController
@@ -56,6 +56,7 @@ class MainController(QWidget):
 
         # 主界面模块视图
         self.view = MainView()
+        self.view.setWindowFlags(self.windowFlags() & ~Qt.WindowMaximizeButtonHint)
         self.view.show()
 
         # 当前功能模块控制器
