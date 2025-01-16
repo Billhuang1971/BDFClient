@@ -448,3 +448,21 @@ class EEGController(QWidget):
         self.switchFromEEG.emit(self.return_from)
     def subtractAverage(self):
         self.view.remove_mean(self.leftTime,self.rightTime,'on')
+    def onSampleBtnClicked(self):
+        grouped_states = self.processSampleName(self.view.type_info)
+        sampleMessage = QDialogSample(grouped_states, self.sampleFilter)
+        sampleMessage.ui.pb_ok.clicked.connect(lambda: self.onSampleConfirmed(sampleMessage))
+        sampleMessage.ui.pb_cancel.clicked.connect(
+            lambda: sampleMessage.close()  # 取消按钮事件，直接关闭窗口
+        )
+        sampleMessage.show()
+        sampleMessage.setAttribute(Qt.WA_DeleteOnClose)
+
+    def onSampleConfirmed(self, sampleMessage):
+        self.sampleFilter = set(self.sampleFilter)
+        for radio_button in sampleMessage.ui.ck_g:
+            if radio_button.isChecked() == False:
+                self.sampleFilter.remove(radio_button.text())
+        self.sampleFilter = list(self.sampleFilter)
+        sampleMessage.close()
+        print(self.sampleFilter)
