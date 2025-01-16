@@ -131,6 +131,8 @@ class EEGController(QWidget):
         self.view.ui.returnBtn.clicked.connect(self.on_return_clicked)
         self.view.ui.subtractAverage.clicked.connect(self.subtractAverage)
 
+        # 样本选择绑定
+        self.view.ui.sampleSelectionBtn.clicked.connect(self.onSampleBtnClicked)
         self.view.canvas.mpl_connect("pick_event", self.handlePickEvent)
         self.view.canvas.mpl_connect("button_release_event", self.doMouseReleaseEvent)
         self.view.canvas.mpl_connect("scroll_event", self.doScrollEvent)
