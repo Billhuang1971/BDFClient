@@ -126,6 +126,7 @@ class EEGController(QWidget):
         self.view.ui.secondsSpan.lineEdit().editingFinished.connect(self.secondsSpanChange)
         self.view.ui.moveLength.lineEdit().editingFinished.connect(self.moveLengthChange)
         self.view.ui.returnBtn.clicked.connect(self.on_return_clicked)
+        self.view.ui.subtractAverage.clicked.connect(self.subtractAverage)
 
         self.view.canvas.mpl_connect("pick_event", self.handlePickEvent)
         self.view.canvas.mpl_connect("button_release_event", self.doMouseReleaseEvent)
@@ -283,7 +284,8 @@ class EEGController(QWidget):
 
     def stopThread(self):
         self._async_raise(self.thread.ident, SystemExit)
-
+    def exit(self):
+        pass
     def onBtnUpingClicked(self):
         try:
             if self.moving is False:
@@ -463,3 +465,5 @@ class EEGController(QWidget):
     def on_return_clicked(self):
         self.view.close()
         self.switchFromEEG.emit(self.return_from)
+    def subtractAverage(self):
+        self.view.remove_mean()

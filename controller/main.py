@@ -398,10 +398,8 @@ class MainController(QWidget):
             self.controller.switchToEEG.disconnect()
             self.controller.exit()
         self.controller = None
-
         self.controller = EEGController(client=self.client, appUtil=self.cAppUtil, msg=msg, mainLabel=self.view.label_4)
         self.controller.switchFromEEG.connect(self.switchFromEEGPage)
-
         self.sub_view = self.controller.view
         self.view.updateForEEG(self.sub_view)
         self.controller.startEEG()
