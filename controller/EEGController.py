@@ -8,9 +8,9 @@ from PyQt5.Qt import *
 import matplotlib as mpl
 
 from view.EEGView import EEGView
-from view.EEGFrom import QDialogMontage
-from view.EEGFrom import SampleSelect
-from view.EEGFrom import ChannelSelect
+#from view.EEGFrom import QDialogMontage
+#from view.EEGFrom import SampleSelect
+#from view.EEGFrom import ChannelSelect
 from model.EEGData import EEGData
 
 
@@ -45,8 +45,7 @@ class EEGController(QWidget):
             self.secondsSpan = 30
             self.nSecWin, nDotSec = self.view.calcSen(self.secondsSpan)
             nWinBlock = 11
-            self.moveLen = self.nSecWin
-            self.view.ui.moveLength.setCurrentText(str(self.moveLen))
+            self.view.setMoveLength(self.nSecWin)
 
             self.client.openEEGFileResSig.connect(self.openEEGFileRes)
             self.client.loadEEGDataSig.connect(self.loadEEGDataRes)
@@ -75,8 +74,6 @@ class EEGController(QWidget):
                 self.montage = msg[2]
                 self.lenBlock = msg[10] // self.nSample
                 self.lenWin = msg[12]
-                self.leftTime = 0
-                self.rightTime = self.nSecWin
                 data = msg[13]
                 labels = msg[14]
                 labelBit = msg[15]
@@ -87,7 +84,7 @@ class EEGController(QWidget):
                 self.data = EEGData()
                 self.data.initEEGData(data, self.lenFile, self.lenBlock, self.nSample, self.lenWin, labels)
                 data, labels = self.data.getData()
-                self.view.refreshWin(data, labels, self.leftTime, self.rightTime)
+                self.view.refreshWin(data, labels)
         except Exception as e:
             print("openEEGFileRes", e)
 
@@ -109,7 +106,7 @@ class EEGController(QWidget):
             labels = msg[1]
             self.data.setData(data, labels)
             data, labels = self.data.getData()
-            self.view.refreshWin(data, labels, self.leftTime, self.rightTime)
+            self.view.refreshWin(data, labels)
         except Exception as e:
             print("loadEEGDataRes", e)
 
@@ -233,15 +230,8 @@ class EEGController(QWidget):
                 self.view.ui.editTime.setText("00:00:00")
                 return
             [h, m, s] = time.split(':')
-            begin = int(h) * 3600 + int(m) * 60 + int(s)
-            if begin < 0 or begin + self.nSecWin > self.duration:
-                self.view.ui.editTime.setText("00:00:00")
-                self.leftTime = 0
-                self.rightTime = self.nSecWin
-            else:
-                self.leftTime = begin
-                self.rightTime = begin + self.nSecWin
-            self.checkSolution()
+            begin = self.view.timeChange(int(h) * 3600 + int(m) * 60 + int(s))
+            self.checkSolution(begin)
         except Exception as e:
             print("timeChange", e)
 
@@ -252,6 +242,7 @@ class EEGController(QWidget):
                 self.view.ui.btnDown.setDisabled(True)
                 self.view.ui.btnUping.setDisabled(True)
                 self.view.ui.btnDowning.setText("■")
+                self.view.stopPaintLabel()
                 self.thread = threading.Thread(target=self.doDowning)
                 self.thread.start()
             else:
@@ -259,6 +250,8 @@ class EEGController(QWidget):
                 self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnUping.setDisabled(False)
                 self.view.ui.btnDowning.setText("<<")
+                self.view.startPaintLabel()
+
                 self.stopThread()
             self.moving = self.moving is False
         except Exception as e:
@@ -268,22 +261,18 @@ class EEGController(QWidget):
         try:
             while True:
                 time.sleep(self.speed[self.speedText])
-                self.leftTime -= self.moveLen
-                self.rightTime -= self.moveLen
-                if self.leftTime < 0:
-                    self.leftTime = 0
-                    self.rightTime = self.nSecWin
-                    self.view.changeTime(self.leftTime)
-                    self.checkSolution()
+                cmd, begin = self.view.doDowning()
+                if cmd is False:
                     self.view.ui.btnUp.setDisabled(False)
                     self.view.ui.btnDown.setDisabled(False)
                     self.view.ui.btnUping.setDisabled(False)
                     self.view.ui.btnDowning.setText("<<")
+                    self.view.startPaintLabel()
+                    self.checkSolution(begin)
                     self.stopThread()
                     return
                 else:
-                    self.view.changeTime(self.leftTime)
-                    self.checkSolution()
+                    self.checkSolution(begin)
         except Exception as e:
             print("doDowning", e)
 
@@ -298,6 +287,7 @@ class EEGController(QWidget):
                 self.view.ui.btnDown.setDisabled(True)
                 self.view.ui.btnDowning.setDisabled(True)
                 self.view.ui.btnUping.setText("■")
+                self.view.stopPaintLabel()
                 self.thread = threading.Thread(target=self.doUping)
                 self.thread.start()
             else:
@@ -305,6 +295,8 @@ class EEGController(QWidget):
                 self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnDowning.setDisabled(False)
                 self.view.ui.btnUping.setText(">>")
+                self.view.startPaintLabel()
+                self.view.restartShow()
                 self.stopThread()
             self.moving = self.moving is False
         except Exception as e:
@@ -314,22 +306,18 @@ class EEGController(QWidget):
         try:
             while True:
                 time.sleep(self.speed[self.speedText])
-                self.leftTime += self.moveLen
-                self.rightTime += self.moveLen
-                if self.rightTime > self.duration:
-                    self.leftTime = self.duration - self.nSecWin
-                    self.rightTime = self.duration
-                    self.view.changeTime(self.leftTime)
-                    self.checkSolution()
+                cmd, begin = self.view.doUping()
+                if cmd is False:
                     self.view.ui.btnUp.setDisabled(False)
                     self.view.ui.btnDown.setDisabled(False)
                     self.view.ui.btnDowning.setDisabled(False)
                     self.view.ui.btnUping.setText(">>")
+                    self.view.startPaintLabel()
+                    self.checkSolution(begin)
                     self.stopThread()
                     return
                 else:
-                    self.view.changeTime(self.leftTime)
-                    self.checkSolution()
+                    self.checkSolution(begin)
         except Exception as e:
             print("doUping", e)
 
@@ -397,29 +385,23 @@ class EEGController(QWidget):
                 # 点击在跳转滚动条上
                 elif ax == EEGView.PICK_AXHSCROLL:
                     x = int(event.xdata)
-                    if x + self.nSecWin <= self.duration:
-                        self.leftTime = x
-                        self.rightTime = x + self.nSecWin
-                    else:
-                        self.leftTime = max(0, self.duration - self.nSecWin)
-                        self.rightTime = self.duration
-                    self.view.changeTime(self.leftTime)
-                    self.checkSolution()
+                    begin = self.view.onAxhscrollClicked(x)
+                    self.checkSolution(begin)
             # 右键释放菜单
             elif event.button == 3:
                 self.view.releaseMenu()
         except Exception as e:
             print("doMouseReleaseEvent", e)
 
-    def checkSolution(self):
+    def checkSolution(self, begin):
         try:
-            self.view.onAxhscrollClicked(self.leftTime)
-            inBlock, readFrom, readTo, = self.data.queryRange(self.view.getIdx(self.leftTime) // self.nSample)
+            self.view.changeAxStatus()
+            inBlock, readFrom, readTo, = self.data.queryRange(begin)
             if inBlock is False:
                 self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.nSample, readTo * self.nSample, self.nSample, self.tableName, self.pUid])
             else:
                 data, labels = self.data.getData()
-                self.view.refreshWin(data, labels, self.leftTime, self.rightTime)
+                self.view.refreshWin(data, labels)
         except Exception as e:
             print("checkSolution", e)
 
@@ -431,25 +413,15 @@ class EEGController(QWidget):
 
     def onBtnUpClicked(self):
         try:
-            self.leftTime -= self.moveLen
-            self.rightTime -= self.moveLen
-            if self.leftTime < 0:
-                self.rightTime = self.nSecWin
-                self.leftTime = 0
-            self.view.changeTime(self.leftTime)
-            self.checkSolution()
+            begin = self.view.onBtnUpClicked()
+            self.checkSolution(begin)
         except Exception as e:
             print("onBtnUpClicked", e)
 
     def onBtnDownClicked(self):
         try:
-            self.leftTime += self.moveLen
-            self.rightTime += self.moveLen
-            if self.rightTime > self.duration:
-                self.rightTime = self.duration
-                self.leftTime = self.rightTime - self.nSecWin
-            self.view.changeTime(self.leftTime)
-            self.checkSolution()
+            begin = self.view.onBtnDownClicked()
+            self.checkSolution(begin)
         except Exception as e:
             print("onBtnDownClicked", e)
 
@@ -471,4 +443,4 @@ class EEGController(QWidget):
         self.view.close()
         self.switchFromEEG.emit(self.return_from)
     def subtractAverage(self):
-        self.view.remove_mean()
+        self.view.remove_mean(self.leftTime,self.rightTime,'on')

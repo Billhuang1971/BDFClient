@@ -78,7 +78,8 @@ class EEGView(QWidget):
         try:
             self.type_info = type_info
             self.nSample = nSample
-
+            self.begin = 0
+            self.end = self.lenWin
             self.popMenu1 = QMenu(self.canvas)
             self.popMenu2 = QMenu(self.canvas)
 
@@ -128,6 +129,52 @@ class EEGView(QWidget):
         px = int(round(secondsSpan * self.xDPI / 25.4))
         self.nDotWin = self.lenWin * px
         return self.lenWin, px
+
+    def setMoveLength(self, moveLength):
+        self.moveLength = moveLength
+        self.ui.moveLength.setCurrentText(str(moveLength))
+
+    def stopPaintLabel(self):
+        self.curShowWaves = self.is_waves_showed
+        self.curShowStates = self.is_status_showed
+        self.is_waves_showed = False
+        self.is_status_showed = False
+
+    def startPaintLabel(self):
+        self.is_waves_showed = self.curShowWaves
+        self.is_status_showed = self.curShowStates
+
+    def doDowning(self):
+        self.begin -= self.moveLength
+        self.end -= self.moveLength
+        cmd = True
+        if self.begin < 0:
+            self.begin = 0
+            self.end = self.lenWin
+            cmd = False
+        self.changeTime()
+        return cmd, self.begin * self.sample_rate // self.nSample
+
+    def doUping(self):
+        self.begin += self.moveLength
+        self.end += self.moveLength
+        cmd = True
+        if self.end > self.duration:
+            self.begin = self.duration - self.lenWin
+            self.end = self.duration
+            cmd = False
+        self.changeTime()
+        return cmd, self.begin * self.sample_rate // self.nSample
+
+    def timeChange(self, begin):
+        if begin < 0 or begin + self.lenWin > self.duration:
+            self.view.ui.editTime.setText("00:00:00")
+            self.beign = 0
+            self.end = self.lenWin
+        else:
+            self.begin = begin
+            self.end = begin + self.lenWin
+        return self.begin * self.sample_rate // self.nSample
 
     def secondsSpanChange(self, secondsSpan):
         self.secondsSpan = secondsSpan
@@ -182,102 +229,100 @@ class EEGView(QWidget):
             while idx >= 0 and self.sample_info[idx][1] >= readTo // self.sample_rate:
                 idx -= 1
             self.sample_info = sample_info + self.sample_info[idx + 1:]
-    def testmonitor(self):
-
-        def adjust_spacing(data,lowlim, highlim):  # data ，起始点下标，终止点下标
-            # 计算每个通道的标准差
-            stds = np.std(data[:, lowlim:highlim], axis=1)
-            # 排序并去除最小和最大值
-            stds_sorted = np.sort(stds)
-            if len(stds_sorted) > 2:
-                stds_filtered = stds_sorted[1:-1]  # 去掉最小和最大值
-                mean_std = np.mean(stds_filtered)
-            else:
-                mean_std = np.mean(stds_sorted)  # 如果通道数量小于等于2，直接取平均值
-            # 设置 g.spacing 为标准差乘以系数
-            g_spacing = mean_std * 3
-
-            # 确保 g.spacing 在合理范围内
-            if g_spacing == 0 or np.isnan(g_spacing):
-                g_spacing = 1
-            if g_spacing > 10:
-                g_spacing = round(g_spacing)
-
-            return g_spacing
-
-        def adjust_signal_position(data, g_spacing, g_elec_offset, g_disp_chans, total_channels):
-            """
-            调整EEG信号在Y轴上的显示位置。
-            参数:
-            data -- EEG信号数据，每行代表一个通道，每列代表一个时间点
-            g_spacing -- 垂直间距，控制通道间的间隔
-            g_elecoffset -- 电极偏移量，控制所有通道的起始垂直位置
-            g_disp_chans -- 显示的通道数
-            total_channels -- 总通道数
-            返回:
-            adjusted_data -- 调整后的EEG信号数据
-            y_positions -- 每个通道的Y轴位置
-            """
-
-            # 确保 g.elecoffset 在合理范围内
-            if g_elec_offset < 0:
-                g_elec_offset = 0
-            elif g_elec_offset + g_disp_chans > total_channels:
-                g_elec_offset = total_channels - g_disp_chans
-            # 计算每个通道的Y轴位置
-            y_positions = np.arange(g_elec_offset, g_elec_offset + g_disp_chans) * g_spacing
-            # 调整每个通道的信号位置
-            adjusted_data = np.zeros_like(data)
-            for i in range(g_disp_chans):
-                channel_data = data[i, :]  # 获取第i个通道的数据
-                # 根据Y轴位置调整信号
-                adjusted_data[i, :] = channel_data + y_positions[i]
-            return adjusted_data, y_positions
-
-        def set_yaxis_limits(g_spacing, g_chans):
-            """
-            设置Y轴的显示范围。
-
-            参数:
-            g_spacing -- 每个通道之间的垂直间距
-            g_chans -- 总通道数
-
-            返回:
-            y_lim -- Y轴的范围
-            """
-            y_lim = (0, (g_chans + 1) * g_spacing)  # Y轴的最大值是 (g.chans + 1) * g.spacing
-            return y_lim
-        data=self.data*(10**-6)
-        g_spacing=adjust_spacing(data,0,(((self.end - self.begin) * self.sample_rate // self.nSample)-1))
-        adjusted_data,y_positions=adjust_signal_position(data,g_spacing,0,len(self.channels_name),len(self.channels_name))
-        y_lim=(29 + 1) * g_spacing
-
-    def remove_mean(data, lowlim, highlim, g_submean):
-        """
-        如果 g.submean 是 'on'，从信号中去除均值。
-
-        参数:
-        data -- EEG信号数据，格式为 (通道数, 时间点数)
-        lowlim -- 数据开始点
-        highlim -- 数据结束点
-        g_submean -- 是否去均值操作
-
-        返回:
-        data_no_mean -- 去均值后的EEG数据
-        """
-        if g_submean == 'on':
-            # 计算每个通道在指定区间的均值
-            mean_data = np.mean(data[:, lowlim:highlim], axis=1)
-            # 从每个通道的信号中减去均值
-            data_no_mean = data - mean_data[:, np.newaxis]
-        else:
-            data_no_mean = data  # 不进行去均值操作
-
-        return data_no_mean
-    def refreshWin(self, data, labels, begin, end):
+    # def testmonitor(self):
+    #
+    #     def adjust_spacing(data,lowlim, highlim):  # data ，起始点下标，终止点下标
+    #         # 计算每个通道的标准差
+    #         stds = np.std(data[:, lowlim:highlim], axis=1)
+    #         # 排序并去除最小和最大值
+    #         stds_sorted = np.sort(stds)
+    #         if len(stds_sorted) > 2:
+    #             stds_filtered = stds_sorted[1:-1]  # 去掉最小和最大值
+    #             mean_std = np.mean(stds_filtered)
+    #         else:
+    #             mean_std = np.mean(stds_sorted)  # 如果通道数量小于等于2，直接取平均值
+    #         # 设置 g.spacing 为标准差乘以系数
+    #         g_spacing = mean_std * 3
+    #
+    #         # 确保 g.spacing 在合理范围内
+    #         if g_spacing == 0 or np.isnan(g_spacing):
+    #             g_spacing = 1
+    #         if g_spacing > 10:
+    #             g_spacing = round(g_spacing)
+    #
+    #         return g_spacing
+    #
+    #     def adjust_signal_position(data, g_spacing, g_elec_offset, g_disp_chans, total_channels):
+    #         """
+    #         调整EEG信号在Y轴上的显示位置。
+    #         参数:
+    #         data -- EEG信号数据，每行代表一个通道，每列代表一个时间点
+    #         g_spacing -- 垂直间距，控制通道间的间隔
+    #         g_elecoffset -- 电极偏移量，控制所有通道的起始垂直位置
+    #         g_disp_chans -- 显示的通道数
+    #         total_channels -- 总通道数
+    #         返回:
+    #         adjusted_data -- 调整后的EEG信号数据
+    #         y_positions -- 每个通道的Y轴位置
+    #         """
+    #
+    #         # 确保 g.elecoffset 在合理范围内
+    #         if g_elec_offset < 0:
+    #             g_elec_offset = 0
+    #         elif g_elec_offset + g_disp_chans > total_channels:
+    #             g_elec_offset = total_channels - g_disp_chans
+    #         # 计算每个通道的Y轴位置
+    #         y_positions = np.arange(g_elec_offset, g_elec_offset + g_disp_chans) * g_spacing
+    #         # 调整每个通道的信号位置
+    #         adjusted_data = np.zeros_like(data)
+    #         for i in range(g_disp_chans):
+    #             channel_data = data[i, :]  # 获取第i个通道的数据
+    #             # 根据Y轴位置调整信号
+    #             adjusted_data[i, :] = channel_data + y_positions[i]
+    #         return adjusted_data, y_positions
+    #
+    #     def set_yaxis_limits(g_spacing, g_chans):
+    #         """
+    #         设置Y轴的显示范围。
+    #
+    #         参数:
+    #         g_spacing -- 每个通道之间的垂直间距
+    #         g_chans -- 总通道数
+    #
+    #         返回:
+    #         y_lim -- Y轴的范围
+    #         """
+    #         y_lim = (0, (g_chans + 1) * g_spacing)  # Y轴的最大值是 (g.chans + 1) * g.spacing
+    #         return y_lim
+    #     data=self.data*(10**-6)
+    #     g_spacing=adjust_spacing(data,0,(((self.end - self.begin) * self.sample_rate // self.nSample)-1))
+    #     adjusted_data,y_positions=adjust_signal_position(data,g_spacing,0,len(self.channels_name),len(self.channels_name))
+    #     y_lim=(29 + 1) * g_spacing
+    #
+    # def remove_mean(data, lowlim, highlim, g_submean):
+    #     """
+    #     如果 g.submean 是 'on'，从信号中去除均值。
+    #
+    #     参数:
+    #     data -- EEG信号数据，格式为 (通道数, 时间点数)
+    #     lowlim -- 数据开始点
+    #     highlim -- 数据结束点
+    #     g_submean -- 是否去均值操作
+    #
+    #     返回:
+    #     data_no_mean -- 去均值后的EEG数据
+    #     """
+    #     if g_submean == 'on':
+    #         # 计算每个通道在指定区间的均值
+    #         mean_data = np.mean(data[:, lowlim:highlim], axis=1)
+    #         # 从每个通道的信号中减去均值
+    #         data_no_mean = data - mean_data[:, np.newaxis]
+    #     else:
+    #         data_no_mean = data  # 不进行去均值操作
+    #
+    #     return data_no_mean
+    def refreshWin(self, data, labels):
         self.data = data
-        self.begin = begin
-        self.end = end
         self.labels = labels
         self.removeLines()
         self.updateXAxis()
@@ -312,7 +357,9 @@ class EEGView(QWidget):
             self.focusLines()
         self.canvas.draw()
         self.showLabels()
-
+    def restartShow(self):
+        self.paintWaves()
+        self.paintStates()
     def changeShowState(self):
         self.is_status_showed = self.is_status_showed is False
         if self.is_status_showed:
@@ -475,10 +522,37 @@ class EEGView(QWidget):
             return EEGView.PICK_AXHSCROLL
         return EEGView.PICK_NO_AX
 
-    def onAxhscrollClicked(self, begin):
+    def onAxhscrollClicked(self, x):
+        if x + self.lenWin <= self.duration:
+            self.begin = x
+            self.end = x + self.lenWin
+        else:
+            self.begin = max(0, self.duration - self.lenWin)
+            self.end = self.duration
+        return self.begin * self.sample_rate // self.nSample
+
+    def onBtnUpClicked(self):
+        self.begin -= self.moveLength
+        self.end -= self.moveLength
+        if self.begin < 0:
+            self.end = self.lenWin
+            self.begin = 0
+        self.changeTime()
+        return self.begin * self.sample_rate // self.nSample
+
+    def onBtnDownClicked(self):
+        self.begin += self.moveLength
+        self.end += self.moveLength
+        if self.end > self.duration:
+            self.end = self.duration
+            self.begin = self.begin - self.lenWin
+        self.changeTime()
+        return self.begin * self.sample_rate // self.nSample
+
+    def changeAxStatus(self):
         if self.scroll_position is not None:
             self.scroll_position.remove()
-        self.scroll_position = self.ax_hscroll.axvline(begin, color='r', linewidth=0.5)
+        self.scroll_position = self.ax_hscroll.axvline(self.begin, color='r', linewidth=0.5)
         self.canvas.draw()
 
     def isBanWave(self):
@@ -547,7 +621,7 @@ class EEGView(QWidget):
             for state in self.state_lines:
                 state.remove()
             self.state_lines = []
-            self.wave_lines  =   []
+            self.wave_lines = []
             lines = self.axes.get_lines()
             for l in lines:
                 l.remove()
@@ -900,7 +974,13 @@ class EEGView(QWidget):
         if self.is_waves_showed and self.is_status_showed:
             if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.labels):
                 self.labels[self.cur_sample_index][3] = type[0]
-                # for
+                if self.labels[self.cur_sample_index][0] == 'all':
+                    pass
+                else:
+                    for wave in self.waves:
+                        if wave[0] == self.labels[self.cur_sample_index][0] and wave[1] == self.labels[self.cur_sample_index][1] and wave[2] == self.labels[self.cur_sample_index][2]:
+                            wave[3] = type[0]
+                            break
                 self.showLabels()
                 return 2, self.labels[self.cur_sample_index]
         elif self.is_waves_showed:
@@ -957,5 +1037,5 @@ class EEGView(QWidget):
             amp = str(round(float(amp), 3))
         self.ui.labelAmp.setText(amp)
 
-    def changeTime(self, x):
-        self.ui.editTime.setText(time.strftime("%H:%M:%S", time.gmtime(x)))
+    def changeTime(self):
+        self.ui.editTime.setText(time.strftime("%H:%M:%S", time.gmtime(self.begin)))
