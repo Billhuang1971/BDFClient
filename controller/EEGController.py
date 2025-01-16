@@ -8,9 +8,9 @@ from PyQt5.Qt import *
 import matplotlib as mpl
 
 from view.EEGView import EEGView
-from view.EEGFrom import QDialogMontage
-from view.EEGFrom import SampleSelect
-from view.EEGFrom import ChannelSelect
+#from view.EEGFrom import QDialogMontage
+#from view.EEGFrom import SampleSelect
+#from view.EEGFrom import ChannelSelect
 from model.EEGData import EEGData
 
 
@@ -440,4 +440,4 @@ class EEGController(QWidget):
         self.view.close()
         self.switchFromEEG.emit(self.return_from)
     def subtractAverage(self):
-        self.view.remove_mean()
+        self.view.remove_mean(self.leftTime,self.rightTime,'on')
