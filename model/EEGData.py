@@ -17,50 +17,54 @@ class EEGData(object):
         self.labels = []
 
     def queryRange(self, startWin):
-        if startWin >= self.startBlock and startWin + self.lenWin <= self.startBlock + self.lenBlock:
-            self.fromBlock = startWin - self.startBlock
-            self.toBlock = startWin - self.startBlock + self.lenWin
-            self.case = 0
-            return [True, None, None]
-        if startWin - (self.lenBlock - self.lenWin) // 2 < 0:
-            readFrom = 0
-            readTo = self.lenBlock
-            self.fromBlock = startWin
-            self.toBlock = self.fromBlock + self.lenWin
-        elif startWin + self.lenWin + (self.lenBlock - self.lenWin) // 2 > self.lenFile:
-            readFrom = self.lenFile - self.lenBlock
-            readTo = self.lenFile
-            self.fromBlock = startWin - (self.lenFile - self.lenBlock)
-            self.toBlock = self.fromBlock + self.lenWin
-        else:
-            readFrom = startWin - (self.lenBlock - self.lenWin) // 2
-            readTo = startWin + self.lenWin + (self.lenBlock - self.lenWin) // 2
-            self.fromBlock = (self.lenBlock - self.lenWin) // 2
-            self.toBlock = self.fromBlock + self.lenWin
-        if self.startBlock + self.lenBlock <= readFrom or self.startBlock >= readTo:
-            self.startBlock = readFrom
-            self.case = 1
-            return [False, int(readFrom), int(readTo)]
-        if self.startBlock + self.lenBlock <= readTo:
-            self.case = 2
-            self.labels = [label for label in self.labels if label[2] >= readFrom]
-            mid = int(readFrom - self.startBlock)
-            self.data = self.data[:, mid:]
-            self.updateFrom = self.lenBlock - readFrom + self.startBlock
-            self.updateTo = self.lenBlock
-            startBlock = self.startBlock
-            self.startBlock = readFrom
-            readFrom = startBlock + self.lenBlock
-        else:
-            self.case = 3
-            self.labels = [label for label in self.labels if label[2] < readTo]
-            mid = int(readTo - self.startBlock)
-            self.data = self.data[:, :mid]
-            self.updateFrom = 0
-            self.updateTo = self.startBlock - readFrom
-            readTo = self.startBlock
-            self.startBlock = readFrom
-
+        try:
+            if startWin >= self.startBlock and startWin + self.lenWin <= self.startBlock + self.lenBlock:
+                self.fromBlock = startWin - self.startBlock
+                self.toBlock = startWin - self.startBlock + self.lenWin
+                self.case = 0
+                return [True, None, None]
+            if startWin - (self.lenBlock - self.lenWin) // 2 < 0:
+                readFrom = 0
+                readTo = self.lenBlock
+                self.fromBlock = startWin
+                self.toBlock = self.fromBlock + self.lenWin
+            elif startWin + self.lenWin + (self.lenBlock - self.lenWin) // 2 > self.lenFile:
+                readFrom = self.lenFile - self.lenBlock
+                readTo = self.lenFile
+                self.fromBlock = startWin - (self.lenFile - self.lenBlock)
+                self.toBlock = self.fromBlock + self.lenWin
+            else:
+                readFrom = startWin - (self.lenBlock - self.lenWin) // 2
+                readTo = startWin + self.lenWin + (self.lenBlock - self.lenWin) // 2
+                self.fromBlock = (self.lenBlock - self.lenWin) // 2
+                self.toBlock = self.fromBlock + self.lenWin
+            if self.startBlock + self.lenBlock <= readFrom or self.startBlock >= readTo:
+                self.startBlock = readFrom
+                self.case = 1
+                return [False, int(readFrom), int(readTo)]
+            if self.startBlock + self.lenBlock <= readTo:
+                self.case = 2
+                if self.labels:
+                    self.labels = [label for label in self.labels if label[2] >= readFrom]
+                mid = int(readFrom - self.startBlock)
+                self.data = self.data[:, mid:]
+                self.updateFrom = self.lenBlock - readFrom + self.startBlock
+                self.updateTo = self.lenBlock
+                startBlock = self.startBlock
+                self.startBlock = readFrom
+                readFrom = startBlock + self.lenBlock
+            else:
+                self.case = 3
+                if self.labels:
+                    self.labels = [label for label in self.labels if label[2] < readTo]
+                mid = int(readTo - self.startBlock)
+                self.data = self.data[:, :mid]
+                self.updateFrom = 0
+                self.updateTo = self.startBlock - readFrom
+                readTo = self.startBlock
+                self.startBlock = readFrom
+        except Exception as e:
+            print("queryRange", e)
         return [False, int(readFrom), int(readTo)]
 
     def setData(self, EEG, labels):
