@@ -89,12 +89,14 @@ class EEGView(QWidget):
             self.nSample = nSample
             self.begin = 0
             self.end = self.lenWin
+            self.duration = duration
+            self.labelBit = labelBit
+            self.sample_rate = sampleRate
             self.popMenu1 = QMenu(self.canvas)
             self.popMenu2 = QMenu(self.canvas)
-
             self.updateYAxis(channels_name=channels)
-            self.sample_rate = sampleRate
-            self.setAxHscroll(duration, labelBit)
+            self.setAxHscroll()
+            self.paintTimeLine()
             self.showPatientInfo(patientInfo, fileName,
                                       measureDate, startTime,
                                       endTime)
@@ -200,15 +202,14 @@ class EEGView(QWidget):
 
     def changeSecondsLine(self):
         self.show_seconds_line = self.show_seconds_line is False
-
-    def checkSecondsLine(self):
-        self.removeTimeLine()
         if self.show_seconds_line:
             self.paintTimeLine()
+        else:
+            self.removeTimeLine()
         self.canvas.draw()
 
     def paintTimeLine(self):
-        for x in range(self.begin, self.end + 1):
+        for x in range(0, self.duration + 1):
             self.time_lines.append(self.axes.vlines(x, 0, 200, colors='black', alpha=0.7))
 
     def removeTimeLine(self):
@@ -331,28 +332,30 @@ class EEGView(QWidget):
     #
     #     return data_no_mean
     def refreshWin(self, data, labels):
-        self.data = data
-        self.labels = labels
-        self.removeLines()
-        self.updateXAxis()
-        self.paintEEG()
-        self.checkSecondsLine()
-        self.filterSamples()
-        self.paintWaves()
-        self.paintStates()
-        if self.pick_first is not None:
-            if self.pick_second is None:
-                if self.pick_first >= self.begin * self.sample_rate // self.nSample and self.pick_first < self.end * self.sample_rate // self.nSample:
-                    self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
-            else:
-                if (self.pick_first >= self.begin * self.sample_rate // self.nSample and self.pick_first < self.end * self.sample_rate // self.nSample) or (self.pick_second >= self.begin * self.sample_rate // self.nSample and self.pick_second < self.end * self.sample_rate // self.nSample) or (self.pick_first < self.begin * self.sample_rate // self.nSample and self.pick_second >= self.end * self.sample_rate // self.nSample):
-                    self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.nSample, 0),
-                                    min(self.lenWin * self.sample_rate // self.nSample, self.pick_second - self.begin * self.sample_rate // self.nSample),
-                                    self.pick_label, 'pickedsegment', 'red')
+        try:
+            self.data = data
+            self.labels = labels
+            self.removeLines()
+            self.updateXAxis()
+            self.paintEEG()
+            self.filterSamples()
+            self.paintWaves()
+            self.paintStates()
+            if self.pick_first is not None:
+                if self.pick_second is None:
+                    if self.pick_first >= self.begin * self.sample_rate // self.nSample and self.pick_first < self.end * self.sample_rate // self.nSample:
+                        self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
+                else:
+                    if (self.pick_first >= self.begin * self.sample_rate // self.nSample and self.pick_first < self.end * self.sample_rate // self.nSample) or (self.pick_second >= self.begin * self.sample_rate // self.nSample and self.pick_second < self.end * self.sample_rate // self.nSample) or (self.pick_first < self.begin * self.sample_rate // self.nSample and self.pick_second >= self.end * self.sample_rate // self.nSample):
+                        self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.nSample, 0),
+                                        min(self.lenWin * self.sample_rate // self.nSample, self.pick_second - self.begin * self.sample_rate // self.nSample),
+                                        self.pick_label, 'pickedsegment', 'red')
 
-        self.canvas.draw()
-        self.showLabels()
-        self.showCurLabel()
+            self.canvas.draw()
+            self.showLabels()
+            self.showCurLabel()
+        except Exception as e:
+            print("refreshWin", e)
 
     def changeShowWave(self):
         self.is_waves_showed = self.is_waves_showed is False
@@ -369,6 +372,9 @@ class EEGView(QWidget):
     def restartShow(self):
         self.paintWaves()
         self.paintStates()
+        self.canvas.draw()
+        self.showLabels()
+        self.showCurLabel()
     def changeShowState(self):
         self.is_status_showed = self.is_status_showed is False
         if self.is_status_showed:
@@ -492,19 +498,17 @@ class EEGView(QWidget):
         self.fig.subplots_adjust(left=0.07)
         self.fig.subplots_adjust(right=0.97)
 
-    def setAxHscroll(self, duration, labelBit):
-        self.duration = duration
-        self.labelBit = labelBit
-        self.ax_hscroll.set_xlim(0, duration)
+    def setAxHscroll(self):
+        self.ax_hscroll.set_xlim(0, self.duration)
         self.ax_hscroll.get_yaxis().set_visible(False)
-        hsel_patch = mpl.patches.Rectangle((0, 0), duration,
+        hsel_patch = mpl.patches.Rectangle((0, 0), self.duration,
                                            1,
                                            edgecolor='k',
                                            facecolor=(0.75, 0.75, 0.75),
                                            alpha=0.25, linewidth=1,
                                            clip_on=False)
         self.ax_hscroll.add_patch(hsel_patch)
-        hxticks = np.linspace(0, duration, 11)
+        hxticks = np.linspace(0, self.duration, 11)
         self.ax_hscroll.set_xticks(hxticks)
         hxlabels = [time.strftime('%H:%M:%S', time.gmtime(int(hxticks[i])))
                     for i in range(0, 11)]
@@ -564,10 +568,13 @@ class EEGView(QWidget):
         return self.begin * self.sample_rate // self.nSample
 
     def changeAxStatus(self):
-        if self.scroll_position is not None:
-            self.scroll_position.remove()
-        self.scroll_position = self.ax_hscroll.axvline(self.begin, color='r', linewidth=0.5)
-        self.canvas.draw()
+        try:
+            if self.scroll_position is not None:
+                self.scroll_position.remove()
+            self.scroll_position = self.ax_hscroll.axvline(self.begin, color='r', linewidth=0.5)
+            self.canvas.draw()
+        except Exception as e:
+            print("changeAxStatus", e)
 
     def isBanWave(self):
         return self.states_annotate or self.is_waves_showed is False

@@ -37,6 +37,7 @@ class EEGController(QWidget):
             "3x": 1
         }
         self.speedText = "1x"
+        self.loading = True
 
 
     def startEEG(self):
@@ -66,13 +67,13 @@ class EEGController(QWidget):
                 self.channels = msg[3]
                 self.index_channels = msg[4]
                 sample_rate = msg[5]
-                self.lenFile = msg[6] // self.nSample
+                self.lenFile = msg[6]
                 self.duration = msg[7]
                 self.start_time = msg[8]
                 self.end_time = msg[9]
                 type_info = msg[1]
                 self.montage = msg[2]
-                self.lenBlock = msg[10] // self.nSample
+                self.lenBlock = msg[10]
                 self.lenWin = msg[12]
                 data = msg[13]
                 labels = msg[14]
@@ -91,6 +92,7 @@ class EEGController(QWidget):
                 self.data.initEEGData(data, self.lenFile, self.lenBlock, self.nSample, self.lenWin, labels)
                 data, labels = self.data.getData()
                 self.view.refreshWin(data, labels)
+                self.loading = False
         except Exception as e:
             print("openEEGFileRes", e)
     def processIeegMontage(self,type):
@@ -134,6 +136,7 @@ class EEGController(QWidget):
             self.data.setData(data, labels)
             data, labels = self.data.getData()
             self.view.refreshWin(data, labels)
+            self.loading = False
         except Exception as e:
             print("loadEEGDataRes", e)
 
@@ -153,7 +156,7 @@ class EEGController(QWidget):
         self.view.ui.secondsSpan.lineEdit().editingFinished.connect(self.secondsSpanChange)
         self.view.ui.moveLength.lineEdit().editingFinished.connect(self.moveLengthChange)
         self.view.ui.returnBtn.clicked.connect(self.on_return_clicked)
-        self.view.ui.subtractAverage.clicked.connect(self.subtractAverage)
+        #self.view.ui.subtractAverage.clicked.connect(self.subtractAverage)
 
         # 导联选择绑定
         self.view.ui.scenarioSelectionBtn.clicked.connect(self.onrRefClicked)
@@ -251,10 +254,11 @@ class EEGController(QWidget):
 
     def secondsLineClicked(self):
         self.view.changeSecondsLine()
-        self.view.checkSecondsLine()
 
     def timeChange(self):
         try:
+            if self.loading:
+                return
             reg = QRegExp(r"^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$")
             time = self.view.ui.editTime.text()
             if not reg.exactMatch(time):
@@ -268,6 +272,8 @@ class EEGController(QWidget):
 
     def onBtnDowningClicked(self):
         try:
+            if self.loading:
+                return
             if self.moving is False:
                 self.view.ui.btnUp.setDisabled(True)
                 self.view.ui.btnDown.setDisabled(True)
@@ -282,7 +288,7 @@ class EEGController(QWidget):
                 self.view.ui.btnUping.setDisabled(False)
                 self.view.ui.btnDowning.setText("<<")
                 self.view.startPaintLabel()
-
+                self.view.restartShow()
                 self.stopThread()
             self.moving = self.moving is False
         except Exception as e:
@@ -291,6 +297,8 @@ class EEGController(QWidget):
     def doDowning(self):
         try:
             while True:
+                if self.loading:
+                    continue
                 time.sleep(self.speed[self.speedText])
                 cmd, begin = self.view.doDowning()
                 if cmd is False:
@@ -313,6 +321,8 @@ class EEGController(QWidget):
         pass
     def onBtnUpingClicked(self):
         try:
+            if self.loading:
+                return
             if self.moving is False:
                 self.view.ui.btnUp.setDisabled(True)
                 self.view.ui.btnDown.setDisabled(True)
@@ -336,6 +346,8 @@ class EEGController(QWidget):
     def doUping(self):
         try:
             while True:
+                if self.loading:
+                    continue
                 time.sleep(self.speed[self.speedText])
                 cmd, begin = self.view.doUping()
                 if cmd is False:
@@ -370,6 +382,8 @@ class EEGController(QWidget):
     # 响应选中对象事件
     def handlePickEvent(self, event):
         try:
+            if self.loading:
+                return
             mouseevent = event.mouseevent
             artist = event.artist
             if self.view.isBanWave() or mouseevent.button != 1:
@@ -407,6 +421,8 @@ class EEGController(QWidget):
 
     def doMouseReleaseEvent(self, event):
         try:
+            if self.loading:
+                return
             # 左键
             if event.button == 1:
                 ax = self.view.clickAxStatus(event.inaxes)
@@ -429,6 +445,7 @@ class EEGController(QWidget):
             self.view.changeAxStatus()
             inBlock, readFrom, readTo, = self.data.queryRange(begin)
             if inBlock is False:
+                self.loading = True
                 self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.nSample, readTo * self.nSample, self.nSample, self.tableName, self.pUid])
             else:
                 data, labels = self.data.getData()
@@ -437,6 +454,8 @@ class EEGController(QWidget):
             print("checkSolution", e)
 
     def doScrollEvent(self, event):
+        if self.loading:
+            return
         if event.button == "down":
             self.onBtnDownClicked()
         else:
@@ -444,6 +463,8 @@ class EEGController(QWidget):
 
     def onBtnUpClicked(self):
         try:
+            if self.loading:
+                return
             begin = self.view.onBtnUpClicked()
             self.checkSolution(begin)
         except Exception as e:
@@ -451,12 +472,16 @@ class EEGController(QWidget):
 
     def onBtnDownClicked(self):
         try:
+            if self.loading:
+                return
             begin = self.view.onBtnDownClicked()
             self.checkSolution(begin)
         except Exception as e:
             print("onBtnDownClicked", e)
 
     def doKeyPressEvent(self, event):
+        if self.loading:
+            return
         if event.key == 'escape':
             self.view.cancelSelect()
         elif event.key == 'a':

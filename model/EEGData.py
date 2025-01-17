@@ -44,8 +44,7 @@ class EEGData(object):
                 return [False, int(readFrom), int(readTo)]
             if self.startBlock + self.lenBlock <= readTo:
                 self.case = 2
-                if self.labels:
-                    self.labels = [label for label in self.labels if label[2] >= readFrom]
+                self.labels = [label for label in self.labels if (label[1] >= readFrom and label[1] < readTo) or (label[2] >= readFrom and label[2] < readTo) or (label[1] < readFrom and label[2] >= readTo)]
                 mid = int(readFrom - self.startBlock)
                 self.data = self.data[:, mid:]
                 self.updateFrom = self.lenBlock - readFrom + self.startBlock
@@ -55,8 +54,7 @@ class EEGData(object):
                 readFrom = startBlock + self.lenBlock
             else:
                 self.case = 3
-                if self.labels:
-                    self.labels = [label for label in self.labels if label[2] < readTo]
+                self.labels = [label for label in self.labels if (label[1] >= readFrom and label[1] < readTo) or (label[2] >= readFrom and label[2] < readTo) or (label[1] < readFrom and label[2] >= readTo)]
                 mid = int(readTo - self.startBlock)
                 self.data = self.data[:, :mid]
                 self.updateFrom = 0
@@ -69,6 +67,7 @@ class EEGData(object):
 
     def setData(self, EEG, labels):
         try:
+            print(self.data.shape, EEG.shape)
             if self.updateFrom == 0 and self.updateTo == self.lenBlock:
                 self.data = EEG
             elif self.updateFrom == 0:
@@ -79,14 +78,12 @@ class EEGData(object):
             if self.case == 1:
                 self.labels = labels
             elif self.case == 2:
-                if (labels != None and len(labels) > 0):
-                    self.labels.extend(labels)
+                self.labels.extend(labels)
             elif self.case == 3:
-                if (labels != None and len(labels) > 0):
-                    self.labels = labels.extend(self.labels)
+                labels.extend(self.labels)
+                self.labels = labels
         except Exception as e:
             print("setData", e)
-
 
     def getData(self):
         try:
@@ -95,11 +92,8 @@ class EEGData(object):
             if self.labels is None or len(self.labels) == 0:
                 return data, labels
             for label in self.labels:
-                if label[1] < self.startBlock + self.fromBlock and label[2] < self.startBlock + self.fromBlock:
-                    continue
-                if label[1] >= self.startBlock + self.toBlock:
-                    break
-                labels.append(label)
+                if (label[1] >= self.startBlock + self.fromBlock and label[1] < self.startBlock + self.toBlock) or (label[2] >= self.startBlock + self.fromBlock and label[2] < self.startBlock + self.toBlock) or (label[1] < self.startBlock + self.fromBlock and label[2] >= self.startBlock + self.toBlock):
+                    labels.append(label)
             return data, labels
         except Exception as e:
             print("getData", e)
