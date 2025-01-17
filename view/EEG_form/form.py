@@ -34,8 +34,10 @@ class Ui_EEGView(object):
         self.glCanvas.setObjectName("glCanvas")
         self.groupBox = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_1)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
+        # sizePolicy.setHorizontalStretch(0)
+        # sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(1)
         sizePolicy.setHeightForWidth(self.groupBox.sizePolicy().hasHeightForWidth())
         self.groupBox.setSizePolicy(sizePolicy)
         self.groupBox.setTitle("")
@@ -276,7 +278,7 @@ class Ui_EEGView(object):
         self.waveLayout = QHBoxLayout()  # 创建一个水平布局
         #self.waveLayout.setSpacing(1)  # 设置控件之间的间距为 5
         self.hideWaveText = QLabel("波形")
-        self.hideWaveText.setMaximumWidth(30)
+        self.hideWaveText.setMaximumWidth(35)
         self.waveLayout.addWidget(self.hideWaveText)
         #self.glSample.addWidget(self.hideWaveText, 1, 0, 1, 1)
 
@@ -316,7 +318,7 @@ class Ui_EEGView(object):
         self.stateLayout = QHBoxLayout()  # 创建一个水平布局
         self.hideStateText = QLabel("状态")
         # self.waveLayout.setSpacing(1)  # 设置控件之间的间距为 5
-        self.hideStateText.setMaximumWidth(30)
+        self.hideStateText.setMaximumWidth(35)
         self.stateLayout.addWidget(self.hideStateText)
         #self.glSample.addWidget(self.hideStateText, 1, 2, 1, 1)
         self.hideState = QtWidgets.QRadioButton(self.gbSample)
