@@ -15,20 +15,19 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QLabel, QDialog
 
 
-class Ui_Sample(QDialog):
-    def setupUi(self,  Setting, dgroup,samplefilter):
+class Ui_channel(QDialog):
+    def setupUi(self,  Setting, montage,dgroup,dgroupFilter):
         Setting.setObjectName("Setting")
         Setting.resize(1380, 766)
 
         self.dgroup = dgroup
-        self.samplefilter = samplefilter
-        self.montage = None
+        self.montage = montage
         iFont = QFont("", 11)
         self.dgroupKeys = list(self.dgroup.keys())
+        self.dgroupFilter = dgroupFilter
         glen = len(self.dgroupKeys)
         self.lb_g = []
         self.ck_g = []
-
         self.main_layout = QtWidgets.QVBoxLayout(Setting)
         self.buttonLayout = QtWidgets.QHBoxLayout()
         # 初始化 label_2 和其他控件
@@ -51,11 +50,11 @@ class Ui_Sample(QDialog):
         self.scroll_layout = QtWidgets.QGridLayout(self.scroll_content)
 
         self.all = QtWidgets.QCheckBox(Setting, text="全选")
-        self.all.stateChanged.connect(self.allChange)
+        self.all.stateChanged.connect(partial(self.allChange))
         self.scroll_layout.addWidget(self.all, 0, 0)
-
+        x = 1
         # `y` 是控件垂直位置的偏移量，用来控制行的布局
-        x=1
+
         index_global = 0  # 全局索引
         for i in range(glen):
             # 创建一个按钮，并将它添加到 grid layout 中
@@ -72,7 +71,13 @@ class Ui_Sample(QDialog):
             index = 1
 
             # 对应的复选框控件
-            for j in range(len(chs)):
+            if self.montage == '单极':
+                chsIndex = len(chs)-1
+            elif self.montage == '双极':
+                chsIndex = len(chs) - 2
+            else:
+                chsIndex = len(chs)
+            for j in range(chsIndex):
                 if j != 0 and j % 4 == 0:  # 每6个元素换一行
                     x += 1
                     index = 1
@@ -86,7 +91,7 @@ class Ui_Sample(QDialog):
                 self.scroll_layout.addWidget(self.ck_g[index_global], x, index)
                 index += 1
                 index_global += 1
-            x += 2  # 组与组之间换行
+            x += 1  # 组与组之间换行
 
         self.pb_ok = QtWidgets.QPushButton(Setting)
         # self.pb_ok.setGeometry(QtCore.QRect(800, 20, 61, 23))
@@ -112,57 +117,112 @@ class Ui_Sample(QDialog):
 
     def retranslateUi(self, Setting):
         _translate = QtCore.QCoreApplication.translate
-        Setting.setWindowTitle(_translate("Setting", "样本选择"))
+        Setting.setWindowTitle(_translate("Setting", "导联选择"))
 
 
-
-        self.label_2.setText(_translate("Setting", "样本选择："))
+        self.label_2.setText(_translate("Setting", "导联选择："))
         self.pb_ok.setText(_translate("Setting", "确定"))
         self.pb_cancel.setText(_translate("Setting", "取消"))
+        self.all.setText(_translate("Setting", "全选"))
     def initChannels(self):
         self.all.setChecked(True)
         glen = len(self.dgroupKeys)
         index = 0
-        for i in range(glen):
-            self.lb_g[i].setText(f"{self.dgroupKeys[i]}")
-            chs = self.dgroup.get(self.dgroupKeys[i])
-            for j in range(len(chs)):
-                self.ck_g[index].setText(f"{chs[j]}")
-                # if chs[j] in self.dgroup_filter:
-                #     self.ck_g[index].setChecked(True)
-                # else:
-                #     self.ck_g[index].setChecked(False)
-                if chs[j] not in self.samplefilter:
-                    self.ck_g[index].setChecked(False)
-                    self.all.setChecked(False)
-                self.ck_g[index].setChecked(True)
-                index += 1
-            self.ck_g[index-1].show()
-            self.montage = '默认'
-            #self.ck_g[index-1].setChecked(True)
+        if self.montage == '单极':
+            #self.radioButtonMontage_1.setChecked(True)
+
+            #self.radioButtonMontage_1.setChecked(False)
+            #self.radioButtonMontage_2.hide()
+            for i in range(glen):
+                self.lb_g[i].setText(f"{self.dgroupKeys[i]}")
+                chs = self.dgroup.get(self.dgroupKeys[i])
+                for j in range(len(chs)-1):
+                    ch=" - ".join([chs[j], chs[j + 1]])
+                    self.ck_g[index].setText(ch)
+                    if ch in self.dgroupFilter:
+                        self.ck_g[index].setChecked(True)
+                    else:
+                        self.ck_g[index].setChecked(False)
+                        self.all.setChecked(False)
+                    index += 1
+                #self.ck_g[index].hide()
+                #self.ck_g[index].setChecked(False)
+                #index += 1
+        elif self.montage == '双极':
+            for i in range(glen):
+                self.lb_g[i].setText(f"{self.dgroupKeys[i]}")
+                chs = self.dgroup.get(self.dgroupKeys[i])
+                for j in range(len(chs)-2):
+                    ch=" - ".join([chs[j], chs[j + 2]])
+                    self.ck_g[index].setText(ch)
+                    if ch in self.dgroupFilter:
+                        self.ck_g[index].setChecked(True)
+                    else:
+                        self.ck_g[index].setChecked(False)
+                        self.all.setChecked(False)
+                    index += 1
+                #self.ck_g[index].hide()
+                #self.ck_g[index].setChecked(False)
+                #index += 1
+        else:
+            for i in range(glen):
+                self.lb_g[i].setText(f"{self.dgroupKeys[i]}")
+                chs = self.dgroup.get(self.dgroupKeys[i])
+                for j in range(len(chs)):
+                    self.ck_g[index].setText(f"{chs[j]}")
+                    if chs[j] in self.dgroupFilter:
+                        self.ck_g[index].setChecked(True)
+                    else:
+                        self.ck_g[index].setChecked(False)
+                        self.all.setChecked(False)
+                    index += 1
+                self.ck_g[index - 1].show()
+                # self.ck_g[index-1].setChecked(True)
 
 
     def groupSel(self, gname):
         glen = len(self.dgroupKeys)
         index = 0
+        # if self.radioButtonMontage_1.isChecked():
         for i in range(glen):
             chs = self.dgroup.get(self.dgroupKeys[i])
+            if self.montage == '单极':
+                chsIndex = len(chs) - 1
+            elif self.montage == '双极':
+                chsIndex = len(chs) - 2
+            else:
+                chsIndex = len(chs)
             if gname==self.dgroupKeys[i]:
                 st=self.lb_gSt[i]
                 if st:
                     st=False
                 else:
-                    st=True
+                    st = True
                 self.lb_gSt[i]=st
-                for j in range(len(chs)):
+
+                for j in range(chsIndex):
                    self.ck_g[index].setChecked(st)
                    index += 1
                 break;
             else:
-                index += len(chs)
+                index += chsIndex
 
-
-
+        # else:
+        #     for i in range(glen):
+        #         chs = self.dgroup.get(self.dgroupKeys[i])
+        #         if gname == self.dgroupKeys[i]:
+        #             st = self.lb_gSt[i]
+        #             if st:
+        #                 st = False
+        #             else:
+        #                 st = True
+        #             self.lb_gSt[i] = st
+        #             for j in range(len(chs)-1):
+        #                 self.ck_g[index].setChecked(st)
+        #                 index += 1
+        #             break;
+        #         else:
+        #             index += len(chs)
     def allChange(self):
         if self.all.isChecked():
             st = True
@@ -170,12 +230,18 @@ class Ui_Sample(QDialog):
             st = False
         glen = len(self.dgroupKeys)
         index = 0
+        # if self.radioButtonMontage_1.isChecked():
         for i in range(glen):
             chs = self.dgroup.get(self.dgroupKeys[i])
             self.lb_gSt[i] = st
-            for j in range(len(chs)):
+            if self.montage == '单极':
+                chsIndex = len(chs)-1
+            elif self.montage == '双极':
+                chsIndex = len(chs) - 2
+            else:
+                chsIndex = len(chs)
+            for j in range(chsIndex):
                 self.ck_g[index].setChecked(st)
                 index += 1
-
-
+            #index += len(chs)
 

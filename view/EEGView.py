@@ -74,8 +74,17 @@ class EEGView(QWidget):
 
         self.createPaintTools()
 
-    def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, nSample):
+    def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, nSample,type,montage):
         try:
+            self.type = type  # True:颅内脑电 False：头皮脑电
+            #refList即self.montage
+            self.refList = dict()
+            self.refList = montage
+            self.curRefName = 'defualt'
+            #平均参考时计算平均时需要排除的通道
+            self.exclude_av = ['Ldelt1', 'Ldelt2', 'Rdelt1', 'Rdelt2', 'A1', 'A2', 'M1', 'M2', 'LOC', 'ROC',
+                               'CHIN1', 'CHIN2', 'ECGL', 'ECGR', 'LAT1', 'LAT2', 'RAT1', 'RAT2',
+                               'CHEST', 'ABD', 'FLOW', 'SNORE', 'DIF5', 'DIF6']
             self.type_info = type_info
             self.nSample = nSample
             self.begin = 0
@@ -465,6 +474,11 @@ class EEGView(QWidget):
 
     def updateYAxis(self, channels_name=[]):
         self.channels_name = channels_name
+        #处理单通道名，获取每个导联所映射的通道
+        self.singleChannels = []
+        for ch in self.channels_name:
+            ch = ch.split('-')[0]
+            self.singleChannels.append(ch)
         self.resetPickLabels()
         max_y = len(channels_name) + 1
         self.axes.clear()
@@ -1039,3 +1053,52 @@ class EEGView(QWidget):
 
     def changeTime(self):
         self.ui.editTime.setText(time.strftime("%H:%M:%S", time.gmtime(self.begin)))
+    def Refchange(self,Ref):
+        self.curRefName = Ref
+        self.channels_name = self.refList[self.curRefName]
+        self.updateYAxis()
+        begin = self.begin
+        end = self.end
+
+
+    def processChan(self,x,i,av=None):
+        #头皮脑电处理
+        index = self.channels_name.index(self.channels_name[i])
+        label = self.channels_name[i]
+        if '-' in label:
+            g1, g2 = label.split('-')
+            g1_index = self.singleChannels.index(g1)
+            y1 = self.data[g1_index]
+            if g2 == 'REF':
+                y2 = 0
+            elif g2 == 'AV':
+                y2 = av
+            else:
+                g2_index = self.singleChannels.index(g2)
+                y2 = self.data[g2_index]
+            y = y1 - y2
+        else:
+            y = self.data[index]
+        if x.shape != y.shape:
+            y = np.resize(y, x.shape)
+        # y = y * self.scales[label]
+        # 在create_axes中 axes.invert_yaxis反转y轴，y轴取值上负下正，脑电取值默认下负上正，需要对其取反
+        y = -y + index + 1
+        #颅内脑电处理
+        return x,y
+
+    def getCurrentRef(self):
+        return self.curRefName
+
+    def getCurrentRefList(self):
+        return self.refList[self.curRefName]
+
+    def checkType(self):
+        if self.type == False:
+            curRefName = self.getCurrentRef()
+            curRefList = self.getCurrentRefList()
+            dgroup = {curRefName: curRefList}
+        else:
+            dgroup = {}
+        return self.type,self.curRefName,dgroup
+

@@ -8,9 +8,9 @@ from PyQt5.Qt import *
 import matplotlib as mpl
 
 from view.EEGView import EEGView
-#from view.EEGFrom import QDialogMontage
-#from view.EEGFrom import SampleSelect
-#from view.EEGFrom import ChannelSelect
+from view.EEGFrom import QDialogRef
+from view.EEGFrom import QDialogSample
+from view.EEGFrom import QDialogChannel
 from model.EEGData import EEGData
 
 
@@ -77,8 +77,14 @@ class EEGController(QWidget):
                 data = msg[13]
                 labels = msg[14]
                 labelBit = msg[15]
+                type = msg[16]  # True:颅内 False:头皮
 
-                self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.nSample)
+                if type == True:  # 如果是颅内脑电，处理montage
+                    self.processIeegMontage(type)
+                self.dgroupFilter = self.channels
+                self.sampleFilter = []
+
+                self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.nSample,type,self.montage)
                 self.connetEvent(type_info)
 
                 self.data = EEGData()
@@ -87,6 +93,27 @@ class EEGController(QWidget):
                 self.view.refreshWin(data, labels)
         except Exception as e:
             print("openEEGFileRes", e)
+    def processIeegMontage(self,type):
+        list1=[]
+        list2=[]
+        if type == True:
+            self.dgroup = self.appUtil.bdfMontage(self.channels)
+            dgroupKeys = list(self.dgroup.keys())
+            glen = len(dgroupKeys)
+            for i in range(glen):
+                chs = self.dgroup.get(dgroupKeys[i])
+                for j in range(len(chs)-1):
+                    ch1=" - ".join([chs[j], chs[j + 1]]) #单极
+                    list1.append(ch1)
+                    if j < len(chs)-2:
+                        ch2 = " - ".join([chs[j], chs[j + 2]])
+                        list2.append(ch2)
+            self.montage['单极'] = list1
+            self.montage['双极'] = list2
+
+        else:
+            self.dgroup = self.montage
+
 
 
     def insertSampleRes(self, REPData):
@@ -446,8 +473,40 @@ class EEGController(QWidget):
     def on_return_clicked(self):
         self.view.close()
         self.switchFromEEG.emit(self.return_from)
-    def subtractAverage(self):
-        self.view.remove_mean(self.leftTime,self.rightTime,'on')
+    #def subtractAverage(self):
+        #self.view.remove_mean(self.leftTime,self.rightTime,'on')
+
+    def onrRefClicked(self):
+        curRefName = self.view.getCurrentRef()
+        montagesDialog = QDialogRef(self.montage,curRefName)
+
+        montagesDialog.ui.pb_ok.clicked.connect(lambda: self.onRefConfirmed(montagesDialog))
+        # montagesView.ui.pb_cancel.clicked.connect(
+        #     lambda: self.montagesView.close()  # 取消按钮事件，直接关闭窗口
+        # )
+        montagesDialog.ui.pb_cancel.clicked.connect(
+            lambda: montagesDialog.close()  # 取消按钮事件，直接关闭窗口
+        )
+        QApplication.processEvents()
+        montagesDialog.show()
+        montagesDialog.setAttribute(Qt.WA_DeleteOnClose)
+
+    def onRefConfirmed(self, montagesDialog):
+        selected_button = None
+        for radio_button in montagesDialog.ui.lb_g:
+            if radio_button.isChecked():
+                selected_button = radio_button
+                break
+
+        # 检查是否有选中的按钮
+        if selected_button:
+            selected_text = selected_button.text()
+            self.channels = self.montage[selected_text]
+            print(selected_text)
+        self.view.Refchange(selected_text)
+        self.dgroupFilter = self.view.getCurrentRefList()
+        montagesDialog.close()
+
     def processSampleName(self, type_info):
         # 遍历数据,grouped_states={'正常波形':[正常波形名]}
         grouped_states = {}
@@ -458,6 +517,7 @@ class EEGController(QWidget):
             grouped_states[state_type].append((name))  # 存储 ID 和名称
             self.sampleFilter.append(name)
         return grouped_states
+
     def onSampleBtnClicked(self):
         grouped_states = self.processSampleName(self.view.type_info)
         sampleMessage = QDialogSample(grouped_states, self.sampleFilter)
@@ -465,14 +525,41 @@ class EEGController(QWidget):
         sampleMessage.ui.pb_cancel.clicked.connect(
             lambda: sampleMessage.close()  # 取消按钮事件，直接关闭窗口
         )
+        QApplication.processEvents()
         sampleMessage.show()
         sampleMessage.setAttribute(Qt.WA_DeleteOnClose)
 
     def onSampleConfirmed(self, sampleMessage):
         self.sampleFilter = set(self.sampleFilter)
         for radio_button in sampleMessage.ui.ck_g:
-            if radio_button.isChecked() == False:
+            if radio_button.isChecked() == False and radio_button.text() in self.sampleFilter:
                 self.sampleFilter.remove(radio_button.text())
+            if radio_button.isChecked() == True and radio_button.text() not in self.sampleFilter:
+                self.sampleFilter.add(radio_button.text())
         self.sampleFilter = list(self.sampleFilter)
         sampleMessage.close()
         print(self.sampleFilter)
+
+    def onChannelBtnClicked(self):
+        type,curRefName,dgroup=self.view.checkType()
+        if type == True:
+            dgroup = self.appUtil.bdfMontage(self.view.refList['default'])
+        channelMessage = QDialogChannel(curRefName, dgroup, self.dgroupFilter)
+        channelMessage.ui.pb_ok.clicked.connect(lambda: self.onChannelConfirmed(channelMessage))
+        channelMessage.ui.pb_cancel.clicked.connect(
+            lambda: channelMessage.close()  # 取消按钮事件，直接关闭窗口
+        )
+        QApplication.processEvents()
+        channelMessage.show()
+        channelMessage.setAttribute(Qt.WA_DeleteOnClose)
+
+    def onChannelConfirmed(self, channelMessage):
+        self.dgroupFilter = set(self.dgroupFilter)
+        for radio_button in channelMessage.ui.ck_g:
+            if radio_button.isChecked() == False and radio_button.text() in self.dgroupFilter:
+                self.dgroupFilter.remove(radio_button.text())
+            if radio_button.isChecked() == True and radio_button.text() not in self.dgroupFilter:
+                self.dgroupFilter.add(radio_button.text())
+        self.dgroupFilter = list(self.dgroupFilter)
+        channelMessage.close()
+        print(self.dgroupFilter)
