@@ -134,8 +134,8 @@ class Ui_Sample(QDialog):
                 #     self.ck_g[index].setChecked(False)
                 if chs[j] not in self.samplefilter:
                     self.ck_g[index].setChecked(False)
-                    self.all.setChecked(False)
-                self.ck_g[index].setChecked(True)
+                else:
+                    self.ck_g[index].setChecked(True)
                 index += 1
             self.ck_g[index-1].show()
             self.montage = '默认'

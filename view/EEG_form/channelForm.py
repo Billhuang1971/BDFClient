@@ -143,7 +143,7 @@ class Ui_channel(QDialog):
                         self.ck_g[index].setChecked(True)
                     else:
                         self.ck_g[index].setChecked(False)
-                        self.all.setChecked(False)
+
                     index += 1
                 #self.ck_g[index].hide()
                 #self.ck_g[index].setChecked(False)
@@ -159,7 +159,7 @@ class Ui_channel(QDialog):
                         self.ck_g[index].setChecked(True)
                     else:
                         self.ck_g[index].setChecked(False)
-                        self.all.setChecked(False)
+
                     index += 1
                 #self.ck_g[index].hide()
                 #self.ck_g[index].setChecked(False)
@@ -174,7 +174,7 @@ class Ui_channel(QDialog):
                         self.ck_g[index].setChecked(True)
                     else:
                         self.ck_g[index].setChecked(False)
-                        self.all.setChecked(False)
+
                     index += 1
                 self.ck_g[index - 1].show()
                 # self.ck_g[index-1].setChecked(True)

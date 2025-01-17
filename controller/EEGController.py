@@ -84,6 +84,7 @@ class EEGController(QWidget):
                     self.processIeegMontage(type)
                 self.dgroupFilter = self.channels
                 self.sampleFilter = []
+                self.grouped_states = self.processSampleName(type_info)
 
                 self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.nSample,type,self.montage)
                 self.connetEvent(type_info)
@@ -96,6 +97,7 @@ class EEGController(QWidget):
         except Exception as e:
             print("openEEGFileRes", e)
     def processIeegMontage(self,type):
+        self.montage['defualt'] = self.channels
         list1=[]
         list2=[]
         if type == True:
@@ -544,8 +546,7 @@ class EEGController(QWidget):
         return grouped_states
 
     def onSampleBtnClicked(self):
-        grouped_states = self.processSampleName(self.view.type_info)
-        sampleMessage = QDialogSample(grouped_states, self.sampleFilter)
+        sampleMessage = QDialogSample(self.grouped_states, self.sampleFilter)
         sampleMessage.ui.pb_ok.clicked.connect(lambda: self.onSampleConfirmed(sampleMessage))
         sampleMessage.ui.pb_cancel.clicked.connect(
             lambda: sampleMessage.close()  # 取消按钮事件，直接关闭窗口
@@ -562,13 +563,14 @@ class EEGController(QWidget):
             if radio_button.isChecked() == True and radio_button.text() not in self.sampleFilter:
                 self.sampleFilter.add(radio_button.text())
         self.sampleFilter = list(self.sampleFilter)
+        self.dgroupFilter = self.view.getCurrentRefList()
         sampleMessage.close()
         print(self.sampleFilter)
 
     def onChannelBtnClicked(self):
         type,curRefName,dgroup=self.view.checkType()
         if type == True:
-            dgroup = self.appUtil.bdfMontage(self.view.refList['default'])
+            dgroup = self.appUtil.bdfMontage(self.view.refList['defualt'])
         channelMessage = QDialogChannel(curRefName, dgroup, self.dgroupFilter)
         channelMessage.ui.pb_ok.clicked.connect(lambda: self.onChannelConfirmed(channelMessage))
         channelMessage.ui.pb_cancel.clicked.connect(
