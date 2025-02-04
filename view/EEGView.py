@@ -76,7 +76,7 @@ class EEGView(QWidget):
 
         self.createPaintTools()
 
-    def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, nSample,type,montage):
+    def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, nSample,type,montage,sampleFilter):
         try:
             self.type = type  # True:颅内脑电 False：头皮脑电
             #refList：参考方案列表，即montage
@@ -89,7 +89,7 @@ class EEGView(QWidget):
                 ch = ch.split('-')[0]
                 self.singleChannels.append(ch)
             self.allChannel = {key: True for key in channels}
-
+            self.sampleFilter = sampleFilter
             #平均参考时计算平均时需要排除的通道
             self.exclude_av = ['Ldelt1', 'Ldelt2', 'Rdelt1', 'Rdelt2', 'A1', 'A2', 'M1', 'M2', 'LOC', 'ROC',
                                'CHIN1', 'CHIN2', 'ECGL', 'ECGR', 'LAT1', 'LAT2', 'RAT1', 'RAT2',
@@ -1156,6 +1156,12 @@ class EEGView(QWidget):
         self.updateYAxis(channel)
         label = self.labelFilter()
         self.refreshWin(self.data, label)
+
+    def getSampleFilter(self):
+        return self.sampleFilter
+
+    def updateSample(self,sampleFilter):
+        self.sampleFilter = sampleFilter
 
 
 

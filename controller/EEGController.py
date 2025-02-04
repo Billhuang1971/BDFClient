@@ -83,10 +83,10 @@ class EEGController(QWidget):
                 if type == True:  # 如果是颅内脑电，处理montage
                     self.processIeegMontage(type)
                 # self.dgroupFilter = self.channels
-                self.sampleFilter = []
-                self.grouped_states = self.processSampleName(type_info)
 
-                self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.nSample,type,self.montage)
+                self.grouped_states,sampleFilter = self.processSampleName(type_info)
+
+                self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.nSample,type,self.montage,sampleFilter)
                 self.connetEvent(type_info)
 
                 self.data = EEGData()
@@ -539,17 +539,19 @@ class EEGController(QWidget):
     def processSampleName(self, type_info):
         # 遍历数据,grouped_states={'正常波形':[正常波形名]}
         grouped_states = {}
+        sampleFilter = []
         # 遍历 type_info 列表并分组
         for id, name, _, state_type in type_info:
             if state_type not in grouped_states:
                 grouped_states[state_type] = []
             grouped_states[state_type].append((name))  # 存储 ID 和名称
-            self.sampleFilter.append(name)
-        return grouped_states
+            sampleFilter.append(name)
+        return grouped_states,sampleFilter
 
     def onSampleBtnClicked(self):
-        sampleMessage = QDialogSample(self.grouped_states, self.sampleFilter)
-        sampleMessage.ui.pb_ok.clicked.connect(lambda: self.onSampleConfirmed(sampleMessage))
+        sampleFilter = self.view.getSampleFilter()
+        sampleMessage = QDialogSample(self.grouped_states, sampleFilter)
+        sampleMessage.ui.pb_ok.clicked.connect(lambda: self.onSampleConfirmed(sampleMessage,sampleFilter))
         sampleMessage.ui.pb_cancel.clicked.connect(
             lambda: sampleMessage.close()  # 取消按钮事件，直接关闭窗口
         )
@@ -557,17 +559,17 @@ class EEGController(QWidget):
         sampleMessage.show()
         sampleMessage.setAttribute(Qt.WA_DeleteOnClose)
 
-    def onSampleConfirmed(self, sampleMessage):
-        self.sampleFilter = set(self.sampleFilter)
+    def onSampleConfirmed(self, sampleMessage,sampleFilter):
+        sampleFilter = set(sampleFilter)
         for radio_button in sampleMessage.ui.ck_g:
-            if radio_button.isChecked() == False and radio_button.text() in self.sampleFilter:
-                self.sampleFilter.remove(radio_button.text())
-            if radio_button.isChecked() == True and radio_button.text() not in self.sampleFilter:
-                self.sampleFilter.add(radio_button.text())
-        self.sampleFilter = list(self.sampleFilter)
-        self.dgroupFilter = self.view.getCurrentRefList()
+            if radio_button.isChecked() == False and radio_button.text() in sampleFilter:
+                sampleFilter.remove(radio_button.text())
+            if radio_button.isChecked() == True and radio_button.text() not in sampleFilter:
+                sampleFilter.add(radio_button.text())
+        sampleFilter = list(sampleFilter)
+        self.view.updateSample(sampleFilter)
         sampleMessage.close()
-        print(self.sampleFilter)
+        print(sampleFilter)
 
     def onChannelBtnClicked(self):
         type,curRefName,dgroup,shownChannels=self.view.checkType()
