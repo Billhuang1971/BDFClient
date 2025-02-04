@@ -1,4 +1,5 @@
 import sys
+from collections import OrderedDict
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -22,6 +23,7 @@ class EEGView(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.labelBit = None
         self.ui = Ui_EEGView()
         self.ui.setupUi(self)
 
@@ -77,10 +79,17 @@ class EEGView(QWidget):
     def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, nSample,type,montage):
         try:
             self.type = type  # True:颅内脑电 False：头皮脑电
-            #refList即self.montage
-            self.refList = dict()
-            self.refList = montage
-            self.curRefName = 'defualt'
+            #refList：参考方案列表，即montage
+            self.refList = dict(montage)
+            self.curRef = 'defualt'
+
+            # 处理单通道名，获取每个导联所映射的通道
+            self.singleChannels = []
+            for ch in channels:
+                ch = ch.split('-')[0]
+                self.singleChannels.append(ch)
+            self.allChannel = {key: True for key in channels}
+
             #平均参考时计算平均时需要排除的通道
             self.exclude_av = ['Ldelt1', 'Ldelt2', 'Rdelt1', 'Rdelt2', 'A1', 'A2', 'M1', 'M2', 'LOC', 'ROC',
                                'CHIN1', 'CHIN2', 'ECGL', 'ECGR', 'LAT1', 'LAT2', 'RAT1', 'RAT2',
@@ -218,10 +227,27 @@ class EEGView(QWidget):
         self.time_lines = []
 
     def paintEEG(self):
+        # x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate // self.nSample)
+        # for i in range(len(self.channels_name)):
+        #     y=self.processChan(x,i)
+        #     self.axes.plot(x, self.data[i] + i + 1, color='black', label=self.channels_name[i], picker=True,
+        #                    alpha=self.channels_alpha[self.channels_name[i]], linewidth=0.3)
+
         x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate // self.nSample)
+        av = None
+        if self.type == False:
+            if 'AV' in self.singleChannels:
+                ex_chs = tuple([self.channels_name.index(x) for x in self.exclude_av if x in self.channels_name])
+                temp_data = self.data
+                temp_data = np.delete(temp_data, ex_chs, axis=0)
+                av = np.mean(temp_data, axis=0)
         for i in range(len(self.channels_name)):
-            self.axes.plot(x, self.data[i] + i + 1, color='black', label=self.channels_name[i], picker=True,
-                           alpha=self.channels_alpha[self.channels_name[i]], linewidth=0.3)
+            try:
+                x, y = self.processChan(x, i,av)
+            except ValueError:
+                continue
+            self.axes.plot(x, y, color='black', label=self.channels_name[i], picker=True,
+                           alpha=self.channels_alpha[self.channels_name[i]], linewidth=0.7)
 
     def getIdx(self, time):
         return time * self.sample_rate
@@ -480,11 +506,6 @@ class EEGView(QWidget):
 
     def updateYAxis(self, channels_name=[]):
         self.channels_name = channels_name
-        #处理单通道名，获取每个导联所映射的通道
-        self.singleChannels = []
-        for ch in self.channels_name:
-            ch = ch.split('-')[0]
-            self.singleChannels.append(ch)
         self.resetPickLabels()
         max_y = len(channels_name) + 1
         self.axes.clear()
@@ -1061,20 +1082,32 @@ class EEGView(QWidget):
     def changeTime(self):
         self.ui.editTime.setText(time.strftime("%H:%M:%S", time.gmtime(self.begin)))
     def Refchange(self,Ref):
-        self.curRefName = Ref
-        self.channels_name = self.refList[self.curRefName]
-        self.updateYAxis()
-        begin = self.begin
-        end = self.end
+        self.curRef = Ref
+        chanList = self.refList[Ref]
+        self.allChannel = {key: True for key in chanList}
+        self.updateYAxis(chanList)
+        label = self.labelFilter()
+        self.refreshWin(self.data,label)
 
+    def labelFilter(self):
+        return self.labels
+        # shownLabels = None
+        # for label in self.labels:
+        #     if label[0] in self.channels_name:
+        #         shownLabels.append(label)
+        # return shownLabels
 
-    def processChan(self,x,i,av=None):
-        #头皮脑电处理
+    def processChan(self,x,i,av):
         index = self.channels_name.index(self.channels_name[i])
         label = self.channels_name[i]
         if '-' in label:
             g1, g2 = label.split('-')
-            g1_index = self.singleChannels.index(g1)
+            g1 = g1.strip()
+            g2 = g2.strip()
+            try:
+                g1_index = self.singleChannels.index(g1)
+            except Exception as e:
+                print(e)
             y1 = self.data[g1_index]
             if g2 == 'REF':
                 y2 = 0
@@ -1086,26 +1119,44 @@ class EEGView(QWidget):
             y = y1 - y2
         else:
             y = self.data[index]
+
         if x.shape != y.shape:
             y = np.resize(y, x.shape)
         # y = y * self.scales[label]
         # 在create_axes中 axes.invert_yaxis反转y轴，y轴取值上负下正，脑电取值默认下负上正，需要对其取反
         y = -y + index + 1
-        #颅内脑电处理
         return x,y
 
     def getCurrentRef(self):
-        return self.curRefName
+        return self.curRef
 
     def getCurrentRefList(self):
-        return self.refList[self.curRefName]
+        return self.refList[self.curRef]
 
     def checkType(self):
         if self.type == False:
-            curRefName = self.getCurrentRef()
+            curRef = self.getCurrentRef()
             curRefList = self.getCurrentRefList()
-            dgroup = {curRefName: curRefList}
+            dgroup = {curRef: curRefList}
         else:
             dgroup = {}
-        return self.type,self.curRefName,dgroup
+        return self.type,self.curRef,dgroup,self.channels_name
+
+    def getShownChannel(self):
+        return self.channels_name
+
+    def updateShownChannels(self,shownChannels):
+        channel = []
+        for key in self.allChannel.keys():
+            if key in shownChannels:
+                self.allChannel[key] = True
+                channel.append(key)
+            else:
+                self.allChannel[key] = False
+        self.updateYAxis(channel)
+        label = self.labelFilter()
+        self.refreshWin(self.data, label)
+
+
+
 

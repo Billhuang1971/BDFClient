@@ -245,6 +245,8 @@ class clientAppUtil():
             bg = []
             i += 1
             try:
+                suffix = cha.split('-')[1] if len(cha.split('-')) > 1 else None
+                suffix = '-' + suffix
                 cha = cha.split('-')[0]
                 n = int(cha[-1])
             except ValueError:
@@ -252,6 +254,8 @@ class clientAppUtil():
             if n != 1:
                 continue
             bkey = cha[:-1]
+            if suffix is not None:
+                cha = cha + suffix
             bg.append(cha)
             while i < chlen:
                 n += 1
@@ -260,6 +264,8 @@ class clientAppUtil():
                 if cha.upper() in ch0s:
                     return {}
                 if cha == f'{bkey}{n}':
+                    if suffix is not None:
+                        cha = cha + suffix
                     bg.append(cha)
                     i += 1
                 else:
@@ -276,8 +282,11 @@ class clientAppUtil():
             if i >= chlen and n > 1:
                 bkey = cha[:-2]
                 dgroup.setdefault(bkey, bg)
+
         print(dgroup)
         return dgroup
+
+
 
     def makeTxt(self, file_path):
         with open(file_path, 'w', encoding='utf-8') as file:

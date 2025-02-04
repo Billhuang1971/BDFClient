@@ -82,7 +82,7 @@ class EEGController(QWidget):
 
                 if type == True:  # 如果是颅内脑电，处理montage
                     self.processIeegMontage(type)
-                self.dgroupFilter = self.channels
+                # self.dgroupFilter = self.channels
                 self.sampleFilter = []
                 self.grouped_states = self.processSampleName(type_info)
 
@@ -107,9 +107,12 @@ class EEGController(QWidget):
             for i in range(glen):
                 chs = self.dgroup.get(dgroupKeys[i])
                 for j in range(len(chs)-1):
+                    chs[j] = chs[j].split('-')[0]
+                    chs[j+1] = chs[j+1].split('-')[0]
                     ch1=" - ".join([chs[j], chs[j + 1]]) #单极
                     list1.append(ch1)
                     if j < len(chs)-2:
+                        chs[j+2] = chs[j+2].split('-')[0]
                         ch2 = " - ".join([chs[j], chs[j + 2]])
                         list2.append(ch2)
             self.montage['单极'] = list1
@@ -531,7 +534,6 @@ class EEGController(QWidget):
             self.channels = self.montage[selected_text]
             print(selected_text)
         self.view.Refchange(selected_text)
-        self.dgroupFilter = self.view.getCurrentRefList()
         montagesDialog.close()
 
     def processSampleName(self, type_info):
@@ -568,10 +570,10 @@ class EEGController(QWidget):
         print(self.sampleFilter)
 
     def onChannelBtnClicked(self):
-        type,curRefName,dgroup=self.view.checkType()
+        type,curRefName,dgroup,shownChannels=self.view.checkType()
         if type == True:
             dgroup = self.appUtil.bdfMontage(self.view.refList['defualt'])
-        channelMessage = QDialogChannel(curRefName, dgroup, self.dgroupFilter)
+        channelMessage = QDialogChannel(curRefName, dgroup, shownChannels)
         channelMessage.ui.pb_ok.clicked.connect(lambda: self.onChannelConfirmed(channelMessage))
         channelMessage.ui.pb_cancel.clicked.connect(
             lambda: channelMessage.close()  # 取消按钮事件，直接关闭窗口
@@ -581,12 +583,13 @@ class EEGController(QWidget):
         channelMessage.setAttribute(Qt.WA_DeleteOnClose)
 
     def onChannelConfirmed(self, channelMessage):
-        self.dgroupFilter = set(self.dgroupFilter)
+        shownChannels = set(self.view.getShownChannel())
         for radio_button in channelMessage.ui.ck_g:
-            if radio_button.isChecked() == False and radio_button.text() in self.dgroupFilter:
-                self.dgroupFilter.remove(radio_button.text())
-            if radio_button.isChecked() == True and radio_button.text() not in self.dgroupFilter:
-                self.dgroupFilter.add(radio_button.text())
-        self.dgroupFilter = list(self.dgroupFilter)
+            if radio_button.isChecked() == False and radio_button.text() in shownChannels:
+                shownChannels.remove(radio_button.text())
+            if radio_button.isChecked() == True and radio_button.text() not in shownChannels:
+                shownChannels.add(radio_button.text())
+        shownChannels = list(shownChannels)
+        self.view.updateShownChannels(shownChannels)
+        print(shownChannels)
         channelMessage.close()
-        print(self.dgroupFilter)
