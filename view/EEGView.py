@@ -38,6 +38,7 @@ class EEGView(QWidget):
         # 是否状态显示
         self.is_status_showed = True
         self.is_waves_showed = True
+        self.is_Event_showed = True
         # 被选中的通道
         self.pick_labels = []
         self.pick_first = None
@@ -156,7 +157,7 @@ class EEGView(QWidget):
         self.moveLength = moveLength
         self.ui.moveLength.setCurrentText(str(moveLength))
 
-    # 停止绘制样本
+    # 自动播放时停止绘制样本
     def stopPaintLabel(self):
         self.curShowWaves = self.is_waves_showed
         self.curShowStates = self.is_status_showed
@@ -436,7 +437,18 @@ class EEGView(QWidget):
             self.focusLines()
         self.canvas.draw()
         self.showLabels()
-
+    def changeShowEvent(self):
+        self.is_Event_showed = self.is_Event_showed is False
+        if self.is_Event_showed:
+            pass
+        else:
+            for state in self.state_lines:
+                state.remove()
+            self.state_lines = []
+            self.resetPickLabels()
+            self.focusLines()
+        self.canvas.draw()
+        self.showLabels()
     # 显示样本信息
     def showLabels(self):
         list = []
