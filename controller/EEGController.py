@@ -81,11 +81,11 @@ class EEGController(QWidget):
                 labelBit = msg[15]
                 type = msg[16]  # True:颅内 False:头皮
 
-                if type == True:  # 如果是颅内脑电，处理montage
-                    self.processIeegMontage(type)
-                self.dgroupFilter = self.channels
+                # if type == True:  # 如果是颅内脑电，处理montage
+                #     self.processIeegMontage(type)
+                # self.dgroupFilter = self.channels
 
-                self.grouped_states,sampleFilter = self.processSampleName(type_info)
+                self.grouped_states, sampleFilter = self.processSampleName(type_info)
 
                 self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.nSample,type,self.montage,sampleFilter)
                 self.connetEvent(type_info)
@@ -220,7 +220,7 @@ class EEGController(QWidget):
 
     # 删除样本
     def delSample(self):
-        pass
+        label = self.view.delSample()
 
     # 改变移动速度的操作
     def onMoveSpeedChanged(self):
@@ -577,7 +577,7 @@ class EEGController(QWidget):
         sampleMessage.show()
         sampleMessage.setAttribute(Qt.WA_DeleteOnClose)
 
-    def onSampleConfirmed(self, sampleMessage,sampleFilter):
+    def onSampleConfirmed(self, sampleMessage, sampleFilter):
         sampleFilter = set(sampleFilter)
         for radio_button in sampleMessage.ui.ck_g:
             if radio_button.isChecked() == False and radio_button.text() in sampleFilter:
@@ -585,9 +585,8 @@ class EEGController(QWidget):
             if radio_button.isChecked() == True and radio_button.text() not in sampleFilter:
                 sampleFilter.add(radio_button.text())
         sampleFilter = list(sampleFilter)
-        self.view.updateSample(sampleFilter)
+        self.view.setSelectedTypes(sampleFilter)
         sampleMessage.close()
-        print(sampleFilter)
 
     def onChannelBtnClicked(self):
         type,curRefName,dgroup,shownChannels=self.view.checkType()

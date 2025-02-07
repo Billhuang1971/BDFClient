@@ -119,7 +119,7 @@ class EEGView(QWidget):
         self.fig = plt.figure()
         self.canvas = FigureCanvas(self.fig)
         self.ui.glCanvas.addWidget(self.canvas, 0, 0, 1, 1)
-        self.fig.tight_layout()
+        self.fig.subplots_adjust(0.125, 0.01,  0.9, 0.95)
         self.axes = plt.subplot2grid((33, 1), (2, 0), rowspan=30)
         self.ax_hscroll = plt.subplot2grid((33, 1), (0, 0), rowspan=1)
 
@@ -493,7 +493,7 @@ class EEGView(QWidget):
         for state in self.states:
             idx = keys.index(state[3])
             description = self.type_info[idx][3]
-            type_name=self.type_info[idx][1]
+            type_name = self.type_info[idx][1]
             if description == '正常状态':
                 color = 'green'
             elif description == '异常状态':
@@ -505,8 +505,8 @@ class EEGView(QWidget):
     # 绘制一个状态
     def paintAState(self, state, color):
         label = str(state[0]) + "|" + str(state[1]) + "|" + str(state[2]) + "|" + str(state[3])
-        x0=state[1]/(self.sample_rate//self.nSample)
-        x1=state[2]/(self.sample_rate//self.nSample)
+        x0 = state[1]/(self.sample_rate//self.nSample)
+        x1 = state[2]/(self.sample_rate//self.nSample)
         self.state_lines.append(self.axes.axvspan(x0, x1, label=label, facecolor=color, alpha=0.3, picker=True))
 
     # 过滤样本
@@ -1080,19 +1080,10 @@ class EEGView(QWidget):
 
 
 
-    def updateLabel(self, type):
-        pass
+    def setSelectedTypes(self, types):
+        self.type_info = types
 
-    def updateSample(self, type):
-        pass
-
-    def insertUpdateState(self, type):
-        pass
-
-    def cancelMenu(self):
-        pass
-
-    def delLabel(self):
+    def delSample(self):
         pass
 
     # 显示病人相关信息
