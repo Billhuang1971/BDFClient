@@ -440,7 +440,7 @@ class EEGView(QWidget):
     def changeShowEvent(self):
         self.is_Event_showed = self.is_Event_showed is False
         if self.is_Event_showed:
-            pass
+            self.paintEvents()
         else:
             for state in self.state_lines:
                 state.remove()
@@ -520,7 +520,8 @@ class EEGView(QWidget):
         x0 = state[1]/(self.sample_rate//self.nSample)
         x1 = state[2]/(self.sample_rate//self.nSample)
         self.state_lines.append(self.axes.axvspan(x0, x1, label=label, facecolor=color, alpha=0.3, picker=True))
-
+    def paintEvents(self):
+        pass
     # 过滤样本
     def filterSamples(self):
         self.waves = []
