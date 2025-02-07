@@ -87,6 +87,7 @@ class EEGData(object):
 
     def getData(self):
         try:
+
             data = self.data[:, self.fromBlock: self.toBlock]
             labels = []
             if self.labels is None or len(self.labels) == 0:

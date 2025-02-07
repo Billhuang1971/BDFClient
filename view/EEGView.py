@@ -244,7 +244,6 @@ class EEGView(QWidget):
         # for i in range(len(self.channels_name)):
         #     y=self.processChan(x,i)
         #     self.axes.plot(x, self.data[i] + i + 1, color='black', label=self.channels_name[i], picker=True,
-        #                    alpha=self.channels_alpha[self.channels_name[i]], linewidth=0.3)
 
         x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate // self.nSample)
         av = None
@@ -254,9 +253,10 @@ class EEGView(QWidget):
                 temp_data = self.data
                 temp_data = np.delete(temp_data, ex_chs, axis=0)
                 av = np.mean(temp_data, axis=0)
+                #                    alpha=self.channels_alpha[self.channels_name[i]], linewidth=0.3)
         for i in range(len(self.channels_name)):
             try:
-                x, y = self.processChan(x, i,av)
+                x, y = self.processChan(x, i, av)
             except ValueError:
                 continue
             self.axes.plot(x, y, color='black', label=self.channels_name[i], picker=True,
@@ -1133,7 +1133,7 @@ class EEGView(QWidget):
         #         shownLabels.append(label)
         # return shownLabels
 
-    def processChan(self,x,i,av):
+    def processChan(self, x, i, av):
         index = self.channels_name.index(self.channels_name[i])
         label = self.channels_name[i]
         if '-' in label:
@@ -1160,8 +1160,9 @@ class EEGView(QWidget):
             y = np.resize(y, x.shape)
         # y = y * self.scales[label]
         # 在create_axes中 axes.invert_yaxis反转y轴，y轴取值上负下正，脑电取值默认下负上正，需要对其取反
+        y = y / (self.sensitivity * self.axesYWidthMM / (len(self.channels_name) + 1))
         y = -y + index + 1
-        return x,y
+        return x, y
 
     def getCurrentRef(self):
         return self.curRef

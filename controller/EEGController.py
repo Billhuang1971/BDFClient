@@ -81,9 +81,9 @@ class EEGController(QWidget):
                 labelBit = msg[15]
                 type = msg[16]  # True:颅内 False:头皮
 
-                # if type == True:  # 如果是颅内脑电，处理montage
-                #     self.processIeegMontage(type)
-                # self.dgroupFilter = self.channels
+                if type == True:  # 如果是颅内脑电，处理montage
+                    self.processIeegMontage(type)
+                self.dgroupFilter = self.channels
 
                 self.grouped_states, sampleFilter = self.processSampleName(type_info)
 
