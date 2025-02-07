@@ -44,8 +44,8 @@ class EEGView(QWidget):
         self.pick_second = None
         self.cur_sample_index = -1
         self.sample_info = []
-        self.waves = []
-        self.states = []
+        self.waves = [] #当前屏所有波形
+        self.states = []#当前屏所有状态
         self.channels_alpha = {}
         self.pick_channel = None
         self.begin = None
@@ -68,11 +68,10 @@ class EEGView(QWidget):
         self.sensitivity = 10
         self.showSecondLine = True
         self.time_lines = []
-        self.wave_lines = []
-        self.state_lines = []
+        self.wave_lines = [] #绘制出的波形
+        self.state_lines = [] #绘制出的状态
         self.axHscrollSpan = []
         self.sen = 0
-
         self.createPaintTools()
 
     # 初始化View

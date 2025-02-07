@@ -24,8 +24,8 @@ class Ui_Sample(QDialog):
         self.samplefilter = samplefilter
         self.montage = None
         iFont = QFont("", 11)
-        self.dgroupKeys = list(self.dgroup.keys())
-        glen = len(self.dgroupKeys)
+        self.dgroupKeys = list(self.dgroup.keys())#分组组名
+        glen = len(self.dgroupKeys) #组数
         self.lb_g = []
         self.ck_g = []
 

@@ -75,7 +75,7 @@ class Ui_EEGView(object):
         vline1 = QFrame()
         vline1.setFrameShape(QFrame.VLine)
         vline1.setFrameShadow(QFrame.Sunken)
-        self.glBtn.addWidget(vline1, 0, 12, 1, 1)
+        self.glBtn.addWidget(vline1, 0, 10, 1, 1)
 
         self.editTimeText = QtWidgets.QLabel(self.groupBox)
         self.editTimeText.setObjectName("editTimeText")
@@ -211,9 +211,9 @@ class Ui_EEGView(object):
         vline2.setFrameShape(QFrame.VLine)
         vline2.setFrameShadow(QFrame.Sunken)
         self.glBtn.addWidget(vline2, 0, 32, 1, 1)
-        self.btnStateAnnotate = QtWidgets.QPushButton(self.groupBox)
-        self.btnStateAnnotate.setObjectName("btnStateAnnotate")
-        self.glBtn.addWidget(self.btnStateAnnotate, 0, 33, 1, 2)
+        #self.btnStateAnnotate = QtWidgets.QPushButton(self.groupBox)
+        # self.btnStateAnnotate.setObjectName("btnStateAnnotate")
+        # self.glBtn.addWidget(self.btnStateAnnotate, 0, 33, 1, 2)
 
         self.glCanvas.addWidget(self.groupBox, 1, 0, 1, 1)
         self.listView = QtWidgets.QListView(self.scrollAreaWidgetContents_1)
@@ -238,7 +238,7 @@ class Ui_EEGView(object):
         self.groupBox2.setTitle("")
         self.groupBox2.setObjectName("groupBox2")
         # self.groupBox2.setFixedWidth(400)
-        self.gridLayout_4 = QtWidgets.QGridLayout(self.groupBox2)
+        self.gridLayout_4 = QtWidgets.QGridLayout(self.groupBox2)#右侧总布局
         self.gridLayout_4.setObjectName("gridLayout_4")
         self.gbPatientInfo = QtWidgets.QGroupBox(self.groupBox2)
         self.gbPatientInfo.setObjectName("gbPatientInfo")
@@ -271,8 +271,8 @@ class Ui_EEGView(object):
 
         self.gbSample = QtWidgets.QGroupBox(self.groupBox2)
         self.gbSample.setObjectName("gbSample")
-        self.gridLayout_4.addWidget(self.gbSample, 1, 0, 1, 1)
-        self.glSample = QtWidgets.QGridLayout(self.gbSample)
+        self.gridLayout_4.addWidget(self.gbSample, 1, 0, 1, 1) #将显示样本添加到总布局的第一行，占据1行1列
+        self.glSample = QtWidgets.QGridLayout(self.gbSample) #glSample为gbsample里的布局
         self.glSample.setObjectName("glSample")
 
         self.waveLayout = QHBoxLayout()  # 创建一个水平布局
@@ -312,8 +312,7 @@ class Ui_EEGView(object):
         self.hideWave.setChecked(True)
         self.hideWave.setAutoExclusive(False)
         self.waveLayout.addWidget(self.hideWave)
-
-        self.glSample.addLayout(self.waveLayout, 1, 0, 1, 1)
+        self.glSample.addLayout(self.waveLayout,1,0,1,1)
 
         self.stateLayout = QHBoxLayout()  # 创建一个水平布局
         self.hideStateText = QLabel("状态")
@@ -351,7 +350,43 @@ class Ui_EEGView(object):
         self.hideState.setChecked(True)
         self.hideState.setAutoExclusive(False)
         self.stateLayout.addWidget(self.hideState)
-        self.glSample.addLayout(self.stateLayout, 1, 1, 1, 1)
+        self.glSample.addLayout(self.stateLayout,1,1,1,1)
+
+        self.EventLayout = QHBoxLayout()  # 创建一个水平布局
+        self.hideEventText = QLabel("事件")
+        self.hideEventText.setMaximumWidth(35)
+        self.EventLayout.addWidget(self.hideEventText)
+
+        self.hideEvent = QtWidgets.QRadioButton(self.gbSample)
+        self.hideEvent.setObjectName("hideWave")
+        self.hideEvent.setStyleSheet("""
+                        QRadioButton::indicator {
+                                width: 10px; 
+                                height: 10px;
+                                border-radius: 5px;
+                                border: 0.25px solid darkgray; 
+                                background: white; 
+                            }
+
+                            QRadioButton::indicator:checked {   
+                                border: 0.25px solid lightgray; 
+                                background: qradialgradient(  
+                                cx: 0.5, cy: 0.5, fx: 0.5, fy: 0.5,   
+                                radius: 0.7, 
+                                stop: 0 black, 
+                                stop: 0.6 rgba(255, 255, 255, 0.9), 
+                                stop: 1 rgba(255, 255, 255, 0) 
+                            );  
+                            }
+
+                            QRadioButton::indicator:disabled {
+                                border: 1px solid lightgray;
+                                background: lightgray; 
+                            }""")
+        self.hideEvent.setChecked(True)
+        self.hideEvent.setAutoExclusive(False)
+        self.EventLayout.addWidget(self.hideEvent)
+        self.glSample.addLayout(self.EventLayout,1,2,1,1)
 
         self.labelMeasureTimeInfo = QtWidgets.QLabel(self.gbPatientInfo)
         self.labelMeasureTimeInfo.setObjectName("labelMeasureTimeInfo")
@@ -370,62 +405,75 @@ class Ui_EEGView(object):
 
         self.gridLayout_4.addWidget(self.gbPatientInfo, 0, 0, 1, 1)
 
+        #将表格以及显示参数添加到显示样本的布局gl中
         self.tableWidget = QtWidgets.QTableWidget(self.groupBox2)
         self.tableWidget.setObjectName("tableWidget")
-        self.gridLayout_4.addWidget(self.tableWidget, 2, 0, 1, 1)
+        self.glSample.addWidget(self.tableWidget, 2, 0, 1, 3)
 
-        self.gbSampleInfo = QtWidgets.QGroupBox(self.groupBox2)
-        self.gbSampleInfo.setObjectName("gbSampleInfo")
-        self.gridLayout_5 = QtWidgets.QGridLayout(self.gbSampleInfo)
-        self.gridLayout_5.setObjectName("gridLayout_2")
-
-        self.labelTypeInfo = QtWidgets.QLabel(self.gbSampleInfo)
+        self.labelTypeInfo = QtWidgets.QLabel(self.gbSample)
         self.labelTypeInfo.setObjectName("labelTypeInfo")
-        self.gridLayout_5.addWidget(self.labelTypeInfo, 0, 0, 1, 1)
-        self.labelType = QtWidgets.QLabel(self.gbSampleInfo)
+        self.glSample.addWidget(self.labelTypeInfo, 3, 0, 1, 1)
+        self.labelType = QtWidgets.QLabel(self.gbSample)
         self.labelType.setObjectName("labelType")
-        self.gridLayout_5.addWidget(self.labelType, 0, 1, 1, 2)
+        self.glSample.addWidget(self.labelType, 3, 1, 1, 2)
 
-        self.labelChannelInfo = QtWidgets.QLabel(self.gbSampleInfo)
+        self.labelChannelInfo = QtWidgets.QLabel(self.gbSample)
         self.labelChannelInfo.setObjectName("labelChannelInfo")
-        self.gridLayout_5.addWidget(self.labelChannelInfo, 1, 0, 1, 1)
-        self.labelChannel = QtWidgets.QLabel(self.gbSampleInfo)
+        self.glSample.addWidget(self.labelChannelInfo, 4, 0, 1, 1)
+        self.labelChannel = QtWidgets.QLabel(self.gbSample)
         self.labelChannel.setObjectName("labelChannel")
-        self.gridLayout_5.addWidget(self.labelChannel, 1, 1, 1, 2)
+        self.glSample.addWidget(self.labelChannel, 4, 1, 1, 2)
 
-        self.labelLengthInfo = QtWidgets.QLabel(self.gbSampleInfo)
+        self.labelLengthInfo = QtWidgets.QLabel(self.gbSample)
         self.labelLengthInfo.setObjectName("labelLengthInfo")
-        self.gridLayout_5.addWidget(self.labelLengthInfo, 2, 0, 1, 1)
-        self.labelLength = QtWidgets.QLabel(self.gbSampleInfo)
+        self.glSample.addWidget(self.labelLengthInfo, 5, 0, 1, 1)
+        self.labelLength = QtWidgets.QLabel(self.gbSample)
         self.labelLength.setObjectName("labelLength")
-        self.gridLayout_5.addWidget(self.labelLength, 2, 1, 1, 2)
+        self.glSample.addWidget(self.labelLength, 5, 1, 1, 2)
 
-        self.labelBeginInfo = QtWidgets.QLabel(self.gbSampleInfo)
+        self.labelBeginInfo = QtWidgets.QLabel(self.gbSample)
         self.labelBeginInfo.setObjectName("labelBeginInfo")
-        self.gridLayout_5.addWidget(self.labelBeginInfo, 3, 0, 1, 1)
-        self.labelBegin = QtWidgets.QLabel(self.gbSampleInfo)
+        self.glSample.addWidget(self.labelBeginInfo, 6, 0, 1, 1)
+        self.labelBegin = QtWidgets.QLabel(self.gbSample)
         self.labelBegin.setObjectName("labelBegin")
-        self.gridLayout_5.addWidget(self.labelBegin, 3, 1, 1, 2)
+        self.glSample.addWidget(self.labelBegin, 6, 1, 1, 2)
 
-        self.labelEndInfo = QtWidgets.QLabel(self.gbSampleInfo)
+        self.labelEndInfo = QtWidgets.QLabel(self.gbSample)
         self.labelEndInfo.setObjectName("labelEndInfo")
-        self.gridLayout_5.addWidget(self.labelEndInfo, 4, 0, 1, 1)
-        self.labelEnd = QtWidgets.QLabel(self.gbSampleInfo)
+        self.glSample.addWidget(self.labelEndInfo, 7, 0, 1, 1)
+        self.labelEnd = QtWidgets.QLabel(self.gbSample)
         self.labelEnd.setObjectName("labelEnd")
-        self.gridLayout_5.addWidget(self.labelEnd, 4, 1, 1, 2)
+        self.glSample.addWidget(self.labelEnd, 7, 1, 1, 2)
 
-        self.labelAmpInfo = QtWidgets.QLabel(self.gbSampleInfo)
+        self.labelAmpInfo = QtWidgets.QLabel(self.gbSample)
         self.labelAmpInfo.setObjectName("labelAmpInfo")
-        self.gridLayout_5.addWidget(self.labelAmpInfo, 5, 0, 1, 1)
-        self.labelAmp = QtWidgets.QLabel(self.gbSampleInfo)
+        self.glSample.addWidget(self.labelAmpInfo, 8, 0, 1, 1)
+        self.labelAmp = QtWidgets.QLabel(self.gbSample)
         self.labelAmp.setObjectName("labelAmp")
-        self.gridLayout_5.addWidget(self.labelAmp, 5, 1, 1, 2)
+        self.glSample.addWidget(self.labelAmp, 8, 1, 1, 2)
 
-        self.gridLayout_4.addWidget(self.gbSampleInfo, 3, 0, 1, 1)
+        self.gbSamplelabel = QtWidgets.QGroupBox(self.groupBox2)
+        self.gbSamplelabel.setObjectName("gbSample")
+        self.gridLayout_4.addWidget(self.gbSamplelabel, 2, 0, 1, 1)  # 将标注添加到总布局的第2行，占据1行1列
+        self.layoutgbSl=QtWidgets.QGridLayout(self.gbSamplelabel) #设置标注样本的布局
+        self.layoutgbSl.setObjectName("layoutgbSl")
+        self.gblabelbtngroup = QtWidgets.QButtonGroup(self.layoutgbSl)#按钮组管理
+        self.gblabelbtn1=QtWidgets.QRadioButton()
+        self.gblabelbtn2=QtWidgets.QRadioButton()
+        self.gblabelbtn3=QtWidgets.QRadioButton()
+        self.gblabelbtn1.setText('波形')
+        self.gblabelbtn2.setText('状态')
+        self.gblabelbtn3.setText('事件')
+        self.gblabelbtngroup.addButton(self.gblabelbtn1)
+        self.gblabelbtngroup.addButton(self.gblabelbtn2)
+        self.gblabelbtngroup.addButton(self.gblabelbtn3)
+        self.layoutgbSl.addWidget(self.gblabelbtn1,1,0,1,1)
+        self.layoutgbSl.addWidget(self.gblabelbtn2,1,1,1,1)
+        self.layoutgbSl.addWidget(self.gblabelbtn3,1,2,1,1)
 
         self.returnBtn = QtWidgets.QPushButton(self.groupBox2)
         self.returnBtn.setObjectName("returnBtn")
-        self.gridLayout_4.addWidget(self.returnBtn, 4, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.returnBtn, 3, 0, 1, 1)
 
         self.gridLayout_1.addWidget(self.groupBox2, 0, 1, 1, 1)
 
@@ -454,7 +502,7 @@ class Ui_EEGView(object):
         self.scenarioSelectionBtn.setText(_translate("ScenarioSelection Btn", "参考方案"))
         self.channelSelectionBtn.setText(_translate("ChannelSelection", "导联选择"))
         self.sampleSelectionBtn.setText(_translate("SampleSelection Btn", "样本选择"))
-        self.btnStateAnnotate.setText(_translate("Annotate State", "标注状态"))
+        #self.btnStateAnnotate.setText(_translate("Annotate State", "标注状态"))
         ManualForm.setWindowTitle(_translate("ManualForm", "Form44"))
 
         self.gbPatientInfo.setTitle(_translate("Patient Info", "病人信息"))
@@ -472,7 +520,7 @@ class Ui_EEGView(object):
         self.labelFileName.setText(" ")
 
 
-        self.gbSampleInfo.setTitle(_translate("Sample Info", "当前样本"))
+        self.gbSamplelabel.setTitle(_translate("Sample Info", "标注样本"))
         self.labelTypeInfo.setText(_translate("Type: ", "类型："))
         self.labelType.setText("")
         self.labelChannelInfo.setText(_translate("Channel: ", "导联："))
@@ -486,6 +534,6 @@ class Ui_EEGView(object):
         self.labelAmpInfo.setText(_translate("Amplitude(uV): ", "波幅(µV)："))
         self.labelAmp.setText("")
 
-        self.gbSample.setTitle(_translate("Sample", "样本操作"))
+        self.gbSample.setTitle(_translate("Sample", "显示样本"))
         self.hideWave.setText(_translate("hideWave", " "))
         self.hideState.setText(_translate("hideState", " "))
