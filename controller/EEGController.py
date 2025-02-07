@@ -39,7 +39,7 @@ class EEGController(QWidget):
         self.speedText = "1x"
         self.loading = True
 
-
+    # 计算绘图区域物理长度
     def startEEG(self):
         try:
             self.view.show()
@@ -55,6 +55,7 @@ class EEGController(QWidget):
         except Exception as e:
             print("startEEG", e)
 
+    # 第一次访问服务器的返回信息
     def openEEGFileRes(self, REPData):
         try:
             if REPData[0] == '0':
@@ -82,7 +83,7 @@ class EEGController(QWidget):
 
                 if type == True:  # 如果是颅内脑电，处理montage
                     self.processIeegMontage(type)
-                # self.dgroupFilter = self.channels
+                self.dgroupFilter = self.channels
 
                 self.grouped_states,sampleFilter = self.processSampleName(type_info)
 
@@ -96,6 +97,7 @@ class EEGController(QWidget):
                 self.loading = False
         except Exception as e:
             print("openEEGFileRes", e)
+
     def processIeegMontage(self,type):
         self.montage['defualt'] = self.channels
         list1=[]
@@ -121,8 +123,7 @@ class EEGController(QWidget):
         else:
             self.dgroup = self.montage
 
-
-
+    # 插入样本返回信息
     def insertSampleRes(self, REPData):
         try:
             if REPData[3][0] == '0':
@@ -132,7 +133,7 @@ class EEGController(QWidget):
         except Exception as e:
             print("insertSampleRes", e)
 
-
+    # 动态加载脑电文件返回信息
     def loadEEGDataRes(self, REPData):
         try:
             msg = REPData[3][2]
@@ -145,7 +146,7 @@ class EEGController(QWidget):
         except Exception as e:
             print("loadEEGDataRes", e)
 
-
+    # 绑定按钮等控件
     def connetEvent(self, type_info):
         self.view.ui.btnUp.clicked.connect(self.onBtnDownClicked)
         self.view.ui.btnDown.clicked.connect(self.onBtnUpClicked)
@@ -153,7 +154,6 @@ class EEGController(QWidget):
         self.view.ui.btnDowning.clicked.connect(self.onBtnDowningClicked)
         self.view.ui.moveSpeed.currentIndexChanged.connect(self.onMoveSpeedChanged)
         self.view.ui.editTime.editingFinished.connect(self.timeChange)
-        self.view.ui.btnStateAnnotate.clicked.connect(self.btnStateAnnotateClicked)
         self.view.ui.secondsLine.clicked.connect(self.secondsLineClicked)
         self.view.ui.tableWidget.itemClicked.connect(self.onSampleClicked)
         self.view.ui.hideWave.clicked.connect(self.hideWave)
@@ -200,6 +200,7 @@ class EEGController(QWidget):
                 continue
             sms[t[3]].addAction(action)
 
+    # 样本插入更新和删除操作
     def handleMenuAction(self, t):
         try:
             cmd, label = self.view.checkMenuAction(t)
@@ -217,12 +218,15 @@ class EEGController(QWidget):
         except Exception as e:
             print("handleMenuAction", e)
 
+    # 删除样本
     def delSample(self):
         pass
 
+    # 改变移动速度的操作
     def onMoveSpeedChanged(self):
         self.speedText = self.view.ui.moveSpeed.currentText()
 
+    # 改变秒跨度的操作
     def secondsSpanChange(self):
         secondsSpan = self.view.ui.secondsSpan.lineEdit().text()
         self.view.secondsSpanChange(int(secondsSpan))
@@ -238,6 +242,7 @@ class EEGController(QWidget):
         self.data.initEEGData(self.lenFile, self.lenBlock)
         self.client.loadDataDynamical(self.check_id, self.file_id, self.readFrom, self.readTo)
 
+    # 改变移动长度的操作
     def moveLengthChange(self):
         try:
             moveLength = self.view.ui.moveLength.lineEdit().text()
@@ -245,21 +250,26 @@ class EEGController(QWidget):
         except Exception as e:
             print("moveLengthChange", e)
 
+    # 点击样本操作
     def onSampleClicked(self, item=None):
         if item is None:
             return
         row = item.row()
         self.view.pickCurSample(row)
 
+    # 隐藏波形
     def hideWave(self):
         self.view.changeShowWave()
 
+    # 隐藏状态
     def hideState(self):
         self.view.changeShowState()
 
+    # 点击秒线按钮
     def secondsLineClicked(self):
         self.view.changeSecondsLine()
 
+    # 时间改变
     def timeChange(self):
         try:
             if self.loading:
@@ -275,6 +285,7 @@ class EEGController(QWidget):
         except Exception as e:
             print("timeChange", e)
 
+    # 自动播放后退
     def onBtnDowningClicked(self):
         try:
             if self.loading:
@@ -299,6 +310,7 @@ class EEGController(QWidget):
         except Exception as e:
             print("onBtnDowningClicked", e)
 
+    # 自东播放后退的算法
     def doDowning(self):
         try:
             while True:
@@ -320,10 +332,14 @@ class EEGController(QWidget):
         except Exception as e:
             print("doDowning", e)
 
+    # 关闭自动播放开启的线程
     def stopThread(self):
         self._async_raise(self.thread.ident, SystemExit)
+
     def exit(self):
         pass
+
+    # 自动播放前进
     def onBtnUpingClicked(self):
         try:
             if self.loading:
@@ -348,6 +364,7 @@ class EEGController(QWidget):
         except Exception as e:
             print("onBtnUpingClicked", e)
 
+    # 自动播放前进算法
     def doUping(self):
         try:
             while True:
@@ -369,6 +386,7 @@ class EEGController(QWidget):
         except Exception as e:
             print("doUping", e)
 
+    # 停止线程的算法
     def _async_raise(self, tid, exctype):
         try:
             tid = ctypes.c_long(tid)
@@ -424,6 +442,7 @@ class EEGController(QWidget):
         except Exception as e:
             print("handlePickEvent", e)
 
+    # 鼠标松开的操作
     def doMouseReleaseEvent(self, event):
         try:
             if self.loading:
@@ -445,6 +464,7 @@ class EEGController(QWidget):
         except Exception as e:
             print("doMouseReleaseEvent", e)
 
+    # 切换当前屏的操作
     def checkSolution(self, begin):
         try:
             self.view.changeAxStatus()
@@ -458,6 +478,7 @@ class EEGController(QWidget):
         except Exception as e:
             print("checkSolution", e)
 
+    # 滚轮滚动操作
     def doScrollEvent(self, event):
         if self.loading:
             return
@@ -466,6 +487,7 @@ class EEGController(QWidget):
         else:
             self.onBtnUpClicked()
 
+    # 前进一屏操作
     def onBtnUpClicked(self):
         try:
             if self.loading:
@@ -475,6 +497,7 @@ class EEGController(QWidget):
         except Exception as e:
             print("onBtnUpClicked", e)
 
+    # 后退一屏操作
     def onBtnDownClicked(self):
         try:
             if self.loading:
@@ -484,21 +507,16 @@ class EEGController(QWidget):
         except Exception as e:
             print("onBtnDownClicked", e)
 
+    # 键盘点击操作
     def doKeyPressEvent(self, event):
         if self.loading:
             return
         if event.key == 'escape':
             self.view.cancelSelect()
-        elif event.key == 'a':
-            self.btnStateAnnotateClicked()
         elif event.key == 'left':
             self.onBtnUpClicked()
         elif event.key == 'right':
             self.onBtnDownClicked()
-
-    def btnStateAnnotateClicked(self):
-        self.view.changeStateAnnotateStatus()
-        self.view.cancelSelect()
 
     def on_return_clicked(self):
         self.view.close()
@@ -508,7 +526,7 @@ class EEGController(QWidget):
 
     def onrRefClicked(self):
         curRefName = self.view.getCurrentRef()
-        montagesDialog = QDialogRef(self.montage,curRefName)
+        montagesDialog = QDialogRef(self.montage, curRefName)
 
         montagesDialog.ui.pb_ok.clicked.connect(lambda: self.onRefConfirmed(montagesDialog))
         # montagesView.ui.pb_cancel.clicked.connect(

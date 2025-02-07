@@ -20,6 +20,7 @@ class EEGView(QWidget):
     PICK_NO_AX = 0
     STATE_ANNOTATE = 0
     WAVE_ANNOTATE = 1
+    EVENT_ANNOTATE = 2
 
     def __init__(self):
         super().__init__()
@@ -31,14 +32,12 @@ class EEGView(QWidget):
         # 类型数据
         self.type_info = []
         # 是否状态标注
-        self.states_annotate = False
+        self.annotate = EEGView.WAVE_ANNOTATE
         # 当前选中的状态
         self.state_picked = None
         # 是否状态显示
         self.is_status_showed = True
         self.is_waves_showed = True
-        # 状态标注列表
-        self.states_annotated = []
         # 被选中的通道
         self.pick_labels = []
         self.pick_first = None
@@ -67,7 +66,7 @@ class EEGView(QWidget):
         self.secondsSpan = 30
         self.lenWin = 0
         self.sensitivity = 10
-        self.show_seconds_line = True
+        self.showSecondLine = True
         self.time_lines = []
         self.wave_lines = []
         self.state_lines = []
@@ -76,6 +75,7 @@ class EEGView(QWidget):
 
         self.createPaintTools()
 
+    # 初始化View
     def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, nSample,type,montage,sampleFilter):
         try:
             self.type = type  # True:颅内脑电 False：头皮脑电
@@ -105,25 +105,26 @@ class EEGView(QWidget):
             self.popMenu2 = QMenu(self.canvas)
             self.updateYAxis(channels_name=channels)
             self.setAxHscroll()
-            self.paintTimeLine()
             self.showPatientInfo(patientInfo, fileName,
                                       measureDate, startTime,
                                       endTime)
         except Exception as e:
             print("initView", e)
 
+    # 获取当前窗口长度
     def getLenWin(self):
         return self.lenWin
 
+    # 初始化绘图工具
     def createPaintTools(self):
         self.fig = plt.figure()
         self.canvas = FigureCanvas(self.fig)
         self.ui.glCanvas.addWidget(self.canvas, 0, 0, 1, 1)
-        self.fig.subplots_adjust(left=0.05, right=0.95, top=0.99, bottom=0.01)
+        self.fig.tight_layout()
         self.axes = plt.subplot2grid((33, 1), (2, 0), rowspan=30)
         self.ax_hscroll = plt.subplot2grid((33, 1), (0, 0), rowspan=1)
 
-
+    # 计算绘图区域物理长度
     def calcSen(self, secondsSpan):
         axesL = self.axes.figure.subplotpars.left
         axesR = self.axes.figure.subplotpars.right
@@ -142,6 +143,7 @@ class EEGView(QWidget):
         self.axesYWidthMM = y_fraction * figureHeightMM
         return self.changeSecondsSpan(secondsSpan)
 
+    # 改变秒跨度操作
     def changeSecondsSpan(self, secondsSpan):
         self.secondsSpan = secondsSpan
         self.ui.secondsSpan.setCurrentText(str(secondsSpan))
@@ -150,20 +152,24 @@ class EEGView(QWidget):
         self.nDotWin = self.lenWin * px
         return self.lenWin, px
 
+    # 设置移动长度
     def setMoveLength(self, moveLength):
         self.moveLength = moveLength
         self.ui.moveLength.setCurrentText(str(moveLength))
 
+    # 停止绘制样本
     def stopPaintLabel(self):
         self.curShowWaves = self.is_waves_showed
         self.curShowStates = self.is_status_showed
         self.is_waves_showed = False
         self.is_status_showed = False
 
+    # 开始绘制样本
     def startPaintLabel(self):
         self.is_waves_showed = self.curShowWaves
         self.is_status_showed = self.curShowStates
 
+    # 前进一屏
     def doDowning(self):
         self.begin -= self.moveLength
         self.end -= self.moveLength
@@ -175,6 +181,7 @@ class EEGView(QWidget):
         self.changeTime()
         return cmd, self.begin * self.sample_rate // self.nSample
 
+    # 后退一屏
     def doUping(self):
         self.begin += self.moveLength
         self.end += self.moveLength
@@ -186,6 +193,7 @@ class EEGView(QWidget):
         self.changeTime()
         return cmd, self.begin * self.sample_rate // self.nSample
 
+    # 时间改变
     def timeChange(self, begin):
         if begin < 0 or begin + self.lenWin > self.duration:
             self.view.ui.editTime.setText("00:00:00")
@@ -196,10 +204,12 @@ class EEGView(QWidget):
             self.end = begin + self.lenWin
         return self.begin * self.sample_rate // self.nSample
 
+    # 秒跨度改变
     def secondsSpanChange(self, secondsSpan):
         self.secondsSpan = secondsSpan
         self.lenWin = int(round(self.axesXWidthMM / self.secondsSpan))
 
+    # 更新x轴
     def updateXAxis(self):
         self.axes.set_xlim([self.begin, self.end])
         self.axes.set_xticks(np.arange(self.begin, self.end + 1, 1))
@@ -209,23 +219,27 @@ class EEGView(QWidget):
         for xtl in self.axes.get_xticklabels():
             xtl.set_fontsize(10)
 
+    # 改变秒线状态
     def changeSecondsLine(self):
-        self.show_seconds_line = self.show_seconds_line is False
-        if self.show_seconds_line:
+        self.showSecondLine = self.showSecondLine is False
+        if self.showSecondLine:
             self.paintTimeLine()
         else:
             self.removeTimeLine()
         self.canvas.draw()
 
+    # 绘制秒线
     def paintTimeLine(self):
-        for x in range(0, self.duration + 1):
+        for x in range(self.begin, self.end + 1):
             self.time_lines.append(self.axes.vlines(x, 0, 200, colors='black', alpha=0.7))
 
+    # 删除秒线
     def removeTimeLine(self):
         for line in self.time_lines:
             line.remove()
-        self.time_lines = []
+        self.time_lines.clear()
 
+    # 绘制脑电信号
     def paintEEG(self):
         # x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate // self.nSample)
         # for i in range(len(self.channels_name)):
@@ -249,9 +263,11 @@ class EEGView(QWidget):
             self.axes.plot(x, y, color='black', label=self.channels_name[i], picker=True,
                            alpha=self.channels_alpha[self.channels_name[i]], linewidth=0.7)
 
+    # 将时间单位转化为采样单位
     def getIdx(self, time):
         return time * self.sample_rate
 
+    # 更新样本
     def updateSamples(self, readFrom, readTo, case, sample_info):
         if case == 1:
             self.sample_info = sample_info
@@ -265,6 +281,7 @@ class EEGView(QWidget):
             while idx >= 0 and self.sample_info[idx][1] >= readTo // self.sample_rate:
                 idx -= 1
             self.sample_info = sample_info + self.sample_info[idx + 1:]
+
     # def testmonitor(self):
     #
     #     def adjust_spacing(data,lowlim, highlim):  # data ，起始点下标，终止点下标
@@ -357,6 +374,8 @@ class EEGView(QWidget):
     #         data_no_mean = data  # 不进行去均值操作
     #
     #     return data_no_mean
+
+    # 更新当前屏
     def refreshWin(self, data, labels):
         try:
             self.data = data
@@ -367,6 +386,8 @@ class EEGView(QWidget):
             self.filterSamples()
             self.paintWaves()
             self.paintStates()
+            self.removeTimeLine()
+            self.paintTimeLine()
             if self.pick_first is not None:
                 if self.pick_second is None:
                     if self.pick_first >= self.begin * self.sample_rate // self.nSample and self.pick_first < self.end * self.sample_rate // self.nSample:
@@ -383,6 +404,7 @@ class EEGView(QWidget):
         except Exception as e:
             print("refreshWin", e)
 
+    # 改变波形显示
     def changeShowWave(self):
         self.is_waves_showed = self.is_waves_showed is False
         self.ui.hideWave.setChecked(self.is_waves_showed)
@@ -401,6 +423,8 @@ class EEGView(QWidget):
         self.canvas.draw()
         self.showLabels()
         self.showCurLabel()
+
+    # 改变状态显示
     def changeShowState(self):
         self.is_status_showed = self.is_status_showed is False
         if self.is_status_showed:
@@ -414,6 +438,7 @@ class EEGView(QWidget):
         self.canvas.draw()
         self.showLabels()
 
+    # 显示样本信息
     def showLabels(self):
         list = []
         if self.is_status_showed is True and self.is_waves_showed is True:
@@ -461,6 +486,7 @@ class EEGView(QWidget):
         self.ui.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.ui.tableWidget.resizeRowsToContents()
 
+    # 绘制当前屏幕状态
     def paintStates(self):
         if self.is_status_showed is False:
             return
@@ -477,14 +503,14 @@ class EEGView(QWidget):
                 color = 'green'#'dodgerblue'
             self.paintAState(state, color)
 
+    # 绘制一个状态
     def paintAState(self, state, color):
         label = str(state[0]) + "|" + str(state[1]) + "|" + str(state[2]) + "|" + str(state[3])
         x0=state[1]/(self.sample_rate//self.nSample)
         x1=state[2]/(self.sample_rate//self.nSample)
         self.state_lines.append(self.axes.axvspan(x0, x1, label=label, facecolor=color, alpha=0.3, picker=True))
 
-
-
+    # 过滤样本
     def filterSamples(self):
         self.waves = []
         self.states = []
@@ -494,6 +520,7 @@ class EEGView(QWidget):
             else:
                 self.waves.append(sample)
 
+    # 绘制当前屏幕波形
     def paintWaves(self):
         if self.is_waves_showed is False:
             return
@@ -504,11 +531,12 @@ class EEGView(QWidget):
             label = str(wave[0]) + "|" + str(wave[1]) + "|" + str(wave[2]) + "|" + str(wave[3])
             self.paintAWave(l, r, wave[0], label, color)
 
+    # 更新Y轴
     def updateYAxis(self, channels_name=[]):
         self.channels_name = channels_name
         self.resetPickLabels()
         max_y = len(channels_name) + 1
-        self.axes.clear()
+        # self.axes.clear()
         self.axes.set_ylim([0, max_y])
         self.axes.set_yticks(range(max_y))
         self.axes.set_yticklabels(['Reset'] + channels_name)
@@ -518,6 +546,7 @@ class EEGView(QWidget):
         self.axes.invert_yaxis()
         self.fig.subplots_adjust(left=0.07)
         self.fig.subplots_adjust(right=0.97)
+        self.canvas.draw()
 
     def setAxHscroll(self):
         self.ax_hscroll.set_xlim(0, self.duration)
@@ -538,6 +567,7 @@ class EEGView(QWidget):
             xhtl.set_fontsize(10)
         self.paintLabelBit()
 
+    # 绘制时间轴上样本信息
     def paintLabelBit(self):
         for span in self.axHscrollSpan:
             span.remove()
@@ -554,6 +584,7 @@ class EEGView(QWidget):
             else:
                 l += 1
 
+    # 判断点击对象
     def clickAxStatus(self, ax):
         if ax == self.axes:
             return EEGView.PICK_AXES
@@ -561,6 +592,7 @@ class EEGView(QWidget):
             return EEGView.PICK_AXHSCROLL
         return EEGView.PICK_NO_AX
 
+    # 时间轴点击事件
     def onAxhscrollClicked(self, x):
         if x + self.lenWin <= self.duration:
             self.begin = x
@@ -570,6 +602,7 @@ class EEGView(QWidget):
             self.end = self.duration
         return self.begin * self.sample_rate // self.nSample
 
+    # 前进一屏操作
     def onBtnUpClicked(self):
         self.begin -= self.moveLength
         self.end -= self.moveLength
@@ -579,6 +612,7 @@ class EEGView(QWidget):
         self.changeTime()
         return self.begin * self.sample_rate // self.nSample
 
+    # 后退一屏操作
     def onBtnDownClicked(self):
         self.begin += self.moveLength
         self.end += self.moveLength
@@ -588,6 +622,7 @@ class EEGView(QWidget):
         self.changeTime()
         return self.begin * self.sample_rate // self.nSample
 
+    # 改变时间轴当前屏幕位置浮标
     def changeAxStatus(self):
         try:
             if self.scroll_position is not None:
@@ -597,9 +632,11 @@ class EEGView(QWidget):
         except Exception as e:
             print("changeAxStatus", e)
 
+    # 判断禁止波形标注
     def isBanWave(self):
-        return self.states_annotate or self.is_waves_showed is False
+        return self.annotate == EEGView.STATE_ANNOTATE or self.is_waves_showed is False
 
+    # 重置选中样本
     def resetPickLabels(self):
         self.pick_labels = self.channels_name
         for channel in self.channels_name:
@@ -608,6 +645,7 @@ class EEGView(QWidget):
         self.pick_first = None
         self.pick_second = None
 
+    # 取消状态标注
     def cancelStateAnnotate(self):
         self.state_left = None
         if self.state_left_line is not None:
@@ -621,6 +659,7 @@ class EEGView(QWidget):
             self.state_picked = None
         self.canvas.draw()
 
+    # 取消波形标注
     def cancelWaveAnnotate(self):
         self.pick_channel = None
         self.pick_first = None
@@ -632,13 +671,7 @@ class EEGView(QWidget):
         self.pick_labels = []
         self.focus_lines()
 
-    def changeStateAnnotateStatus(self):
-        self.states_annotate = not self.states_annotate
-        if self.states_annotate:
-            self.ui.btnStateAnnotate.setText("波形标注")
-        else:
-            self.ui.btnStateAnnotate.setText("状态标注")
-
+    # 判断选中标签
     def checkPickLabels(self, pl):
         if len(self.pick_labels) == len(self.channels_name):
             self.pick_labels = [pl]
@@ -658,6 +691,7 @@ class EEGView(QWidget):
         self.pick_first = None
         self.pick_second = None
 
+    # 删除line对象
     def removeLines(self, ch=None, sample=False):
         if (ch is None or len(ch) == 0) and sample is False:
             for state in self.state_lines:
@@ -674,7 +708,7 @@ class EEGView(QWidget):
             if label in ch:
                 l.remove()
 
-
+    # 判断点击第几个点
     def clickPointStatus(self, label):
         if self.pick_first is None:
             return EEGView.PICK_FIRST
@@ -682,8 +716,9 @@ class EEGView(QWidget):
             return EEGView.PICK_SECOND
         return EEGView.PICK_NO_DOT
 
+    # 绘制状态线
     def drawStateLine(self, event):
-        if not self.states_annotate:
+        if self.annotate != EEGView.STATE_ANNOTATE:
             return
         x, y = event.xdata, event.ydata
         if self.state_left is None:
@@ -708,12 +743,14 @@ class EEGView(QWidget):
                     self.state_right / self.sample_rate, 0, 200, color='red')
         self.canvas.draw()
 
+    # 释放菜单
     def releaseMenu(self):
-        if self.states_annotate:
+        if self.annotate == EEGView.STATE_ANNOTATE:
             self.popMenu2.exec_(QCursor.pos())
         else:
             self.popMenu1.exec_(QCursor.pos())
 
+    # 绘制线透明度
     def focusLines(self):
         lines = self.axes.get_lines()
         for l in lines:
@@ -721,6 +758,7 @@ class EEGView(QWidget):
             l.set_alpha(self.channels_alpha[label])
         self.canvas.draw()
 
+    # 绘制第一个点
     def showFirstPoint(self, event):
         artist = event.artist
         label = artist.get_label()
@@ -739,6 +777,7 @@ class EEGView(QWidget):
             mouseevent.xdata, mouseevent.ydata, 'ro', label="pp", markersize=4)
         self.canvas.draw()
 
+    # 恢复上一个选中的样本颜色
     def restorePreSampleColor(self):
         if self.cur_sample_index < 0:
             return
@@ -765,6 +804,7 @@ class EEGView(QWidget):
             self.ui.tableWidget.item(self.cur_sample_index, col).setSelected(False)
         self.cur_sample_index = -1
 
+    # 点击一个列表样本
     def pickCurSample(self, row):
         self.restorePreSampleColor() #恢复前一个选中的线条颜色
         self.cur_sample_index = row
@@ -830,6 +870,7 @@ class EEGView(QWidget):
             m = np.max(self.data[idx, l:r])
             self.showCurLabel(type_name, label[0], str((label[2] - label[1])/(self.sample_rate//self.nSample)), str(b_t), str(e_t), str(m))
 
+    # 绘制第二个点
     def showSecondPoint(self, event):
         artist = event.artist
         self.pick_label = artist.get_label()
@@ -852,6 +893,7 @@ class EEGView(QWidget):
         self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.nSample, 0), min(self.lenWin * self.sample_rate // self.nSample, self.pick_second - self.begin * self.sample_rate // self.nSample), self.pick_label, 'pickedsegment', 'red')
         self.canvas.draw()
 
+    # 点击图像样本
     def clickSample(self, artist):
         label = artist.get_label()
         label = label.split('|')
@@ -896,7 +938,7 @@ class EEGView(QWidget):
         self.showCurLabel(type_name, label[0], str(label[2] - label[1]), str(b_t), str(e_t), str(m))
         self.canvas.draw()
 
-
+    # 绘制一个波形
     def paintAWave(self, start, end, channel, label, color):
         x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate // self.nSample)
         idx = -1
@@ -910,7 +952,7 @@ class EEGView(QWidget):
         self.axes.plot(x[start:end], self.data[idx, start:end] + idx + 1, color=color, picker=True, label=label,
                        alpha=self.channels_alpha[channel], linewidth=1)
 
-
+    # 改变样本颜色
     def changeSampleColor(self, sample, color):
         s_label = str(sample[0]) + "|" + str(sample[1]) + "|" + str(sample[2]) + "|" + str(sample[3])
         lines = self.axes.get_lines()
@@ -926,6 +968,7 @@ class EEGView(QWidget):
                     break
             self.canvas.draw()
 
+    # 取消选中
     def cancelSelect(self):
         self.state_left = None
         if self.state_left_line is not None:
@@ -946,8 +989,9 @@ class EEGView(QWidget):
         self.resetPickLabels()
         self.focusLines()
 
+    # 判断样本是波形还是状态
     def checkMenuAction(self, type):
-        if self.states_annotate:
+        if self.annotate == EEGView.STATE_ANNOTATE:
             if self.state_left is None or self.state_right is None:
                 QMessageBox.information(self.view, ' ', "无效选择")
                 return 0, []
@@ -1079,15 +1123,17 @@ class EEGView(QWidget):
             amp = str(round(float(amp), 3))
         self.ui.labelAmp.setText(amp)
 
+    # 改变时间信息
     def changeTime(self):
         self.ui.editTime.setText(time.strftime("%H:%M:%S", time.gmtime(self.begin)))
-    def Refchange(self,Ref):
+
+    def Refchange(self, Ref):
         self.curRef = Ref
         chanList = self.refList[Ref]
         self.allChannel = {key: True for key in chanList}
         self.updateYAxis(chanList)
         label = self.labelFilter()
-        self.refreshWin(self.data,label)
+        self.refreshWin(self.data, label)
 
     def labelFilter(self):
         return self.labels
