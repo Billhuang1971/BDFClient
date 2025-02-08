@@ -850,6 +850,8 @@ class EEGView(QWidget):
                         break
                 l = int((label[1] - (self.begin * (self.sample_rate//self.nSample))))
                 r = int((label[2] - (self.begin * (self.sample_rate//self.nSample))))
+                print(idx, l, r)
+                print(self.data[idx, l:r])
                 m = np.max(self.data[idx, l:r])
                 self.showCurLabel(type_name, label[0], str((label[2] - label[1])/(self.sample_rate//self.nSample)), str(b_t), str(e_t), str(m))
         elif self.is_status_showed is True:

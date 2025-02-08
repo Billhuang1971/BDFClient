@@ -211,11 +211,7 @@ class EEGController(QWidget):
                 return
             if cmd == 1:
                 self.data.insertSample(label)
-                upLoadLabel = label
-                upLoadLabel[1] = upLoadLabel[1] * self.nSample
-                upLoadLabel[2] = upLoadLabel[2] * self.nSample
-                upLoadLabel.extend([self.check_id, self.file_id, self.user_id])
-                self.client.insertSample([upLoadLabel, self.tableName])
+                self.client.insertSample([label, self.tableName, self.check_id, self.file_id, self.user_id, self.nSample])
             # else:
             #
         except Exception as e:
@@ -464,7 +460,6 @@ class EEGController(QWidget):
         try:
             self.view.changeAxStatus()
             inBlock, readFrom, readTo, = self.data.queryRange(begin)
-            print(readFrom, readTo)
             if inBlock is False:
                 self.loading = True
                 self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.nSample, readTo * self.nSample, self.nSample, self.tableName, self.pUid])
