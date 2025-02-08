@@ -43,15 +43,14 @@ class EEGController(QWidget):
     def startEEG(self):
         try:
             self.view.show()
-            self.secondsSpan = 30
-            self.nSecWin, nDotSec = self.view.calcSen(self.secondsSpan)
-            nWinBlock = 11
+            self.nSecWin, nDotSec = self.view.calcSen()
+            self.nWinBlock = 11
             self.view.setMoveLength(self.nSecWin)
 
             self.client.openEEGFileResSig.connect(self.openEEGFileRes)
             self.client.loadEEGDataSig.connect(self.loadEEGDataRes)
             self.client.insertSampleSig.connect(self.insertSampleRes)
-            self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, nDotSec, nWinBlock, self.tableName, self.pUid])
+            self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, nDotSec, self.nWinBlock, self.tableName, self.pUid])
         except Exception as e:
             print("startEEG", e)
 
@@ -90,8 +89,7 @@ class EEGController(QWidget):
                 self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.nSample,type,self.montage,sampleFilter)
                 self.connetEvent(type_info)
 
-                self.data = EEGData()
-                self.data.initEEGData(data, self.lenFile, self.lenBlock, self.nSample, self.lenWin, labels)
+                self.data = EEGData(data, self.lenFile, self.lenBlock, self.lenWin, labels)
                 data, labels = self.data.getData()
                 self.view.refreshWin(data, labels)
                 self.loading = False
@@ -100,8 +98,8 @@ class EEGController(QWidget):
 
     def processIeegMontage(self,type):
         self.montage['defualt'] = self.channels
-        list1=[]
-        list2=[]
+        list1 = []
+        list2 = []
         if type == True:
             self.dgroup = self.appUtil.bdfMontage(self.channels)
             dgroupKeys = list(self.dgroup.keys())
@@ -111,11 +109,11 @@ class EEGController(QWidget):
                 for j in range(len(chs)-1):
                     chs[j] = chs[j].split('-')[0]
                     chs[j+1] = chs[j+1].split('-')[0]
-                    ch1=" - ".join([chs[j], chs[j + 1]]) #单极
+                    ch1 = "-".join([chs[j], chs[j + 1]]) #单极
                     list1.append(ch1)
                     if j < len(chs)-2:
                         chs[j+2] = chs[j+2].split('-')[0]
-                        ch2 = " - ".join([chs[j], chs[j + 2]])
+                        ch2 = "-".join([chs[j], chs[j + 2]])
                         list2.append(ch2)
             self.montage['单极'] = list1
             self.montage['双极'] = list2
@@ -160,6 +158,7 @@ class EEGController(QWidget):
         self.view.ui.hideState.clicked.connect(self.hideState)
         self.view.ui.secondsSpan.lineEdit().editingFinished.connect(self.secondsSpanChange)
         self.view.ui.moveLength.lineEdit().editingFinished.connect(self.moveLengthChange)
+        self.view.ui.sensitivity.lineEdit().editingFinished.connect(self.sensitivityChange)
         self.view.ui.returnBtn.clicked.connect(self.on_return_clicked)
         #self.view.ui.subtractAverage.clicked.connect(self.subtractAverage)
 
@@ -200,6 +199,10 @@ class EEGController(QWidget):
                 continue
             sms[t[3]].addAction(action)
 
+    # 灵敏度修改
+    def sensitivityChange(self):
+        self.view.sensitivityChange()
+
     # 样本插入更新和删除操作
     def handleMenuAction(self, t):
         try:
@@ -228,27 +231,19 @@ class EEGController(QWidget):
 
     # 改变秒跨度的操作
     def secondsSpanChange(self):
-        secondsSpan = self.view.ui.secondsSpan.lineEdit().text()
-        self.view.secondsSpanChange(int(secondsSpan))
-        self.lenWin = self.view.getLenWin()
-        self.toBlock = self.view.getIdx(self.lenWin)
-        self.lenBlock = self.view.getIdx(self.lenWin * 9)
-        self.updateTo = self.lenBlock
-        self.updateFrom = 0
-        self.fromBlock = 0
-        self.readFrom = 0
-        self.readTo = self.lenBlock
-        self.case = 1
-        self.data.initEEGData(self.lenFile, self.lenBlock)
-        self.client.loadDataDynamical(self.check_id, self.file_id, self.readFrom, self.readTo)
+        try:
+            self.nSecWin, nDotSec = self.view.secondsSpanChange()
+            self.nSample, self.lenWin, readFrom = self.view.reCalc(nDotSec, self.nSecWin)
+            self.lenBlock = min(self.lenFile, self.nWinBlock * self.lenWin)
+            self.data.resetEEGData(self.lenBlock, self.lenWin, readFrom)
+            self.client.loadEEGData([self.check_id, self.file_id, readFrom, readFrom + self.lenBlock, self.nSample, self.tableName, self.pUid])
+        except Exception as e:
+            print("secondsSpanChange", e)
+
 
     # 改变移动长度的操作
     def moveLengthChange(self):
-        try:
-            moveLength = self.view.ui.moveLength.lineEdit().text()
-            self.moveLen = int(moveLength)
-        except Exception as e:
-            print("moveLengthChange", e)
+        self.view.setMoveLength(int(self.view.ui.moveLength.lineEdit().text()))
 
     # 点击样本操作
     def onSampleClicked(self, item=None):
@@ -469,6 +464,7 @@ class EEGController(QWidget):
         try:
             self.view.changeAxStatus()
             inBlock, readFrom, readTo, = self.data.queryRange(begin)
+            print(readFrom, readTo)
             if inBlock is False:
                 self.loading = True
                 self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.nSample, readTo * self.nSample, self.nSample, self.tableName, self.pUid])
@@ -550,7 +546,6 @@ class EEGController(QWidget):
         if selected_button:
             selected_text = selected_button.text()
             self.channels = self.montage[selected_text]
-            print(selected_text)
         self.view.Refchange(selected_text)
         montagesDialog.close()
 
@@ -589,7 +584,7 @@ class EEGController(QWidget):
         sampleMessage.close()
 
     def onChannelBtnClicked(self):
-        type,curRefName,dgroup,shownChannels=self.view.checkType()
+        type, curRefName, dgroup, shownChannels  =self.view.checkType()
         if type == True:
             dgroup = self.appUtil.bdfMontage(self.view.refList['defualt'])
         channelMessage = QDialogChannel(curRefName, dgroup, shownChannels)

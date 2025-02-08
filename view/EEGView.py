@@ -1,5 +1,4 @@
-import sys
-from collections import OrderedDict
+import math
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -54,7 +53,7 @@ class EEGView(QWidget):
         self.end = None
         self.User = None
         self.data = None
-        self.labels=[]
+        self.labels = []
         self.channels_name = []
         self.userInfo = None
         self.state_left = None
@@ -64,8 +63,7 @@ class EEGView(QWidget):
         self.duration = None
         self.paint_length = None
         self.scroll_position = None
-        self.secondsSpan = 30
-        self.lenWin = 0
+        self.winTime = 0
         self.sensitivity = 10
         self.showSecondLine = True
         self.time_lines = []
@@ -73,6 +71,8 @@ class EEGView(QWidget):
         self.state_lines = [] #绘制出的状态
         self.axHscrollSpan = []
         self.sen = 0
+
+        self.secondsSpan = 30
         self.createPaintTools()
 
     # 初始化View
@@ -97,7 +97,7 @@ class EEGView(QWidget):
             self.type_info = type_info
             self.nSample = nSample
             self.begin = 0
-            self.end = self.lenWin
+            self.end = self.winTime
             self.duration = duration
             self.labelBit = labelBit
             self.sample_rate = sampleRate
@@ -111,10 +111,6 @@ class EEGView(QWidget):
         except Exception as e:
             print("initView", e)
 
-    # 获取当前窗口长度
-    def getLenWin(self):
-        return self.lenWin
-
     # 初始化绘图工具
     def createPaintTools(self):
         self.fig = plt.figure()
@@ -125,7 +121,7 @@ class EEGView(QWidget):
         self.ax_hscroll = plt.subplot2grid((33, 1), (0, 0), rowspan=1)
 
     # 计算绘图区域物理长度
-    def calcSen(self, secondsSpan):
+    def calcSen(self):
         axesL = self.axes.figure.subplotpars.left
         axesR = self.axes.figure.subplotpars.right
         axesT = self.axes.figure.subplotpars.top
@@ -141,16 +137,23 @@ class EEGView(QWidget):
         figureHeightMM = (figureHeight / self.yDPI) * 25.4
         self.axesXWidthMM = x_fraction * figureWidthMM
         self.axesYWidthMM = y_fraction * figureHeightMM
-        return self.changeSecondsSpan(secondsSpan)
+        return self.secondsSpanChange()
 
     # 改变秒跨度操作
-    def changeSecondsSpan(self, secondsSpan):
-        self.secondsSpan = secondsSpan
-        self.ui.secondsSpan.setCurrentText(str(secondsSpan))
-        self.lenWin = int(round(self.axesXWidthMM / self.secondsSpan))
-        px = int(round(secondsSpan * self.xDPI / 25.4))
-        self.nDotWin = self.lenWin * px
-        return self.lenWin, px
+    def secondsSpanChange(self):
+        self.secondsSpan = int(self.ui.secondsSpan.lineEdit().text())
+        self.winTime = int(round(self.axesXWidthMM / self.secondsSpan))
+        px = int(round(self.secondsSpan * self.xDPI / 25.4))
+        self.nDotWin = self.winTime * px
+        return self.winTime, px
+
+    def sensitivityChange(self):
+        self.sensitivity = int(self.ui.sensitivity.lineEdit().text())
+        self.removeLines()
+        self.paintEEG()
+        self.paintWaves()
+        self.paintStates()
+        self.canvas.draw()
 
     # 设置移动长度
     def setMoveLength(self, moveLength):
@@ -176,7 +179,7 @@ class EEGView(QWidget):
         cmd = True
         if self.begin < 0:
             self.begin = 0
-            self.end = self.lenWin
+            self.end = self.winTime
             cmd = False
         self.changeTime()
         return cmd, self.begin * self.sample_rate // self.nSample
@@ -187,7 +190,7 @@ class EEGView(QWidget):
         self.end += self.moveLength
         cmd = True
         if self.end > self.duration:
-            self.begin = self.duration - self.lenWin
+            self.begin = self.duration - self.winTime
             self.end = self.duration
             cmd = False
         self.changeTime()
@@ -195,19 +198,14 @@ class EEGView(QWidget):
 
     # 时间改变
     def timeChange(self, begin):
-        if begin < 0 or begin + self.lenWin > self.duration:
+        if begin < 0 or begin + self.winTime > self.duration:
             self.view.ui.editTime.setText("00:00:00")
             self.beign = 0
-            self.end = self.lenWin
+            self.end = self.winTime
         else:
             self.begin = begin
-            self.end = begin + self.lenWin
+            self.end = begin + self.winTime
         return self.begin * self.sample_rate // self.nSample
-
-    # 秒跨度改变
-    def secondsSpanChange(self, secondsSpan):
-        self.secondsSpan = secondsSpan
-        self.lenWin = int(round(self.axesXWidthMM / self.secondsSpan))
 
     # 更新x轴
     def updateXAxis(self):
@@ -241,11 +239,6 @@ class EEGView(QWidget):
 
     # 绘制脑电信号
     def paintEEG(self):
-        # x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate // self.nSample)
-        # for i in range(len(self.channels_name)):
-        #     y=self.processChan(x,i)
-        #     self.axes.plot(x, self.data[i] + i + 1, color='black', label=self.channels_name[i], picker=True,
-
         x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate // self.nSample)
         av = None
         if self.type == False:
@@ -263,9 +256,16 @@ class EEGView(QWidget):
             self.axes.plot(x, y, color='black', label=self.channels_name[i], picker=True,
                            alpha=self.channels_alpha[self.channels_name[i]], linewidth=0.7)
 
-    # 将时间单位转化为采样单位
-    def getIdx(self, time):
-        return time * self.sample_rate
+    # 更新下采样和窗口时间
+    def reCalc(self, nDotSec, nSecWin):
+        self.nSample = 1 if nDotSec >= self.sample_rate else int(round(self.sample_rate / nDotSec))
+        self.lenWin = nSecWin * self.sample_rate // self.nSample
+        self.end = self.begin + self.winTime
+        if self.end > self.duration:
+            self.begin = self.duration - self.winTime
+            self.end = self.duration
+        readFrom = self.begin * self.sample_rate
+        return self.nSample, self.lenWin, readFrom
 
     # 更新样本
     def updateSamples(self, readFrom, readTo, case, sample_info):
@@ -395,7 +395,7 @@ class EEGView(QWidget):
                 else:
                     if (self.pick_first >= self.begin * self.sample_rate // self.nSample and self.pick_first < self.end * self.sample_rate // self.nSample) or (self.pick_second >= self.begin * self.sample_rate // self.nSample and self.pick_second < self.end * self.sample_rate // self.nSample) or (self.pick_first < self.begin * self.sample_rate // self.nSample and self.pick_second >= self.end * self.sample_rate // self.nSample):
                         self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.nSample, 0),
-                                        min(self.lenWin * self.sample_rate // self.nSample, self.pick_second - self.begin * self.sample_rate // self.nSample),
+                                        min(self.winTime * self.sample_rate // self.nSample, self.pick_second - self.begin * self.sample_rate // self.nSample),
                                         self.pick_label, 'pickedsegment', 'red')
 
             self.canvas.draw()
@@ -417,6 +417,7 @@ class EEGView(QWidget):
             self.focusLines()
         self.canvas.draw()
         self.showLabels()
+
     def restartShow(self):
         self.paintWaves()
         self.paintStates()
@@ -606,11 +607,11 @@ class EEGView(QWidget):
 
     # 时间轴点击事件
     def onAxhscrollClicked(self, x):
-        if x + self.lenWin <= self.duration:
+        if x + self.winTime <= self.duration:
             self.begin = x
-            self.end = x + self.lenWin
+            self.end = x + self.winTime
         else:
-            self.begin = max(0, self.duration - self.lenWin)
+            self.begin = max(0, self.duration - self.winTime)
             self.end = self.duration
         return self.begin * self.sample_rate // self.nSample
 
@@ -619,7 +620,7 @@ class EEGView(QWidget):
         self.begin -= self.moveLength
         self.end -= self.moveLength
         if self.begin < 0:
-            self.end = self.lenWin
+            self.end = self.winTime
             self.begin = 0
         self.changeTime()
         return self.begin * self.sample_rate // self.nSample
@@ -630,7 +631,7 @@ class EEGView(QWidget):
         self.end += self.moveLength
         if self.end > self.duration:
             self.end = self.duration
-            self.begin = self.begin - self.lenWin
+            self.begin = self.begin - self.winTime
         self.changeTime()
         return self.begin * self.sample_rate // self.nSample
 
@@ -877,7 +878,7 @@ class EEGView(QWidget):
                     idx = i
                     break
             l = int(max(0, (label[1] - (self.begin * (self.sample_rate // self.nSample)))))
-            r = int(min((label[2] - label[1]), self.lenWin * (self.sample_rate // self.nSample)))
+            r = int(min((label[2] - label[1]), self.winTime * (self.sample_rate // self.nSample)))
 
             m = np.max(self.data[idx, l:r])
             self.showCurLabel(type_name, label[0], str((label[2] - label[1])/(self.sample_rate//self.nSample)), str(b_t), str(e_t), str(m))
@@ -902,7 +903,7 @@ class EEGView(QWidget):
         if self.pick_first == self.pick_second:
             return
         self.removeLines(['pp', 'pickedsegment'])
-        self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.nSample, 0), min(self.lenWin * self.sample_rate // self.nSample, self.pick_second - self.begin * self.sample_rate // self.nSample), self.pick_label, 'pickedsegment', 'red')
+        self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.nSample, 0), min(self.winTime * self.sample_rate // self.nSample, self.pick_second - self.begin * self.sample_rate // self.nSample), self.pick_label, 'pickedsegment', 'red')
         self.canvas.draw()
 
     # 点击图像样本
@@ -945,7 +946,7 @@ class EEGView(QWidget):
                 idx = i
                 break
         l = int(max(0, label[1] - self.begin * self.sample_rate // self.nSample))
-        r = int(min(label[2] - label[1], self.lenWin * self.sample_rate // self.nSample))
+        r = int(min(label[2] - label[1], self.winTime * self.sample_rate // self.nSample))
         m = np.max(self.data[idx, l:r])
         self.showCurLabel(type_name, label[0], str(label[2] - label[1]), str(b_t), str(e_t), str(m))
         self.canvas.draw()
@@ -1190,7 +1191,7 @@ class EEGView(QWidget):
             dgroup = {curRef: curRefList}
         else:
             dgroup = {}
-        return self.type,self.curRef,dgroup,self.channels_name
+        return self.type, self.curRef, dgroup, self.channels_name
 
     def getShownChannel(self):
         return self.channels_name

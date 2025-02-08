@@ -2,19 +2,18 @@ import numpy as np
 
 
 class EEGData(object):
-    def __init__(self):
-        self.startBlock = 0
-        self.lenBlock = 0
-        self.data = np.array([])
-        self.lenFile = 0
+    def __init__(self, data, lenFile, lenBlock, lenWin, labels):
+        self.data = data
+        self.lenFile = lenFile
+        self.lenBlock = lenBlock
         self.updateFrom = 0
-        self.updateTo = 0
-        self.case = 0
+        self.updateTo = lenBlock
+        self.lenWin = lenWin
         self.fromBlock = 0
-        self.toBlock = 0
-        self.nSamples = 0
-        self.lenWin = 0
-        self.labels = []
+        self.toBlock = lenWin
+        self.labels = labels
+        self.startBlock = 0
+        self.case = 0
 
     def queryRange(self, startWin):
         try:
@@ -67,7 +66,6 @@ class EEGData(object):
 
     def setData(self, EEG, labels):
         try:
-            print(self.data.shape, EEG.shape)
             if self.updateFrom == 0 and self.updateTo == self.lenBlock:
                 self.data = EEG
             elif self.updateFrom == 0:
@@ -87,7 +85,6 @@ class EEGData(object):
 
     def getData(self):
         try:
-
             data = self.data[:, self.fromBlock: self.toBlock]
             labels = []
             if self.labels is None or len(self.labels) == 0:
@@ -99,17 +96,15 @@ class EEGData(object):
         except Exception as e:
             print("getData", e)
 
-    def initEEGData(self, data, lenFile, lenBlock, nSample, lenWin, labels):
-        self.data = data
-        self.lenFile = lenFile
+    def resetEEGData(self, lenBlock, lenWin, startBlock):
         self.lenBlock = lenBlock
-        self.nSample = nSample
         self.updateFrom = 0
         self.updateTo = lenBlock
         self.lenWin = lenWin
         self.fromBlock = 0
         self.toBlock = lenWin
-        self.labels = labels
+        self.case = 1
+        self.startBlock = startBlock
 
     def insertSample(self, label):
         idx = 0
