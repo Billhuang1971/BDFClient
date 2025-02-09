@@ -32,8 +32,6 @@ class EEGView(QWidget):
         self.type_info = []
         # 当前标注状态（波形、状态、事件）
         self.annotate = EEGView.WAVE_ANNOTATE
-        # 当前选中的状态
-        self.state_picked = None
         # 是否状态显示
         self.is_status_showed = True
         self.is_waves_showed = True
@@ -77,18 +75,17 @@ class EEGView(QWidget):
         self.createPaintTools()
 
     # 初始化View
-    def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, nSample, type, montage, sampleFilter):
+    def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, nSample, type, montage, sampleFilter, channels_index):
         try:
+            # 处理单通道名，获取每个导联所映射的通道
+            self.channels_index = channels_index
             self.type = type  # True:颅内脑电 False：头皮脑电
             #refList：参考方案列表，即montage
             self.refList = dict(montage)
             self.curRef = 'defualt'
 
-            # 处理单通道名，获取每个导联所映射的通道
-            self.singleChannels = []
-            for ch in channels:
-                ch = ch.split('-')[0]
-                self.singleChannels.append(ch)
+
+
             self.allChannel = {key: True for key in channels}
             self.sampleFilter = sampleFilter
             #平均参考时计算平均时需要排除的通道
@@ -369,7 +366,6 @@ class EEGView(QWidget):
     def refreshWin(self, data, labels):
         try:
             self.data = data
-            self.plottedData = np.copy(data)
             self.labels = labels
             self.removeLines()
             self.updateXAxis()
@@ -664,8 +660,6 @@ class EEGView(QWidget):
         if self.state_right_line is not None:
             self.state_right_line.remove()
             self.state_right_line = None
-        if self.state_picked is not None:
-            self.state_picked = None
         self.canvas.draw()
 
     # 取消波形标注
@@ -987,8 +981,6 @@ class EEGView(QWidget):
         if self.state_right_line is not None:
             self.state_right_line.remove()
             self.state_right_line = None
-        if self.state_picked is not None:
-            self.state_picked = None
         self.canvas.draw()
         self.pick_channel = None
         self.pick_first = None
@@ -1133,22 +1125,23 @@ class EEGView(QWidget):
         self.allChannel = {key: True for key in chanList}
 
     def processChan(self):
+        self.plottedData = []
         for i in range(len(self.channels_name)):
             av = None
-            if self.type == False:
-                if 'AV' in self.singleChannels:
-                    ex_chs = tuple([self.channels_name.index(x) for x in self.exclude_av if x in self.channels_name])
-                    temp_data = self.data
-                    temp_data = np.delete(temp_data, ex_chs, axis=0)
-                    av = np.mean(temp_data, axis=0)
-            index = self.channels_name.index(self.channels_name[i])
+            # if self.type == False:
+            #     if 'AV' in self.singleChannels:
+            #         ex_chs = tuple([self.channels_name.index(x) for x in self.exclude_av if x in self.channels_name])
+            #         temp_data = self.data
+            #         temp_data = np.delete(temp_data, ex_chs, axis=0)
+            #         av = np.mean(temp_data, axis=0)
+            index = self.channels_index[self.channels_name[i].split('-')[0]]
             label = self.channels_name[i]
             if '-' in label:
                 g1, g2 = label.split('-')
                 g1 = g1.strip()
                 g2 = g2.strip()
                 try:
-                    g1_index = self.singleChannels.index(g1)
+                    g1_index = self.channels_index[g1]
                 except Exception as e:
                     print(e)
                 y1 = self.data[g1_index]
@@ -1157,14 +1150,16 @@ class EEGView(QWidget):
                 elif g2 == 'AV':
                     y2 = av
                 else:
-                    g2_index = self.singleChannels.index(g2)
+                    g2_index = self.channels_index[g2]
                     y2 = self.data[g2_index]
-                self.plottedData[i] = y1 - y2
+                y = y1 - y2
             else:
-                self.plottedData[i] = self.data[index]
+                y = np.copy(self.data[index])
 
-            self.plottedData[i] /= (self.sensitivity * self.axesYWidthMM / (len(self.channels_name) + 1))
-            self.plottedData[i] = -self.plottedData[i] + index + 1
+            y = y / (self.sensitivity * self.axesYWidthMM / (len(self.channels_name) + 1))
+            y = -y + i + 1
+            self.plottedData.append(y)
+        self.plottedData = np.array(self.plottedData)
 
     def getCurrentRef(self):
         return self.curRef
