@@ -71,6 +71,7 @@ class EEGView(QWidget):
         self.state_lines = [] #绘制出的状态
         self.axHscrollSpan = []
         self.sen = 0
+        self.plottedData = None
 
         self.secondsSpan = 30
         self.createPaintTools()
@@ -150,6 +151,7 @@ class EEGView(QWidget):
     def sensitivityChange(self):
         self.sensitivity = int(self.ui.sensitivity.lineEdit().text())
         self.removeLines()
+        self.processChan()
         self.paintEEG()
         self.paintWaves()
         self.paintStates()
@@ -240,20 +242,8 @@ class EEGView(QWidget):
     # 绘制脑电信号
     def paintEEG(self):
         x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate // self.nSample)
-        av = None
-        if self.type == False:
-            if 'AV' in self.singleChannels:
-                ex_chs = tuple([self.channels_name.index(x) for x in self.exclude_av if x in self.channels_name])
-                temp_data = self.data
-                temp_data = np.delete(temp_data, ex_chs, axis=0)
-                av = np.mean(temp_data, axis=0)
-                #                    alpha=self.channels_alpha[self.channels_name[i]], linewidth=0.3)
         for i in range(len(self.channels_name)):
-            try:
-                x, y = self.processChan(x, i, av)
-            except ValueError:
-                continue
-            self.axes.plot(x, y, color='black', label=self.channels_name[i], picker=True,
+            self.axes.plot(x, self.plottedData[i], color='black', label=self.channels_name[i], picker=True,
                            alpha=self.channels_alpha[self.channels_name[i]], linewidth=0.7)
 
     # 更新下采样和窗口时间
@@ -379,9 +369,11 @@ class EEGView(QWidget):
     def refreshWin(self, data, labels):
         try:
             self.data = data
+            self.plottedData = np.copy(data)
             self.labels = labels
             self.removeLines()
             self.updateXAxis()
+            self.processChan()
             self.paintEEG()
             self.filterSamples()
             self.paintWaves()
@@ -539,8 +531,8 @@ class EEGView(QWidget):
             return
         for wave in self.waves:
             color = 'blue'
-            l = (wave[1] - (self.begin*self.sample_rate//self.nSample)) if wave[1] > (self.begin*self.sample_rate//self.nSample) else 0
-            r = (wave[2] - (self.begin*self.sample_rate//self.nSample))  if wave[2] < (self.end*self.sample_rate//self.nSample) else (self.end - self.begin) * (self.sample_rate//self.nSample)
+            l = (wave[1] - (self.begin * self.sample_rate // self.nSample)) if wave[1] > (self.begin * self.sample_rate // self.nSample) else 0
+            r = (wave[2] - (self.begin * self.sample_rate // self.nSample)) if wave[2] < (self.end * self.sample_rate // self.nSample) else (self.end - self.begin) * (self.sample_rate//self.nSample)
             label = str(wave[0]) + "|" + str(wave[1]) + "|" + str(wave[2]) + "|" + str(wave[3])
             self.paintAWave(l, r, wave[0], label, color)
 
@@ -966,16 +958,7 @@ class EEGView(QWidget):
         if idx == -1:
             return
         self.wave_lines.append(label)
-        av = None
-        if self.type == False:
-            if 'AV' in self.singleChannels:
-                ex_chs = tuple([self.channels_name.index(x) for x in self.exclude_av if x in self.channels_name])
-                temp_data = self.data
-                temp_data = np.delete(temp_data, ex_chs, axis=0)
-                av = np.mean(temp_data, axis=0)
-                #                    alpha=self.channels_alpha[self.channels_name[i]], linewidth=0.3)
-        x, y = self.processChan(x, idx, av)
-        self.axes.plot(x[start:end], y[start:end], color=color, picker=True, label=label,
+        self.axes.plot(x[start:end], self.plottedData[idx, start:end], color=color, picker=True, label=label,
                        alpha=self.channels_alpha[channel], linewidth=1)
 
     # 改变样本颜色
@@ -1160,36 +1143,39 @@ class EEGView(QWidget):
         #         shownLabels.append(label)
         # return shownLabels
 
-    def processChan(self, x, i, av):
-        index = self.channels_name.index(self.channels_name[i])
-        label = self.channels_name[i]
-        if '-' in label:
-            g1, g2 = label.split('-')
-            g1 = g1.strip()
-            g2 = g2.strip()
-            try:
-                g1_index = self.singleChannels.index(g1)
-            except Exception as e:
-                print(e)
-            y1 = self.data[g1_index]
-            if g2 == 'REF':
-                y2 = 0
-            elif g2 == 'AV':
-                y2 = av
+    def processChan(self):
+        for i in range(len(self.channels_name)):
+            av = None
+            if self.type == False:
+                if 'AV' in self.singleChannels:
+                    ex_chs = tuple([self.channels_name.index(x) for x in self.exclude_av if x in self.channels_name])
+                    temp_data = self.data
+                    temp_data = np.delete(temp_data, ex_chs, axis=0)
+                    av = np.mean(temp_data, axis=0)
+            index = self.channels_name.index(self.channels_name[i])
+            label = self.channels_name[i]
+            if '-' in label:
+                g1, g2 = label.split('-')
+                g1 = g1.strip()
+                g2 = g2.strip()
+                try:
+                    g1_index = self.singleChannels.index(g1)
+                except Exception as e:
+                    print(e)
+                y1 = self.data[g1_index]
+                if g2 == 'REF':
+                    y2 = 0
+                elif g2 == 'AV':
+                    y2 = av
+                else:
+                    g2_index = self.singleChannels.index(g2)
+                    y2 = self.data[g2_index]
+                self.plottedData[i] = y1 - y2
             else:
-                g2_index = self.singleChannels.index(g2)
-                y2 = self.data[g2_index]
-            y = y1 - y2
-        else:
-            y = self.data[index]
+                self.plottedData[i] = self.data[index]
 
-        if x.shape != y.shape:
-            y = np.resize(y, x.shape)
-        # y = y * self.scales[label]
-        # 在create_axes中 axes.invert_yaxis反转y轴，y轴取值上负下正，脑电取值默认下负上正，需要对其取反
-        y = y / (self.sensitivity * self.axesYWidthMM / (len(self.channels_name) + 1))
-        y = -y + index + 1
-        return x, y
+            self.plottedData[i] /= (self.sensitivity * self.axesYWidthMM / (len(self.channels_name) + 1))
+            self.plottedData[i] = -self.plottedData[i] + index + 1
 
     def getCurrentRef(self):
         return self.curRef
