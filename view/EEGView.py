@@ -30,7 +30,7 @@ class EEGView(QWidget):
         self.cursor = None
         # 类型数据
         self.type_info = []
-        # 是否状态标注
+        # 当前标注状态（波形、状态、事件）
         self.annotate = EEGView.WAVE_ANNOTATE
         # 当前选中的状态
         self.state_picked = None
@@ -645,10 +645,14 @@ class EEGView(QWidget):
         except Exception as e:
             print("changeAxStatus", e)
 
-    # 判断禁止波形标注
-    def isBanWave(self):
-        return self.annotate == EEGView.STATE_ANNOTATE or self.is_waves_showed is False
-
+    # 判断是否处于波形标注且显示波形
+    def isinWave(self):
+        return self.annotate == EEGView.WAVE_ANNOTATE and self.is_waves_showed is True
+    #是否处于事件标注
+    def isinEvent(self):
+        return self.annotate == EEGView.EVENT_ANNOTATE and self.is_Event_showed is True
+    def isinState(self):
+        return self.annotate == EEGView.STATE_ANNOTATE
     # 重置选中样本
     def resetPickLabels(self):
         self.pick_labels = self.channels_name
@@ -731,7 +735,7 @@ class EEGView(QWidget):
 
     # 绘制状态线
     def drawStateLine(self, event):
-        if self.annotate != EEGView.STATE_ANNOTATE:
+        if self.annotate != EEGView.STATE_ANNOTATE or self.is_status_showed is False:
             return
         x, y = event.xdata, event.ydata
         if self.state_left is None:
@@ -850,8 +854,6 @@ class EEGView(QWidget):
                         break
                 l = int((label[1] - (self.begin * (self.sample_rate//self.nSample))))
                 r = int((label[2] - (self.begin * (self.sample_rate//self.nSample))))
-                print(idx, l, r)
-                print(self.data[idx, l:r])
                 m = np.max(self.data[idx, l:r])
                 self.showCurLabel(type_name, label[0], str((label[2] - label[1])/(self.sample_rate//self.nSample)), str(b_t), str(e_t), str(m))
         elif self.is_status_showed is True:
@@ -964,7 +966,16 @@ class EEGView(QWidget):
         if idx == -1:
             return
         self.wave_lines.append(label)
-        self.axes.plot(x[start:end], self.data[idx, start:end] + idx + 1, color=color, picker=True, label=label,
+        av = None
+        if self.type == False:
+            if 'AV' in self.singleChannels:
+                ex_chs = tuple([self.channels_name.index(x) for x in self.exclude_av if x in self.channels_name])
+                temp_data = self.data
+                temp_data = np.delete(temp_data, ex_chs, axis=0)
+                av = np.mean(temp_data, axis=0)
+                #                    alpha=self.channels_alpha[self.channels_name[i]], linewidth=0.3)
+        x, y = self.processChan(x, idx, av)
+        self.axes.plot(x[start:end], y[start:end], color=color, picker=True, label=label,
                        alpha=self.channels_alpha[channel], linewidth=1)
 
     # 改变样本颜色
@@ -1216,6 +1227,7 @@ class EEGView(QWidget):
     def updateSample(self,sampleFilter):
         self.sampleFilter = sampleFilter
 
-
+    def annotatesignal(self,signal):
+        self.annotate=signal
 
 

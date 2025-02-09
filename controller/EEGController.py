@@ -30,6 +30,7 @@ class EEGController(QWidget):
         self.tableName = msg[6]
         self.pUid = msg[7]
         self.mainLabel = mainLabel
+        self.sampleFilter=[]
         self.view = EEGView()
         self.speed = {
             "1x": 3,
@@ -80,9 +81,9 @@ class EEGController(QWidget):
                 labelBit = msg[15]
                 type = msg[16]  # True:颅内 False:头皮
 
-                if type == True:  # 如果是颅内脑电，处理montage
-                    self.processIeegMontage(type)
-                self.dgroupFilter = self.channels
+                # if type == True:  # 如果是颅内脑电，处理montage
+                #     self.processIeegMontage(type)
+                # self.dgroupFilter = self.channels
 
                 self.grouped_states, sampleFilter = self.processSampleName(type_info)
 
@@ -156,10 +157,12 @@ class EEGController(QWidget):
         self.view.ui.tableWidget.itemClicked.connect(self.onSampleClicked)
         self.view.ui.hideWave.clicked.connect(self.hideWave)
         self.view.ui.hideState.clicked.connect(self.hideState)
+        self.view.ui.hideEvent.clicked.connect(self.hide_Event)
         self.view.ui.secondsSpan.lineEdit().editingFinished.connect(self.secondsSpanChange)
         self.view.ui.moveLength.lineEdit().editingFinished.connect(self.moveLengthChange)
         self.view.ui.sensitivity.lineEdit().editingFinished.connect(self.sensitivityChange)
         self.view.ui.returnBtn.clicked.connect(self.on_return_clicked)
+        self.view.ui.gblabelbtngroup.buttonClicked.connect(self.sampleselect_btn)
         #self.view.ui.subtractAverage.clicked.connect(self.subtractAverage)
 
         # 导联选择绑定
@@ -255,6 +258,8 @@ class EEGController(QWidget):
     # 隐藏状态
     def hideState(self):
         self.view.changeShowState()
+    def hide_Event(self):
+        self.view.changeShowEvent()
 
     # 点击秒线按钮
     def secondsLineClicked(self):
@@ -400,36 +405,65 @@ class EEGController(QWidget):
                 return
             mouseevent = event.mouseevent
             artist = event.artist
-            if self.view.isBanWave() or mouseevent.button != 1:
+            #不是左键
+            if mouseevent.button != 1:
                 return
-
-            # 鼠标左键
-            # 点击y轴标签
-            if isinstance(artist, mpl.text.Text):
-                pl = artist.get_text()
-                if pl == 'Reset':
-                    self.view.resetPickLabels()
-                else:
-                    self.view.checkPickLabels(pl)
-                self.view.focusLines()
-                # 点击线、点
-            elif isinstance(artist, mpl.lines.Line2D):
-                label = artist.get_label()
-                # 点击点
-                if label == "pp":
-                    return
-                # 点击线
-                if len(label.split('|')) == 1:
-                    pick_dot = self.view.clickPointStatus(label)
-                    # 第一个点
-                    if pick_dot == EEGView.PICK_FIRST:
-                        self.view.showFirstPoint(event)
-                    # 第二个点，在同一个通道上
-                    elif pick_dot == EEGView.PICK_SECOND:
-                        self.view.showSecondPoint(event)
-                # 点击样本
-                else:
-                    self.view.clickSample(artist)
+            if self.view.isinState():
+                return
+            if self.view.isinEvent():#进行事件标注
+                if isinstance(artist, mpl.text.Text):
+                    pl = artist.get_text()
+                    if pl == 'Reset':
+                        self.view.resetPickLabels()
+                    else:
+                        self.view.checkPickLabels(pl)
+                    self.view.focusLines()
+                    # 点击线、点
+                elif isinstance(artist, mpl.lines.Line2D):
+                    label = artist.get_label() #点击的线条标签
+                    # 点击点
+                    if label == "pp":
+                        return
+                    # 点击线
+                    if len(label.split('|')) == 1:
+                        pick_dot = self.view.clickPointStatus(label) #判断点第几个点
+                        # 第一个点
+                        if pick_dot == EEGView.PICK_FIRST:
+                            self.view.showFirstPoint(event)
+                        # 第二个点，在同一个通道上
+                        elif pick_dot == EEGView.PICK_SECOND:
+                            self.view.showSecondPoint(event)
+                    # 点击样本
+                    else:
+                        self.view.clickSample(artist)
+            if self.view.isinWave(): #进行波形标注
+                # 鼠标左键
+                # 点击y轴标签
+                if isinstance(artist, mpl.text.Text):
+                    pl = artist.get_text()
+                    if pl == 'Reset':
+                        self.view.resetPickLabels()
+                    else:
+                        self.view.checkPickLabels(pl)
+                    self.view.focusLines()
+                    # 点击线、点
+                elif isinstance(artist, mpl.lines.Line2D):
+                    label = artist.get_label() #点击的线条标签
+                    # 点击点
+                    if label == "pp":
+                        return
+                    # 点击线
+                    if len(label.split('|')) == 1:
+                        pick_dot = self.view.clickPointStatus(label)
+                        # 第一个点
+                        if pick_dot == EEGView.PICK_FIRST:
+                            self.view.showFirstPoint(event)
+                        # 第二个点，在同一个通道上
+                        elif pick_dot == EEGView.PICK_SECOND:
+                            self.view.showSecondPoint(event)
+                    # 点击样本
+                    else:
+                        self.view.clickSample(artist)
         except Exception as e:
             print("handlePickEvent", e)
 
@@ -566,6 +600,13 @@ class EEGController(QWidget):
         QApplication.processEvents()
         sampleMessage.show()
         sampleMessage.setAttribute(Qt.WA_DeleteOnClose)
+    def sampleselect_btn(self,button):
+        if button.text()=='状态':
+            self.view.annotatesignal(0)
+        elif button.text()=='波形':
+            self.view.annotatesignal(1)
+        elif button.text()=='事件':
+            self.view.annotatesignal(2)
 
     def onSampleConfirmed(self, sampleMessage, sampleFilter):
         sampleFilter = set(sampleFilter)

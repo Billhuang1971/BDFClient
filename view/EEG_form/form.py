@@ -465,6 +465,7 @@ class Ui_EEGView(object):
         self.gblabelbtngroup.addButton(self.gblabelbtn1)
         self.gblabelbtngroup.addButton(self.gblabelbtn2)
         self.gblabelbtngroup.addButton(self.gblabelbtn3)
+        self.gblabelbtn1.setChecked(True)
         self.layoutgbSl.addWidget(self.gblabelbtn1,1,0,1,1)
         self.layoutgbSl.addWidget(self.gblabelbtn2,1,1,1,1)
         self.layoutgbSl.addWidget(self.gblabelbtn3,1,2,1,1)
