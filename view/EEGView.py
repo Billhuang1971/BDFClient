@@ -852,8 +852,8 @@ class EEGView(QWidget):
                     if self.channels_name[i] == label[0]:
                         idx = i
                         break
-                l = int((label[1] - (self.begin * (self.sample_rate//self.nSample))))
-                r = int((label[2] - (self.begin * (self.sample_rate//self.nSample))))
+                l = int(max(0, label[1] - self.begin * self.sample_rate // self.nSample))
+                r = int(min(label[2] -(self.begin * self.sample_rate // self.nSample), self.winTime * self.sample_rate // self.nSample))
                 m = np.max(self.data[idx, l:r])
                 self.showCurLabel(type_name, label[0], str((label[2] - label[1])/(self.sample_rate//self.nSample)), str(b_t), str(e_t), str(m))
         elif self.is_status_showed is True:
@@ -882,7 +882,7 @@ class EEGView(QWidget):
                     idx = i
                     break
             l = int(max(0, (label[1] - (self.begin * (self.sample_rate // self.nSample)))))
-            r = int(min((label[2] - label[1]), self.winTime * (self.sample_rate // self.nSample)))
+            r = int(min((label[2] - (self.begin * (self.sample_rate // self.nSample))), self.winTime * (self.sample_rate // self.nSample)))
 
             m = np.max(self.data[idx, l:r])
             self.showCurLabel(type_name, label[0], str((label[2] - label[1])/(self.sample_rate//self.nSample)), str(b_t), str(e_t), str(m))
@@ -950,7 +950,7 @@ class EEGView(QWidget):
                 idx = i
                 break
         l = int(max(0, label[1] - self.begin * self.sample_rate // self.nSample))
-        r = int(min(label[2] - label[1], self.winTime * self.sample_rate // self.nSample))
+        r = int(min(label[2] -(self.begin * self.sample_rate // self.nSample), self.winTime * self.sample_rate // self.nSample))
         m = np.max(self.data[idx, l:r])
         self.showCurLabel(type_name, label[0], str(label[2] - label[1]), str(b_t), str(e_t), str(m))
         self.canvas.draw()
