@@ -407,6 +407,16 @@ class Ui_EEGView(object):
         self.tableWidget = QtWidgets.QTableWidget(self.groupBox2)
         self.tableWidget.setObjectName("tableWidget")
         self.glSample.addWidget(self.tableWidget, 2, 0, 1, 3)
+        self.tableWidget.setStyleSheet('''
+                            QTableWidget::item:selected {
+                                background-color: lightblue;
+                                color: black;
+                            }
+                            QTableWidget::item:selected:active {
+                                background-color: lightblue;
+                                color: black;
+                            }
+                        ''')
 
         self.labelTypeInfo = QtWidgets.QLabel(self.gbSample)
         self.labelTypeInfo.setObjectName("labelTypeInfo")

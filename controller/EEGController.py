@@ -137,7 +137,7 @@ class EEGController(QWidget):
         try:
             msg = REPData[3][2]
             data = msg[0]
-            labels = msg[1]
+            labels = msg[1]#channel,begin,end,typeid
             self.data.setData(data, labels)
             data, labels = self.data.getData()
             self.view.refreshWin(data, labels)
@@ -426,13 +426,7 @@ class EEGController(QWidget):
                         return
                     # 点击线
                     if len(label.split('|')) == 1:
-                        pick_dot = self.view.clickPointStatus(label) #判断点第几个点
-                        # 第一个点
-                        if pick_dot == EEGView.PICK_FIRST:
-                            self.view.showFirstPoint(event)
-                        # 第二个点，在同一个通道上
-                        elif pick_dot == EEGView.PICK_SECOND:
-                            self.view.showSecondPoint(event)
+                        self.view.EventPoint(event)
                     # 点击样本
                     else:
                         self.view.clickSample(artist)
