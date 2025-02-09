@@ -81,9 +81,9 @@ class EEGController(QWidget):
                 labelBit = msg[15]
                 type = msg[16]  # True:颅内 False:头皮
 
-                # if type == True:  # 如果是颅内脑电，处理montage
-                #     self.processIeegMontage(type)
-                # self.dgroupFilter = self.channels
+                if type == True:  # 如果是颅内脑电，处理montage
+                    self.processIeegMontage(type)
+                self.dgroupFilter = self.channels
 
                 self.grouped_states, sampleFilter = self.processSampleName(type_info)
 
@@ -550,6 +550,7 @@ class EEGController(QWidget):
         #self.view.remove_mean(self.leftTime,self.rightTime,'on')
 
     def onrRefClicked(self):
+        # 当前方案名
         curRefName = self.view.getCurrentRef()
         montagesDialog = QDialogRef(self.montage, curRefName)
 
@@ -577,6 +578,7 @@ class EEGController(QWidget):
             self.channels = self.montage[selected_text]
         self.view.Refchange(selected_text)
         montagesDialog.close()
+        self.onChannelBtnClicked()
 
     def processSampleName(self, type_info):
         # 遍历数据,grouped_states={'正常波形':[正常波形名]}
@@ -588,7 +590,7 @@ class EEGController(QWidget):
                 grouped_states[state_type] = []
             grouped_states[state_type].append((name))  # 存储 ID 和名称
             sampleFilter.append(name)
-        return grouped_states,sampleFilter
+        return grouped_states, sampleFilter
 
     def onSampleBtnClicked(self):
         sampleFilter = self.view.getSampleFilter()
@@ -600,6 +602,7 @@ class EEGController(QWidget):
         QApplication.processEvents()
         sampleMessage.show()
         sampleMessage.setAttribute(Qt.WA_DeleteOnClose)
+
     def sampleselect_btn(self,button):
         if button.text()=='状态':
             self.view.annotatesignal(0)
@@ -641,5 +644,4 @@ class EEGController(QWidget):
                 shownChannels.add(radio_button.text())
         shownChannels = list(shownChannels)
         self.view.updateShownChannels(shownChannels)
-        print(shownChannels)
         channelMessage.close()

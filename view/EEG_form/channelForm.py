@@ -139,7 +139,7 @@ class Ui_channel(QDialog):
                 for j in range(len(chs)-1):
                     chs[j] = chs[j].split('-')[0]
                     chs[j + 1] = chs[j + 1].split('-')[0]
-                    ch=" - ".join([chs[j], chs[j + 1]])
+                    ch = "-".join([chs[j], chs[j + 1]])
                     self.ck_g[index].setText(ch)
                     if ch in self.dgroupFilter:
                         self.ck_g[index].setChecked(True)
@@ -157,7 +157,7 @@ class Ui_channel(QDialog):
                 for j in range(len(chs)-2):
                     chs[j] = chs[j].split('-')[0]
                     chs[j + 2] = chs[j + 2].split('-')[0]
-                    ch=" - ".join([chs[j], chs[j + 2]])
+                    ch = "-".join([chs[j], chs[j + 2]])
                     self.ck_g[index].setText(ch)
                     if ch in self.dgroupFilter:
                         self.ck_g[index].setChecked(True)
