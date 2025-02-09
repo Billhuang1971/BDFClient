@@ -623,7 +623,7 @@ class EEGView(QWidget):
         self.end += self.moveLength
         if self.end > self.duration:
             self.end = self.duration
-            self.begin = self.begin - self.winTime
+            self.begin = self.end - self.winTime
         self.changeTime()
         return self.begin * self.sample_rate // self.nSample
 
