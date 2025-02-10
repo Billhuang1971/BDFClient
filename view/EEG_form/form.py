@@ -135,7 +135,7 @@ class Ui_EEGView(object):
         self.subtractAverage = QtWidgets.QRadioButton(self.groupBox)
 
         self.subtractAverage.setObjectName("subtractAverage")
-        self.subtractAverage.setChecked(True)
+        self.subtractAverage.setChecked(False)
         self.subtractAverage.setAutoExclusive(False)
         self.subtractAverage.setLayoutDirection(Qt.RightToLeft)
         self.subtractAverage.setStyleSheet("""

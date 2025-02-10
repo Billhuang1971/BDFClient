@@ -66,6 +66,7 @@ class EEGView(QWidget):
         self.winTime = 0
         self.sensitivity = 10
         self.showSecondLine = True
+        self.subtractAverage = False
         self.time_lines = []
         self.wave_lines = [] #绘制出的波形
         self.state_lines = [] #绘制出的状态
@@ -77,6 +78,11 @@ class EEGView(QWidget):
 
         self.secondsSpan = 30
         self.createPaintTools()
+
+    # 减平均
+    def changeSubtractAverage(self):
+        self.subtractAverage = self.subtractAverage is False
+        self.refreshWin()
 
     # 初始化View
     def initView(self, type_info, channels, lenTime, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, dawnSample, typeEEG, montage, sampleFilter, channels_index):
@@ -270,76 +276,6 @@ class EEGView(QWidget):
                 idx -= 1
             self.sample_info = sample_info + self.sample_info[idx + 1:]
 
-    # def testmonitor(self):
-    #
-    #     def adjust_spacing(data,lowlim, highlim):  # data ，起始点下标，终止点下标
-    #         # 计算每个通道的标准差
-    #         stds = np.std(data[:, lowlim:highlim], axis=1)
-    #         # 排序并去除最小和最大值
-    #         stds_sorted = np.sort(stds)
-    #         if len(stds_sorted) > 2:
-    #             stds_filtered = stds_sorted[1:-1]  # 去掉最小和最大值
-    #             mean_std = np.mean(stds_filtered)
-    #         else:
-    #             mean_std = np.mean(stds_sorted)  # 如果通道数量小于等于2，直接取平均值
-    #         # 设置 g.spacing 为标准差乘以系数
-    #         g_spacing = mean_std * 3
-    #
-    #         # 确保 g.spacing 在合理范围内
-    #         if g_spacing == 0 or np.isnan(g_spacing):
-    #             g_spacing = 1
-    #         if g_spacing > 10:
-    #             g_spacing = round(g_spacing)
-    #
-    #         return g_spacing
-    #
-    #     def adjust_signal_position(data, g_spacing, g_elec_offset, g_disp_chans, total_channels):
-    #         """
-    #         调整EEG信号在Y轴上的显示位置。
-    #         参数:
-    #         data -- EEG信号数据，每行代表一个通道，每列代表一个时间点
-    #         g_spacing -- 垂直间距，控制通道间的间隔
-    #         g_elecoffset -- 电极偏移量，控制所有通道的起始垂直位置
-    #         g_disp_chans -- 显示的通道数
-    #         total_channels -- 总通道数
-    #         返回:
-    #         adjusted_data -- 调整后的EEG信号数据
-    #         y_positions -- 每个通道的Y轴位置
-    #         """
-    #
-    #         # 确保 g.elecoffset 在合理范围内
-    #         if g_elec_offset < 0:
-    #             g_elec_offset = 0
-    #         elif g_elec_offset + g_disp_chans > total_channels:
-    #             g_elec_offset = total_channels - g_disp_chans
-    #         # 计算每个通道的Y轴位置
-    #         y_positions = np.arange(g_elec_offset, g_elec_offset + g_disp_chans) * g_spacing
-    #         # 调整每个通道的信号位置
-    #         adjusted_data = np.zeros_like(data)
-    #         for i in range(g_disp_chans):
-    #             channel_data = data[i, :]  # 获取第i个通道的数据
-    #             # 根据Y轴位置调整信号
-    #             adjusted_data[i, :] = channel_data + y_positions[i]
-    #         return adjusted_data, y_positions
-    #
-    #     def set_yaxis_limits(g_spacing, g_chans):
-    #         """
-    #         设置Y轴的显示范围。
-    #
-    #         参数:
-    #         g_spacing -- 每个通道之间的垂直间距
-    #         g_chans -- 总通道数
-    #
-    #         返回:
-    #         y_lim -- Y轴的范围
-    #         """
-    #         y_lim = (0, (g_chans + 1) * g_spacing)  # Y轴的最大值是 (g.chans + 1) * g.spacing
-    #         return y_lim
-    #     data=self.data*(10**-6)
-    #     g_spacing=adjust_spacing(data,0,(((self.end - self.begin) * self.sample_rate // self.dawnSample)-1))
-    #     adjusted_data,y_positions=adjust_signal_position(data,g_spacing,0,len(self.channels_name),len(self.channels_name))
-    #     y_lim=(29 + 1) * g_spacing
-    #
     # def remove_mean(data, lowlim, highlim, g_submean):
     #     """
     #     如果 g.submean 是 'on'，从信号中去除均值。
@@ -1139,15 +1075,15 @@ class EEGView(QWidget):
     def processChan(self):
         try:
             self.plottedData = []
-            for i in range(len(self.channels_name)):
-                av = None
-                # if self.typeEEG == False:
-                #     if 'AV' in self.singleChannels:
-                #         ex_chs = tuple([self.channels_name.index(x) for x in self.exclude_av if x in self.channels_name])
-                #         temp_data = self.data
-                #         temp_data = np.delete(temp_data, ex_chs, axis=0)
-                #         av = np.mean(temp_data, axis=0)
+            av = None
+            # if self.typeEEG == False:
+            #     if 'AV' in self.singleChannels:
+            #         ex_chs = tuple([self.channels_name.index(x) for x in self.exclude_av if x in self.channels_name])
+            #         temp_data = self.data
+            #         temp_data = np.delete(temp_data, ex_chs, axis=0)
+            #         av = np.mean(temp_data, axis=0)
 
+            for i in range(len(self.channels_name)):
                 index = self.channels_index.get(self.channels_name[i].split('-')[0])
                 label = self.channels_name[i]
                 if '-' in label:
@@ -1170,10 +1106,16 @@ class EEGView(QWidget):
                 else:
                     y = np.copy(self.data[index])
 
+                if self.subtractAverage:
+                    y = y - np.mean(y)
+
                 y = y / (self.sensitivity * self.axesYWidthMM / (len(self.channels_name) + 1))
                 y = -y + i + 1
+
+
                 self.plottedData.append(y)
             self.plottedData = np.array(self.plottedData)
+            print(self.plottedData)
         except Exception as e:
             print("processChan", e)
 

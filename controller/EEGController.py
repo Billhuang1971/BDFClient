@@ -158,6 +158,7 @@ class EEGController(QWidget):
         self.view.ui.hideWave.clicked.connect(self.hideWave)
         self.view.ui.hideState.clicked.connect(self.hideState)
         self.view.ui.hideEvent.clicked.connect(self.hide_Event)
+        self.view.ui.subtractAverage.clicked.connect(self.subtractAverageClicked)
         self.view.ui.secondsSpan.lineEdit().editingFinished.connect(self.secondsSpanChange)
         self.view.ui.moveLength.lineEdit().editingFinished.connect(self.moveLengthChange)
         self.view.ui.sensitivity.lineEdit().editingFinished.connect(self.sensitivityChange)
@@ -207,6 +208,9 @@ class EEGController(QWidget):
             if sms.get(t[3]) is None:
                 continue
             sms[t[3]].addAction(action)
+
+    def subtractAverageClicked(self):
+        self.view.changeSubtractAverage()
 
     # 灵敏度修改
     def sensitivityChange(self):
