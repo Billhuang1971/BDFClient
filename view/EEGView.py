@@ -103,6 +103,7 @@ class EEGView(QWidget):
             self.sample_rate = sampleRate
             self.popMenu1 = QMenu(self.canvas)
             self.popMenu2 = QMenu(self.canvas)
+            self.popMenu3 = QMenu(self.canvas)
             self.updateYAxis(channels)
             self.setAxHscroll()
             self.showPatientInfo(patientInfo, fileName,
@@ -788,8 +789,10 @@ class EEGView(QWidget):
     def releaseMenu(self):
         if self.annotate == EEGView.STATE_ANNOTATE:
             self.popMenu2.exec_(QCursor.pos())
-        else:
+        elif self.annotate == EEGView.WAVE_ANNOTATE:
             self.popMenu1.exec_(QCursor.pos())
+        else:
+            self.popMenu3.exec_(QCursor.pos())
 
     # 绘制线透明度
     def focusLines(self):

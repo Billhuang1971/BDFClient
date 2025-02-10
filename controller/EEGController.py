@@ -183,18 +183,24 @@ class EEGController(QWidget):
         self.view.popMenu1.addSeparator()
         self.view.popMenu2.addAction(cancelAction)
         self.view.popMenu2.addSeparator()
+        self.view.popMenu3.addAction(cancelAction)
+        self.view.popMenu3.addSeparator()
         delAction = QAction("删除样本", self, triggered=self.delSample)
         self.view.popMenu1.addAction(delAction)
         self.view.popMenu1.addSeparator()
         self.view.popMenu2.addAction(delAction)
         self.view.popMenu2.addSeparator()
+        self.view.popMenu3.addAction(delAction)
+        self.view.popMenu3.addSeparator()
         # 向右键菜单栏添加波形和状态
         sms = {}
-        groups = ['正常波形', '异常波形', '伪迹波形', '正常状态', '异常状态', '伪迹状态']
+        groups = ['正常波形', '异常波形', '伪迹波形', '正常状态', '异常状态', '伪迹状态', '正常事件', '异常事件']
         for g in groups[:3]:
             sms[g] = self.view.popMenu1.addMenu(g)
-        for g in groups[3:]:
+        for g in groups[3:6]:
             sms[g] = self.view.popMenu2.addMenu(g)
+        for g in groups[6:]:
+            sms[g] = self.view.popMenu3.addMenu(g)
         for t in type_info:
             action = QAction(t[1], self)
             action.triggered.connect(lambda chk, t=t: self.handleMenuAction(t))
