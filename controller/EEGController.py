@@ -69,7 +69,7 @@ class EEGController(QWidget):
                 channels_index = msg[4]
                 sample_rate = msg[5]
                 self.lenFile = msg[6]
-                self.duration = msg[7]
+                lenTime = msg[7]
                 self.start_time = msg[8]
                 self.end_time = msg[9]
                 type_info = msg[1]
@@ -87,7 +87,7 @@ class EEGController(QWidget):
 
                 self.grouped_states, sampleFilter = self.processSampleName(type_info)
 
-                self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.dawnSample, typeEEG, self.montage, sampleFilter, channels_index)
+                self.view.initView(type_info, self.channels, lenTime, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.dawnSample, typeEEG, self.montage, sampleFilter, channels_index)
                 self.connetEvent(type_info)
 
                 self.data = EEGData(data, self.lenFile, self.lenBlock, self.lenWin, labels)

@@ -60,7 +60,7 @@ class EEGView(QWidget):
         self.state_right = None
         self.state_left_line = None
         self.state_right_line = None
-        self.duration = None
+        self.lenTime = None
         self.paint_length = None
         self.scroll_position = None
         self.winTime = 0
@@ -79,7 +79,7 @@ class EEGView(QWidget):
         self.createPaintTools()
 
     # 初始化View
-    def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, dawnSample, typeEEG, montage, sampleFilter, channels_index):
+    def initView(self, type_info, channels, lenTime, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, dawnSample, typeEEG, montage, sampleFilter, channels_index):
         try:
             # 处理单通道名，获取每个导联所映射的通道
             self.channels_index = channels_index
@@ -98,7 +98,7 @@ class EEGView(QWidget):
             self.dawnSample = dawnSample
             self.begin = 0
             self.end = self.winTime
-            self.duration = duration
+            self.lenTime = lenTime
             self.labelBit = labelBit
             self.sample_rate = sampleRate
             self.popMenu1 = QMenu(self.canvas)
@@ -188,16 +188,16 @@ class EEGView(QWidget):
         self.begin += self.moveLength
         self.end += self.moveLength
         cmd = True
-        if self.end > self.duration:
-            self.begin = self.duration - self.winTime
-            self.end = self.duration
+        if self.end > self.lenTime:
+            self.begin = self.lenTime - self.winTime
+            self.end = self.lenTime
             cmd = False
         self.changeTime()
         return cmd, self.begin * self.sample_rate // self.dawnSample
 
     # 时间改变
     def timeChange(self, begin):
-        if begin < 0 or begin + self.winTime > self.duration:
+        if begin < 0 or begin + self.winTime > self.lenTime:
             self.view.ui.editTime.setText("00:00:00")
             self.beign = 0
             self.end = self.winTime
@@ -248,9 +248,9 @@ class EEGView(QWidget):
         self.dawnSample = 1 if nDotSec >= self.sample_rate else int(round(self.sample_rate / nDotSec))
         self.lenWin = nSecWin * self.sample_rate // self.dawnSample
         self.end = self.begin + self.winTime
-        if self.end > self.duration:
-            self.begin = self.duration - self.winTime
-            self.end = self.duration
+        if self.end > self.lenTime:
+            self.begin = self.lenTime - self.winTime
+            self.end = self.lenTime
         readFrom = self.begin * self.sample_rate
         return self.dawnSample, self.lenWin, readFrom
 
@@ -588,16 +588,16 @@ class EEGView(QWidget):
         self.canvas.draw()
 
     def setAxHscroll(self):
-        self.ax_hscroll.set_xlim(0, self.duration)
+        self.ax_hscroll.set_xlim(0, self.lenTime)
         self.ax_hscroll.get_yaxis().set_visible(False)
-        hsel_patch = mpl.patches.Rectangle((0, 0), self.duration,
+        hsel_patch = mpl.patches.Rectangle((0, 0), self.lenTime,
                                            1,
                                            edgecolor='k',
                                            facecolor=(0.75, 0.75, 0.75),
                                            alpha=0.25, linewidth=1,
                                            clip_on=False)
         self.ax_hscroll.add_patch(hsel_patch)
-        hxticks = np.linspace(0, self.duration, 11)
+        hxticks = np.linspace(0, self.lenTime, 11)
         self.ax_hscroll.set_xticks(hxticks)
         hxlabels = [time.strftime('%H:%M:%S', time.gmtime(int(hxticks[i])))
                     for i in range(0, 11)]
@@ -618,7 +618,7 @@ class EEGView(QWidget):
                 r = l + 1
                 while r <= self.nDotWin and self.labelBit[r]:
                     r += 1
-                self.axHscrollSpan.append(self.ax_hscroll.axvspan(l * self.duration / self.nDotWin, (r - 1) * self.duration / self.nDotWin, facecolor="green", alpha=0.5))
+                self.axHscrollSpan.append(self.ax_hscroll.axvspan(l * self.lenTime / self.nDotWin, (r - 1) * self.lenTime / self.nDotWin, facecolor="green", alpha=0.5))
                 l = r
             else:
                 l += 1
@@ -633,12 +633,12 @@ class EEGView(QWidget):
 
     # 时间轴点击事件
     def onAxhscrollClicked(self, x):
-        if x + self.winTime <= self.duration:
+        if x + self.winTime <= self.lenTime:
             self.begin = x
             self.end = x + self.winTime
         else:
-            self.begin = max(0, self.duration - self.winTime)
-            self.end = self.duration
+            self.begin = max(0, self.lenTime - self.winTime)
+            self.end = self.lenTime
         return self.begin * self.sample_rate // self.dawnSample
 
     # 前进一屏操作
@@ -655,8 +655,8 @@ class EEGView(QWidget):
     def onBtnDownClicked(self):
         self.begin += self.moveLength
         self.end += self.moveLength
-        if self.end > self.duration:
-            self.end = self.duration
+        if self.end > self.lenTime:
+            self.end = self.lenTime
             self.begin = self.end - self.winTime
         self.changeTime()
         return self.begin * self.sample_rate // self.dawnSample
@@ -1021,8 +1021,8 @@ class EEGView(QWidget):
                 idx += 1
             self.states.insert(idx, state)
             self.paintAState(state, "green")
-            lBit = (self.state_left // self.sample_rate) * self.nDotWin // self.duration
-            rBit = (self.state_right // self.sample_rate) * self.nDotWin // self.duration
+            lBit = (self.state_left // self.sample_rate) * self.nDotWin // self.lenTime
+            rBit = (self.state_right // self.sample_rate) * self.nDotWin // self.lenTime
             self.labelBit[lBit: rBit] = True
             self.paintLabelBit()
             self.showLabels()
@@ -1057,8 +1057,8 @@ class EEGView(QWidget):
             self.resetPickLabels()
             self.focusLines()
             self.paintAWave(l, r, wave[0], label, color)
-            lBit = (begin * self.dawnSample // self.sample_rate) * self.nDotWin // self.duration
-            rBit = (end * self.dawnSample // self.sample_rate) * self.nDotWin // self.duration
+            lBit = (begin * self.dawnSample // self.sample_rate) * self.nDotWin // self.lenTime
+            rBit = (end * self.dawnSample // self.sample_rate) * self.nDotWin // self.lenTime
             self.labelBit[lBit: rBit] = True
             self.paintLabelBit()
             self.canvas.draw()
