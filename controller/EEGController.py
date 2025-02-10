@@ -63,7 +63,7 @@ class EEGController(QWidget):
             else:
                 msg = REPData[2]
                 self.moving = False
-                self.nSample = msg[11]
+                self.dawnSample = msg[11]
                 self.patientInfo = msg[0]
                 self.channels = msg[3]
                 channels_index = msg[4]
@@ -87,7 +87,7 @@ class EEGController(QWidget):
 
                 self.grouped_states, sampleFilter = self.processSampleName(type_info)
 
-                self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.nSample, type, self.montage, sampleFilter, channels_index)
+                self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.dawnSample, type, self.montage, sampleFilter, channels_index)
                 self.connetEvent(type_info)
 
                 self.data = EEGData(data, self.lenFile, self.lenBlock, self.lenWin, labels)
@@ -214,7 +214,7 @@ class EEGController(QWidget):
                 return
             if cmd == 1:
                 self.data.insertSample(label)
-                self.client.insertSample([label, self.tableName, self.check_id, self.file_id, self.user_id, self.nSample])
+                self.client.insertSample([label, self.tableName, self.check_id, self.file_id, self.user_id, self.dawnSample])
             # else:
             #
         except Exception as e:
@@ -232,10 +232,10 @@ class EEGController(QWidget):
     def secondsSpanChange(self):
         try:
             self.nSecWin, nDotSec = self.view.secondsSpanChange()
-            self.nSample, self.lenWin, readFrom = self.view.reCalc(nDotSec, self.nSecWin)
+            self.dawnSample, self.lenWin, readFrom = self.view.reCalc(nDotSec, self.nSecWin)
             self.lenBlock = min(self.lenFile, self.nWinBlock * self.lenWin)
             self.data.resetEEGData(self.lenBlock, self.lenWin, readFrom)
-            self.client.loadEEGData([self.check_id, self.file_id, readFrom, readFrom + self.lenBlock, self.nSample, self.tableName, self.pUid])
+            self.client.loadEEGData([self.check_id, self.file_id, readFrom, readFrom + self.lenBlock, self.dawnSample, self.tableName, self.pUid])
         except Exception as e:
             print("secondsSpanChange", e)
 
@@ -490,7 +490,7 @@ class EEGController(QWidget):
             inBlock, readFrom, readTo, = self.data.queryRange(begin)
             if inBlock is False:
                 self.loading = True
-                self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.nSample, readTo * self.nSample, self.nSample, self.tableName, self.pUid])
+                self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample, self.dawnSample, self.tableName, self.pUid])
             else:
                 data, labels = self.data.getData()
                 self.view.refreshWin(data, labels)
