@@ -97,8 +97,8 @@ class EEGController(QWidget):
         except Exception as e:
             print("openEEGFileRes", e)
 
-    def processIeegMontage(self,type):
-        self.montage['defualt'] = self.channels
+    def processIeegMontage(self, type):
+        self.montage['default'] = self.channels
         list1 = []
         list2 = []
         if type == True:
@@ -617,9 +617,9 @@ class EEGController(QWidget):
         sampleMessage.close()
 
     def onChannelBtnClicked(self):
-        type, curRefName, dgroup, shownChannels  =self.view.checkType()
+        type, curRefName, dgroup, shownChannels = self.view.checkType()
         if type == True:
-            dgroup = self.appUtil.bdfMontage(self.view.refList['defualt'])
+            dgroup = self.appUtil.bdfMontage(self.view.refList['default'])
         channelMessage = QDialogChannel(curRefName, dgroup, shownChannels)
         channelMessage.ui.pb_ok.clicked.connect(lambda: self.onChannelConfirmed(channelMessage))
         channelMessage.ui.pb_cancel.clicked.connect(
@@ -632,10 +632,10 @@ class EEGController(QWidget):
     def onChannelConfirmed(self, channelMessage):
         shownChannels = set(self.view.getShownChannel())
         for radio_button in channelMessage.ui.ck_g:
-            if radio_button.isChecked() == False and radio_button.text() in shownChannels:
-                shownChannels.remove(radio_button.text())
-            if radio_button.isChecked() == True and radio_button.text() not in shownChannels:
-                shownChannels.add(radio_button.text())
+            if radio_button.isChecked() is False and radio_button.text().upper() in shownChannels:
+                shownChannels.remove(radio_button.text().upper())
+            if radio_button.isChecked() is True and radio_button.text().upper() not in shownChannels:
+                shownChannels.add(radio_button.text().upper())
         shownChannels = list(shownChannels)
         self.view.updateShownChannels(shownChannels)
         channelMessage.close()

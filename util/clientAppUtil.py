@@ -228,7 +228,8 @@ class clientAppUtil():
     #                     dgroup.setdefault(bkey,bg)
     #     print(dgroup)
     #     return dgroup
-    def bdfMontage(self,channels):
+
+    def bdfMontage(self, channels):
         ch0s = ['Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'T3', 'C3', 'Cz', 'C4', 'T4', 'T5', 'P3', 'Pz', 'P4', 'P6',
                 'O1', 'O2']
 

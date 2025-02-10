@@ -11,13 +11,13 @@ class QDialogRef(QDialog):
         self.ui.setupUi(self, dgroup, curRef)
 
 class QDialogSample(QDialog):
-    def __init__(self, dgroup,samplefilter, parent=None):
+    def __init__(self, dgroup, samplefilter, parent=None):
         super().__init__(parent)
         self.ui = Ui_Sample()
         self.ui.setupUi(self, dgroup, samplefilter)
 
 class QDialogChannel(QDialog):
-    def __init__(self,montage,dgroup, dgroupFilter, parent=None):
+    def __init__(self, montage, dgroup, dgroupFilter, parent=None):
         super().__init__(parent)
         self.ui = Ui_channel()
         self.ui.setupUi(self, montage, dgroup, dgroupFilter)

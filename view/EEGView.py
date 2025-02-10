@@ -86,9 +86,7 @@ class EEGView(QWidget):
             self.type = type  # True:颅内脑电 False：头皮脑电
             #refList：参考方案列表，即montage
             self.refList = dict(montage)
-            self.curRef = 'defualt'
-
-
+            self.curRef = 'default'
 
             self.allChannel = {key: True for key in channels}
             self.sampleFilter = sampleFilter
@@ -105,7 +103,7 @@ class EEGView(QWidget):
             self.sample_rate = sampleRate
             self.popMenu1 = QMenu(self.canvas)
             self.popMenu2 = QMenu(self.canvas)
-            self.updateYAxis(channels_name=channels)
+            self.updateYAxis(channels)
             self.setAxHscroll()
             self.showPatientInfo(patientInfo, fileName,
                                       measureDate, startTime,
@@ -574,13 +572,16 @@ class EEGView(QWidget):
 
     # 更新Y轴
     def updateYAxis(self, channels_name=[]):
-        self.channels_name = channels_name
+        self.channels_name = []
+        for channel in channels_name:
+            if self.channels_index.get(channel.split('-')[0]) is not None:
+                self.channels_name.append(channel)
         self.resetPickLabels()
-        max_y = len(channels_name) + 1
+        max_y = len(self.channels_name) + 1
         # self.axes.clear()
         self.axes.set_ylim([0, max_y])
         self.axes.set_yticks(range(max_y))
-        self.axes.set_yticklabels(['Reset'] + channels_name)
+        self.axes.set_yticklabels(['Reset'] + self.channels_name)
         for ytl in self.axes.get_yticklabels():
             ytl.set_picker(True)
             ytl.set_fontsize(10)
@@ -1153,49 +1154,54 @@ class EEGView(QWidget):
     def Refchange(self, Ref):
         self.curRef = Ref
         chanList = self.refList[Ref]
-        self.allChannel = {key: True for key in chanList}
+        self.allChannel = {key.upper(): True for key in chanList}
 
     def processChan(self):
-        self.plottedData = []
-        for i in range(len(self.channels_name)):
-            av = None
-            # if self.type == False:
-            #     if 'AV' in self.singleChannels:
-            #         ex_chs = tuple([self.channels_name.index(x) for x in self.exclude_av if x in self.channels_name])
-            #         temp_data = self.data
-            #         temp_data = np.delete(temp_data, ex_chs, axis=0)
-            #         av = np.mean(temp_data, axis=0)
-            index = self.channels_index[self.channels_name[i].split('-')[0]]
-            label = self.channels_name[i]
-            if '-' in label:
-                g1, g2 = label.split('-')
-                g1 = g1.strip()
-                g2 = g2.strip()
-                try:
-                    g1_index = self.channels_index[g1]
-                except Exception as e:
-                    print(e)
-                y1 = self.data[g1_index]
-                if g2 == 'REF':
-                    y2 = 0
-                elif g2 == 'AV':
-                    y2 = av
-                else:
-                    g2_index = self.channels_index[g2]
-                    y2 = self.data[g2_index]
-                y = y1 - y2
-            else:
-                y = np.copy(self.data[index])
+        try:
+            self.plottedData = []
+            for i in range(len(self.channels_name)):
+                av = None
+                # if self.type == False:
+                #     if 'AV' in self.singleChannels:
+                #         ex_chs = tuple([self.channels_name.index(x) for x in self.exclude_av if x in self.channels_name])
+                #         temp_data = self.data
+                #         temp_data = np.delete(temp_data, ex_chs, axis=0)
+                #         av = np.mean(temp_data, axis=0)
 
-            y = y / (self.sensitivity * self.axesYWidthMM / (len(self.channels_name) + 1))
-            y = -y + i + 1
-            self.plottedData.append(y)
-        self.plottedData = np.array(self.plottedData)
+                index = self.channels_index.get(self.channels_name[i].split('-')[0])
+                label = self.channels_name[i]
+                if '-' in label:
+                    g1, g2 = label.split('-')
+                    g1 = g1.strip()
+                    g2 = g2.strip()
+                    try:
+                        g1_index = self.channels_index[g1]
+                    except Exception as e:
+                        print(e)
+                    y1 = self.data[g1_index]
+                    if g2 == 'REF':
+                        y2 = 0
+                    elif g2 == 'AV':
+                        y2 = av
+                    else:
+                        g2_index = self.channels_index[g2]
+                        y2 = self.data[g2_index]
+                    y = y1 - y2
+                else:
+                    y = np.copy(self.data[index])
+
+                y = y / (self.sensitivity * self.axesYWidthMM / (len(self.channels_name) + 1))
+                y = -y + i + 1
+                self.plottedData.append(y)
+            self.plottedData = np.array(self.plottedData)
+        except Exception as e:
+            print("processChan", e)
 
     def getCurrentRef(self):
         return self.curRef
 
     def getCurrentRefList(self):
+        print(self.refList)
         return self.refList[self.curRef]
 
     def checkType(self):
@@ -1210,7 +1216,7 @@ class EEGView(QWidget):
     def getShownChannel(self):
         return self.channels_name
 
-    def updateShownChannels(self,shownChannels):
+    def updateShownChannels(self, shownChannels):
         channel = []
         for key in self.allChannel.keys():
             if key in shownChannels:

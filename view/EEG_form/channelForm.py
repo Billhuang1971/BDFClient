@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import QLabel, QDialog
 
 
 class Ui_channel(QDialog):
-    def setupUi(self,  Setting, montage,dgroup,dgroupFilter):
+    def setupUi(self,  Setting, montage, dgroup, dgroupFilter):
         Setting.setObjectName("Setting")
         Setting.resize(1380, 766)
 
@@ -72,7 +72,7 @@ class Ui_channel(QDialog):
 
             # 对应的复选框控件
             if self.montage == '单极':
-                chsIndex = len(chs)-1
+                chsIndex = len(chs) - 1
             elif self.montage == '双极':
                 chsIndex = len(chs) - 2
             else:
@@ -174,7 +174,7 @@ class Ui_channel(QDialog):
                 chs = self.dgroup.get(self.dgroupKeys[i])
                 for j in range(len(chs)):
                     self.ck_g[index].setText(f"{chs[j]}")
-                    if chs[j] in self.dgroupFilter:
+                    if chs[j].upper() in self.dgroupFilter:
                         self.ck_g[index].setChecked(True)
                     else:
                         self.ck_g[index].setChecked(False)
