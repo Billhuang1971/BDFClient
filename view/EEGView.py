@@ -79,11 +79,11 @@ class EEGView(QWidget):
         self.createPaintTools()
 
     # 初始化View
-    def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, dawnSample, type, montage, sampleFilter, channels_index):
+    def initView(self, type_info, channels, duration, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, dawnSample, typeEEG, montage, sampleFilter, channels_index):
         try:
             # 处理单通道名，获取每个导联所映射的通道
             self.channels_index = channels_index
-            self.type = type  # True:颅内脑电 False：头皮脑电
+            self.typeEEG = typeEEG  # True:颅内脑电 False：头皮脑电
             #refList：参考方案列表，即montage
             self.refList = dict(montage)
             self.curRef = 'default'
@@ -1138,7 +1138,7 @@ class EEGView(QWidget):
             self.plottedData = []
             for i in range(len(self.channels_name)):
                 av = None
-                # if self.type == False:
+                # if self.typeEEG == False:
                 #     if 'AV' in self.singleChannels:
                 #         ex_chs = tuple([self.channels_name.index(x) for x in self.exclude_av if x in self.channels_name])
                 #         temp_data = self.data
@@ -1182,13 +1182,13 @@ class EEGView(QWidget):
         return self.refList[self.curRef]
 
     def checkType(self):
-        if self.type == False:
+        if self.typeEEG == False:
             curRef = self.getCurrentRef()
             curRefList = self.getCurrentRefList()
             dgroup = {curRef: curRefList}
         else:
             dgroup = {}
-        return self.type, self.curRef, dgroup, self.channels_name
+        return self.typeEEG, self.curRef, dgroup, self.channels_name
 
     def getShownChannel(self):
         return self.channels_name
@@ -1205,7 +1205,16 @@ class EEGView(QWidget):
         self.refreshWin()
 
     def getSampleFilter(self):
-        return self.sampleFilter
+        tempt=[]
+        for i in self.type_info:
+            if self.is_waves_showed and (i[3][-2:]=='波形' or i[2][-2:]=='波形'):
+                tempt.append(i[1])
+                print(tempt)
+            elif self.is_status_showed and (i[3][-2:] =='状态'or i[2][-2:]=='状态'):
+                tempt.append(i[1])
+            elif self.is_Event_showed and i[3][-2:]=='事件':
+                tempt.append(i[1])
+        return tempt
 
     def updateSample(self,sampleFilter):
         self.sampleFilter = sampleFilter

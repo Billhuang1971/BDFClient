@@ -79,15 +79,15 @@ class EEGController(QWidget):
                 data = msg[13]
                 labels = msg[14]
                 labelBit = msg[15]
-                type = msg[16]  # True:颅内 False:头皮
+                typeEEG = msg[16]  # True:颅内 False:头皮
 
-                if type == True:  # 如果是颅内脑电，处理montage
-                    self.processIeegMontage(type)
+                if typeEEG == True:  # 如果是颅内脑电，处理montage
+                    self.processIeegMontage(typeEEG)
                 self.dgroupFilter = self.channels
 
                 self.grouped_states, sampleFilter = self.processSampleName(type_info)
 
-                self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.dawnSample, type, self.montage, sampleFilter, channels_index)
+                self.view.initView(type_info, self.channels, self.duration, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.dawnSample, typeEEG, self.montage, sampleFilter, channels_index)
                 self.connetEvent(type_info)
 
                 self.data = EEGData(data, self.lenFile, self.lenBlock, self.lenWin, labels)
@@ -97,11 +97,11 @@ class EEGController(QWidget):
         except Exception as e:
             print("openEEGFileRes", e)
 
-    def processIeegMontage(self, type):
+    def processIeegMontage(self, typeEEG):
         self.montage['default'] = self.channels
         list1 = []
         list2 = []
-        if type == True:
+        if typeEEG == True:
             self.dgroup = self.appUtil.bdfMontage(self.channels)
             dgroupKeys = list(self.dgroup.keys())
             glen = len(dgroupKeys)
@@ -587,7 +587,7 @@ class EEGController(QWidget):
         return grouped_states, sampleFilter
 
     def onSampleBtnClicked(self):
-        sampleFilter = self.view.getSampleFilter()
+        sampleFilter = self.view.getSampleFilter() #获取所有的type
         sampleMessage = QDialogSample(self.grouped_states, sampleFilter)
         sampleMessage.ui.pb_ok.clicked.connect(lambda: self.onSampleConfirmed(sampleMessage,sampleFilter))
         sampleMessage.ui.pb_cancel.clicked.connect(
@@ -607,12 +607,12 @@ class EEGController(QWidget):
 
     def onSampleConfirmed(self, sampleMessage, sampleFilter):
         sampleFilter = set(sampleFilter)
-        for radio_button in sampleMessage.ui.ck_g:
+        for radio_button in sampleMessage.ui.ck_g: #遍历按钮确认是否选中
             if radio_button.isChecked() == False and radio_button.text() in sampleFilter:
                 sampleFilter.remove(radio_button.text())
             if radio_button.isChecked() == True and radio_button.text() not in sampleFilter:
                 sampleFilter.add(radio_button.text())
-        sampleFilter = list(sampleFilter)
+        sampleFilter = list(sampleFilter) #已选择的type
         self.view.setSelectedTypes(sampleFilter)
         sampleMessage.close()
 
