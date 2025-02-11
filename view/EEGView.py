@@ -82,7 +82,32 @@ class EEGView(QWidget):
     # 减平均
     def changeSubtractAverage(self):
         self.subtractAverage = self.subtractAverage is False
-        self.refreshWin()
+        self.filterlist = list(self.labels)
+        self.removeLines()
+        self.processChan()
+        self.paintEEG()
+        self.paintWaves()
+        self.paintStates()
+        self.paintEvents()
+        self.removeTimeLine()
+        self.paintTimeLine()
+        if self.pick_first is not None:
+            if self.pick_second is None:
+                if self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample:
+                    self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
+            else:
+                if (
+                        self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample) or (
+                        self.pick_second >= self.begin * self.sample_rate // self.dawnSample and self.pick_second < self.end * self.sample_rate // self.dawnSample) or (
+                        self.pick_first < self.begin * self.sample_rate // self.dawnSample and self.pick_second >= self.end * self.sample_rate // self.dawnSample):
+                    self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.dawnSample, 0),
+                                    min(self.winTime * self.sample_rate // self.dawnSample,
+                                        self.pick_second - self.begin * self.sample_rate // self.dawnSample),
+                                    self.pick_label, 'pickedsegment', 'red')
+
+        self.canvas.draw()
+        self.showLabels()
+        self.showCurLabel()
 
     # 初始化View
     def initView(self, type_info, channels, lenTime, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, dawnSample, typeEEG, montage, sampleFilter, channels_index):
@@ -156,7 +181,32 @@ class EEGView(QWidget):
 
     def sensitivityChange(self):
         self.sensitivity = int(self.ui.sensitivity.lineEdit().text())
-        self.refreshWin()
+        self.filterlist = list(self.labels)
+        self.removeLines()
+        self.processChan()
+        self.paintEEG()
+        self.paintWaves()
+        self.paintStates()
+        self.paintEvents()
+        self.removeTimeLine()
+        self.paintTimeLine()
+        if self.pick_first is not None:
+            if self.pick_second is None:
+                if self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample:
+                    self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
+            else:
+                if (
+                        self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample) or (
+                        self.pick_second >= self.begin * self.sample_rate // self.dawnSample and self.pick_second < self.end * self.sample_rate // self.dawnSample) or (
+                        self.pick_first < self.begin * self.sample_rate // self.dawnSample and self.pick_second >= self.end * self.sample_rate // self.dawnSample):
+                    self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.dawnSample, 0),
+                                    min(self.winTime * self.sample_rate // self.dawnSample,
+                                        self.pick_second - self.begin * self.sample_rate // self.dawnSample),
+                                    self.pick_label, 'pickedsegment', 'red')
+
+        self.canvas.draw()
+        self.showLabels()
+        self.showCurLabel()
 
     # 设置移动长度
     def setMoveLength(self, moveLength):
@@ -300,12 +350,10 @@ class EEGView(QWidget):
     #     return data_no_mean
 
     # 更新当前屏
-    def refreshWin(self, data=None, labels=None):
+    def refreshWin(self, data, labels):
         try:
-            if data is not None:
-                self.data = data
-            if labels is not None:
-                self.labels = labels
+            self.data = data
+            self.labels = labels
             self.filterlist = list(self.labels)
             self.removeLines()
             self.updateXAxis()
@@ -1120,7 +1168,33 @@ class EEGView(QWidget):
             else:
                 self.allChannel[key] = False
         self.updateYAxis(channel)
-        self.refreshWin()
+        self.filterlist = list(self.labels)
+        self.removeLines()
+        self.processChan()
+        self.paintEEG()
+        self.filterSamples()
+        self.paintWaves()
+        self.paintStates()
+        self.paintEvents()
+        self.removeTimeLine()
+        self.paintTimeLine()
+        if self.pick_first is not None:
+            if self.pick_second is None:
+                if self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample:
+                    self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
+            else:
+                if (
+                        self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample) or (
+                        self.pick_second >= self.begin * self.sample_rate // self.dawnSample and self.pick_second < self.end * self.sample_rate // self.dawnSample) or (
+                        self.pick_first < self.begin * self.sample_rate // self.dawnSample and self.pick_second >= self.end * self.sample_rate // self.dawnSample):
+                    self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.dawnSample, 0),
+                                    min(self.winTime * self.sample_rate // self.dawnSample,
+                                        self.pick_second - self.begin * self.sample_rate // self.dawnSample),
+                                    self.pick_label, 'pickedsegment', 'red')
+
+        self.canvas.draw()
+        self.showLabels()
+        self.showCurLabel()
 
     def getSampleFilter(self):
         tempt=[]
