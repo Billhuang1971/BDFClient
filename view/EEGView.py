@@ -176,28 +176,28 @@ class EEGView(QWidget):
     def startPaintLabel(self):
         self.is_waves_showed = self.curShowWaves
         self.is_status_showed = self.curShowStates
-        self.is_Event_showed=self.curshowEvents
-
-    # 前进一屏
-    def doDowning(self):
-        self.begin -= self.moveLength
-        self.end -= self.moveLength
-        cmd = True
-        if self.begin < 0:
-            self.begin = 0
-            self.end = self.winTime
-            cmd = False
-        self.changeTime()
-        return cmd, self.begin * self.sample_rate // self.dawnSample
+        self.is_Event_showed = self.curshowEvents
 
     # 后退一屏
-    def doUping(self):
+    def onBtnDownClicked(self):
         self.begin += self.moveLength
         self.end += self.moveLength
         cmd = True
         if self.end > self.lenTime:
             self.begin = self.lenTime - self.winTime
             self.end = self.lenTime
+            cmd = False
+        self.changeTime()
+        return cmd, self.begin * self.sample_rate // self.dawnSample
+
+    # 前进一屏
+    def onBtnUpClicked(self):
+        self.begin -= self.moveLength
+        self.end -= self.moveLength
+        cmd = True
+        if self.begin < 0:
+            self.begin = 0
+            self.end = self.winTime
             cmd = False
         self.changeTime()
         return cmd, self.begin * self.sample_rate // self.dawnSample
@@ -576,26 +576,6 @@ class EEGView(QWidget):
         else:
             self.begin = max(0, self.lenTime - self.winTime)
             self.end = self.lenTime
-        return self.begin * self.sample_rate // self.dawnSample
-
-    # 前进一屏操作
-    def onBtnUpClicked(self):
-        self.begin -= self.moveLength
-        self.end -= self.moveLength
-        if self.begin < 0:
-            self.end = self.winTime
-            self.begin = 0
-        self.changeTime()
-        return self.begin * self.sample_rate // self.dawnSample
-
-    # 后退一屏操作
-    def onBtnDownClicked(self):
-        self.begin += self.moveLength
-        self.end += self.moveLength
-        if self.end > self.lenTime:
-            self.end = self.lenTime
-            self.begin = self.end - self.winTime
-        self.changeTime()
         return self.begin * self.sample_rate // self.dawnSample
 
     # 改变时间轴当前屏幕位置浮标
@@ -1115,7 +1095,6 @@ class EEGView(QWidget):
 
                 self.plottedData.append(y)
             self.plottedData = np.array(self.plottedData)
-            print(self.plottedData)
         except Exception as e:
             print("processChan", e)
 
@@ -1123,7 +1102,6 @@ class EEGView(QWidget):
         return self.curRef
 
     def getCurrentRefList(self):
-        print(self.refList)
         return self.refList[self.curRef]
 
     def checkType(self):
@@ -1154,7 +1132,6 @@ class EEGView(QWidget):
         for i in self.type_info:
             if self.is_waves_showed and (i[3][-2:]=='波形' or i[2][-2:]=='波形'):
                 tempt.append(i[1])
-                print(tempt)
             elif self.is_status_showed and (i[3][-2:] =='状态'or i[2][-2:]=='状态'):
                 tempt.append(i[1])
             elif self.is_Event_showed and i[3][-2:]=='事件':

@@ -149,8 +149,8 @@ class EEGController(QWidget):
     def connetEvent(self, type_info):
         self.view.ui.btnUp.clicked.connect(self.onBtnDownClicked)
         self.view.ui.btnDown.clicked.connect(self.onBtnUpClicked)
-        self.view.ui.btnUping.clicked.connect(self.onBtnUpingClicked)
-        self.view.ui.btnDowning.clicked.connect(self.onBtnDowningClicked)
+        self.view.ui.btnUping.clicked.connect(self.onBtnDowningClicked)
+        self.view.ui.btnDowning.clicked.connect(self.onBtnUpingClicked)
         self.view.ui.moveSpeed.currentIndexChanged.connect(self.onMoveSpeedChanged)
         self.view.ui.editTime.editingFinished.connect(self.timeChange)
         self.view.ui.secondsLine.clicked.connect(self.secondsLineClicked)
@@ -299,16 +299,16 @@ class EEGController(QWidget):
             if self.moving is False:
                 self.view.ui.btnUp.setDisabled(True)
                 self.view.ui.btnDown.setDisabled(True)
-                self.view.ui.btnUping.setDisabled(True)
-                self.view.ui.btnDowning.setText("■")
+                self.view.ui.btnDowning.setDisabled(True)
+                self.view.ui.btnUping.setText("■")
                 self.view.stopPaintLabel()
                 self.thread = threading.Thread(target=self.doDowning)
                 self.thread.start()
             else:
                 self.view.ui.btnUp.setDisabled(False)
                 self.view.ui.btnDown.setDisabled(False)
-                self.view.ui.btnUping.setDisabled(False)
-                self.view.ui.btnDowning.setText("<<")
+                self.view.ui.btnDowning.setDisabled(False)
+                self.view.ui.btnUping.setText(">>")
                 self.view.startPaintLabel()
                 self.view.restartShow()
                 self.stopThread()
@@ -323,7 +323,7 @@ class EEGController(QWidget):
                 if self.loading:
                     continue
                 time.sleep(self.speed[self.speedText])
-                cmd, begin = self.view.doDowning()
+                cmd, begin = self.view.onBtnDownClicked()
                 if cmd is False:
                     self.view.ui.btnUp.setDisabled(False)
                     self.view.ui.btnDown.setDisabled(False)
@@ -353,16 +353,16 @@ class EEGController(QWidget):
             if self.moving is False:
                 self.view.ui.btnUp.setDisabled(True)
                 self.view.ui.btnDown.setDisabled(True)
-                self.view.ui.btnDowning.setDisabled(True)
-                self.view.ui.btnUping.setText("■")
+                self.view.ui.btnUping.setDisabled(True)
+                self.view.ui.btnDowning.setText("■")
                 self.view.stopPaintLabel()
                 self.thread = threading.Thread(target=self.doUping)
                 self.thread.start()
             else:
                 self.view.ui.btnUp.setDisabled(False)
                 self.view.ui.btnDown.setDisabled(False)
-                self.view.ui.btnDowning.setDisabled(False)
-                self.view.ui.btnUping.setText(">>")
+                self.view.ui.btnUping.setDisabled(False)
+                self.view.ui.btnDowning.setText("<<")
                 self.view.startPaintLabel()
                 self.view.restartShow()
                 self.stopThread()
@@ -377,7 +377,7 @@ class EEGController(QWidget):
                 if self.loading:
                     continue
                 time.sleep(self.speed[self.speedText])
-                cmd, begin = self.view.doUping()
+                cmd, begin = self.view.onBtnUpClicked()
                 if cmd is False:
                     self.view.ui.btnUp.setDisabled(False)
                     self.view.ui.btnDown.setDisabled(False)
@@ -521,7 +521,7 @@ class EEGController(QWidget):
         try:
             if self.loading:
                 return
-            begin = self.view.onBtnUpClicked()
+            _, begin = self.view.onBtnUpClicked()
             self.checkSolution(begin)
         except Exception as e:
             print("onBtnUpClicked", e)
@@ -531,7 +531,7 @@ class EEGController(QWidget):
         try:
             if self.loading:
                 return
-            begin = self.view.onBtnDownClicked()
+            _, begin = self.view.onBtnDownClicked()
             self.checkSolution(begin)
         except Exception as e:
             print("onBtnDownClicked", e)
