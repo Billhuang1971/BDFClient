@@ -580,7 +580,7 @@ class EEGController(QWidget):
         if selected_button:
             selected_text = selected_button.text()
             self.channels = self.montage[selected_text]
-        self.view.Refchange(selected_text)
+        self.view.refChange(selected_text)
         montagesDialog.close()
         self.onChannelBtnClicked()
 

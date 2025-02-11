@@ -1047,7 +1047,7 @@ class EEGView(QWidget):
     def changeTime(self):
         self.ui.editTime.setText(time.strftime("%H:%M:%S", time.gmtime(self.begin)))
 
-    def Refchange(self, Ref):
+    def refChange(self, Ref):
         self.curRef = Ref
         chanList = self.refList[Ref]
         self.allChannel = {key.upper(): True for key in chanList}
@@ -1105,12 +1105,7 @@ class EEGView(QWidget):
         return self.refList[self.curRef]
 
     def checkType(self):
-        if self.typeEEG == False:
-            curRef = self.getCurrentRef()
-            curRefList = self.getCurrentRefList()
-            dgroup = {curRef: curRefList}
-        else:
-            dgroup = {}
+        dgroup = {self.curRef: self.refList[self.curRef]} if self.typeEEG is False else {}
         return self.typeEEG, self.curRef, dgroup, self.channels_name
 
     def getShownChannel(self):
