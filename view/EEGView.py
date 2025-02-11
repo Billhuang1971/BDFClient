@@ -60,6 +60,7 @@ class EEGView(QWidget):
         self.state_right = None
         self.state_left_line = None
         self.state_right_line = None
+        self.eventline=None
         self.lenTime = None
         self.paint_length = None
         self.scroll_position = None
@@ -70,7 +71,7 @@ class EEGView(QWidget):
         self.time_lines = []
         self.wave_lines = [] #绘制出的波形
         self.state_lines = [] #绘制出的状态
-        self.Event_point=[] #绘制出的事件
+        self.Event_lines=[] #绘制出的事件
 
         self.axHscrollSpan = []
         self.sen = 0
@@ -428,9 +429,9 @@ class EEGView(QWidget):
         if self.is_Event_showed:
             self.paintEvents()
         else:
-            for state in self.Event_point:
-                state.remove()
-            self.Event_point = []
+            for event in self.Event_lines:
+                event[1].remove()
+            self.Event_lines = []
             self.resetPickLabels()
             self.focusLines()
         self.canvas.draw()
@@ -447,11 +448,11 @@ class EEGView(QWidget):
                     self.filterlist.remove(sample)
         if self.is_status_showed is False:
             for sample in self.filterlist.copy():
-                if sample[0] == 'all':
+                if sample[0] == 'all' and sample[1]!=sample[2]:
                     self.filterlist.remove(sample)
         if self.is_Event_showed is False:
             for sample in self.filterlist.copy():
-                if sample[0] != 'all' and sample[1] == sample[2]:
+                if sample[0] == 'all' and sample[1] == sample[2]:
                     self.filterlist.remove(sample)
         itemName = ['开始时间', '样本类型']
         col_num = 2
@@ -523,29 +524,21 @@ class EEGView(QWidget):
             start = (event[1] - (self.begin * self.sample_rate // self.dawnSample)) if event[1] > (
                         self.begin * self.sample_rate // self.dawnSample) else 0
             label = str(event[0]) + "|" + str(event[1]) + "|" + str(event[2]) + "|" + str(event[3])
-            self.paintAEvent(start, event[0], label, color)
-    def paintAEvent(self, start, channel, label, color):
+            self.paintAEvent(start, label, color)
+    def paintAEvent(self, start, label, color):
         x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate // self.dawnSample)
-        idx = -1
-        for i in range(len(self.channels_name)):
-            if self.channels_name[i] == channel:
-                idx = i
-                break
-        if idx == -1:
-            return
-        #self.Event_point.append(label)
-        self.axes.plot(x[start], self.plottedData[idx, start], color, label=label, marker='o',markersize=4)
+        self.Event_lines.append([label,self.axes.vlines(x[start], 0, 200, color=color)])
     # 过滤样本
     def filterSamples(self):
         self.waves = []
         self.states = []
         self.events=[]
         for sample in self.labels:
-            if sample[0] == 'all':
+            if sample[0] == 'all' and sample[1]!=sample[2]:
                 self.states.append(sample)
-            elif sample[1]==sample[2]:
+            elif sample[0]=='all' and sample[1]==sample[2]:
                 self.events.append(sample)
-            else:
+            elif sample[0]!='all':
                 self.waves.append(sample)
 
     # 绘制当前屏幕波形
@@ -795,19 +788,12 @@ class EEGView(QWidget):
         self.canvas.draw()
     #绘制事件
     def drawEvent(self, event):
-        artist = event.artist
-        label = artist.get_label()
-        if label not in self.pick_labels:
-            return
-        self.pick_labels = self.channels_name
-        self.checkPickLabels(label)
-        self.focusLines()
-        self.restorePreSampleColor()
-        self.pick_first = int(event.ind[0] + self.begin * self.sample_rate // self.dawnSample)
-        self.pick_channel = label
-        self.removeLines(['pp'])
-        self.paintAEvent(max(self.pick_first - self.begin * self.sample_rate // self.dawnSample, 0),
-                         label,'pp', 'red')
+        x, y = event.xdata, event.ydata
+        if self.eventline:
+            self.eventline.remove()
+        lineposition = int(x * self.sample_rate)
+        self.eventline = self.axes.vlines(
+        lineposition / self.sample_rate, 0, 200, color='red')
         self.canvas.draw()
     # 恢复上一个选中的样本颜色
     def restorePreSampleColor(self):
@@ -816,11 +802,11 @@ class EEGView(QWidget):
         if self.cur_sample_index >= len(self.filterlist):
             return
         sample = self.filterlist[self.cur_sample_index]
-        if sample[0] == 'all':
+        if sample[0] == 'all' and sample[1]!=sample[2]:
             self.changeSampleColor(sample, 'green')
         elif sample[0]!='all' and sample[1]!=sample[2]:
             self.changeSampleColor(sample, 'blue')
-        elif sample[0]!='all' and sample[1]==sample[2]:
+        elif sample[0]=='all' and sample[1]==sample[2]:
             self.changeSampleColor(sample, 'orange')
         self.showlabelInfo()
         for col in range(self.ui.tableWidget.columnCount()):
@@ -832,7 +818,7 @@ class EEGView(QWidget):
         self.restorePreSampleColor() #恢复前一个选中的线条颜色
         self.cur_sample_index = row
         label = self.filterlist[self.cur_sample_index]
-        if label[0] == "all":
+        if label[0] == "all" and label[1] != label[2]:
             b_t = time.strftime('%H:%M:%S', time.gmtime(label[1]//(self.sample_rate//self.dawnSample)))
             e_t = time.strftime('%H:%M:%S', time.gmtime(label[2]//(self.sample_rate//self.dawnSample)))
             type_name = ""
@@ -861,7 +847,7 @@ class EEGView(QWidget):
             r = int(min(label[2] -(self.begin * self.sample_rate // self.dawnSample), self.winTime * self.sample_rate // self.dawnSample))
             m = np.max(self.data[idx, l:r])
             self.showlabelInfo(type_name, label[0], str((label[2] - label[1]) / (self.sample_rate // self.dawnSample)), str(b_t), str(e_t), str(m))
-        elif label[0] != 'all' and label[1] == label[2]:
+        elif label[0] == 'all' and label[1] == label[2]:
             self.changeSampleColor(label, 'red')  # 改变当前选中线条颜色
             b_t = time.strftime('%H:%M:%S', time.gmtime(label[1] // (self.sample_rate // self.dawnSample)))
             e_t = time.strftime('%H:%M:%S', time.gmtime(label[2] // (self.sample_rate // self.dawnSample)))
@@ -937,7 +923,7 @@ class EEGView(QWidget):
     def changeSampleColor(self, sample, color):
         s_label = str(sample[0]) + "|" + str(sample[1]) + "|" + str(sample[2]) + "|" + str(sample[3])
         lines = self.axes.get_lines()
-        if sample[0] == 'all':
+        if sample[0] == 'all' and sample[1]!=sample[2]:
             for s in self.state_lines:
                 if s[0]==s_label:
                     s[1].set_facecolor(color)
@@ -949,11 +935,10 @@ class EEGView(QWidget):
                     l.set_color(color)
                     break
             self.canvas.draw()
-        elif sample[0]!='all' and sample[1]==sample[2]:#事件
-            for l in lines:
-                label = l.get_label()
-                if label == s_label:
-                    l.set_color(color)
+        elif sample[0]=='all' and sample[1]==sample[2]:#事件
+            for l in self.Event_lines:
+                if l[0] == s_label:
+                    l[1].set_color(color)
                     break
             self.canvas.draw()
 
@@ -967,6 +952,9 @@ class EEGView(QWidget):
         if self.state_right_line is not None:
             self.state_right_line.remove()
             self.state_right_line = None
+        if self.eventline is not None:
+            self.eventline.remove()
+            self.eventline = None
         self.canvas.draw()
         self.pick_channel = None
         self.pick_first = None

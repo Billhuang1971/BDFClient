@@ -421,14 +421,7 @@ class EEGController(QWidget):
             if self.view.isinState():
                 return
             if self.view.isinEvent():#进行事件标注
-                ax = self.view.clickAxStatus(event.inaxes)
-                # 点击在脑电图axes中
-                if ax == EEGView.PICK_AXES:
-                    self.view.drawEvent(event)
-                elif ax == EEGView.PICK_AXHSCROLL:
-                    x = int(event.xdata)
-                    begin = self.view.onAxhscrollClicked(x)
-                    self.checkSolution(begin)
+                return
             if self.view.isinWave(): #进行波形标注
                 # 鼠标左键
                 # 点击y轴标签
@@ -467,15 +460,25 @@ class EEGController(QWidget):
                 return
             # 左键
             if event.button == 1:
-                ax = self.view.clickAxStatus(event.inaxes)
-                # 点击在脑电图axes中
-                if ax == EEGView.PICK_AXES:
-                    self.view.drawStateLine(event)
-                # 点击在跳转滚动条上
-                elif ax == EEGView.PICK_AXHSCROLL:
-                    x = int(event.xdata)
-                    begin = self.view.onAxhscrollClicked(x)
-                    self.checkSolution(begin)
+                if self.view.isinState():
+                    ax = self.view.clickAxStatus(event.inaxes)
+                    # 点击在脑电图axes中
+                    if ax == EEGView.PICK_AXES:
+                        self.view.drawStateLine(event)
+                    # 点击在跳转滚动条上
+                    elif ax == EEGView.PICK_AXHSCROLL:
+                        x = int(event.xdata)
+                        begin = self.view.onAxhscrollClicked(x)
+                        self.checkSolution(begin)
+                if self.view.isinEvent(): #进行事件标注
+                    ax = self.view.clickAxStatus(event.inaxes)
+                    # 点击在脑电图axes中
+                    if ax == EEGView.PICK_AXES:
+                        self.view.drawEvent(event)
+                    elif ax == EEGView.PICK_AXHSCROLL:
+                        x = int(event.xdata)
+                        begin = self.view.onAxhscrollClicked(x)
+                        self.checkSolution(begin)
             # 右键释放菜单
             elif event.button == 3:
                 self.view.releaseMenu()
