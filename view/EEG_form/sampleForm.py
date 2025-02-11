@@ -133,6 +133,7 @@ class Ui_Sample(QDialog):
                 # else:
                 #     self.ck_g[index].setChecked(False)
                 if chs[j] not in self.samplefilter:
+                    self.ck_g[index].setDisabled(True)
                     self.ck_g[index].setChecked(False)
                 else:
                     self.ck_g[index].setChecked(True)
@@ -155,8 +156,9 @@ class Ui_Sample(QDialog):
                     st=True
                 self.lb_gSt[i]=st
                 for j in range(len(chs)):
-                   self.ck_g[index].setChecked(st)
-                   index += 1
+                    if self.ck_g[index].isEnabled():
+                        self.ck_g[index].setChecked(st)
+                        index += 1
                 break;
             else:
                 index += len(chs)
@@ -174,7 +176,8 @@ class Ui_Sample(QDialog):
             chs = self.dgroup.get(self.dgroupKeys[i])
             self.lb_gSt[i] = st
             for j in range(len(chs)):
-                self.ck_g[index].setChecked(st)
+                if self.ck_g[index].isEnabled():
+                    self.ck_g[index].setChecked(st)
                 index += 1
 
 

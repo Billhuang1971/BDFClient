@@ -157,7 +157,7 @@ class EEGController(QWidget):
         self.view.ui.tableWidget.itemClicked.connect(self.onSampleClicked)
         self.view.ui.hideWave.clicked.connect(self.hideWave)
         self.view.ui.hideState.clicked.connect(self.hideState)
-        self.view.ui.hideEvent.clicked.connect(self.hide_Event)
+        self.view.ui.hideEvent.clicked.connect(self.hideEvents)
         self.view.ui.subtractAverage.clicked.connect(self.subtractAverageClicked)
         self.view.ui.secondsSpan.lineEdit().editingFinished.connect(self.secondsSpanChange)
         self.view.ui.moveLength.lineEdit().editingFinished.connect(self.moveLengthChange)
@@ -268,7 +268,7 @@ class EEGController(QWidget):
     # 隐藏状态
     def hideState(self):
         self.view.changeShowState()
-    def hide_Event(self):
+    def hideEvents(self):
         self.view.changeShowEvent()
 
     # 点击秒线按钮
@@ -421,25 +421,14 @@ class EEGController(QWidget):
             if self.view.isinState():
                 return
             if self.view.isinEvent():#进行事件标注
-                if isinstance(artist, mpl.text.Text):
-                    pl = artist.get_text()
-                    if pl == 'Reset':
-                        self.view.resetPickLabels()
-                    else:
-                        self.view.checkPickLabels(pl)
-                    self.view.focusLines()
-                    # 点击线、点
-                elif isinstance(artist, mpl.lines.Line2D):
-                    label = artist.get_label() #点击的线条标签
-                    # 点击点
-                    if label == "pp":
-                        return
-                    # 点击线
-                    if len(label.split('|')) == 1:
-                        self.view.EventPoint(event)
-                    # 点击样本
-                    else:
-                        self.view.clickSample(artist)
+                ax = self.view.clickAxStatus(event.inaxes)
+                # 点击在脑电图axes中
+                if ax == EEGView.PICK_AXES:
+                    self.view.drawEvent(event)
+                elif ax == EEGView.PICK_AXHSCROLL:
+                    x = int(event.xdata)
+                    begin = self.view.onAxhscrollClicked(x)
+                    self.checkSolution(begin)
             if self.view.isinWave(): #进行波形标注
                 # 鼠标左键
                 # 点击y轴标签
