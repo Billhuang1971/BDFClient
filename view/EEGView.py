@@ -437,6 +437,7 @@ class EEGView(QWidget):
         self.restorePreSampleColor()
         self.showLabelList()
         self.ui.tableWidget.clearSelection()
+
     # 显示样本列表信息
     def showLabelList(self):
         self.filterlist=list(self.labels)
@@ -559,10 +560,12 @@ class EEGView(QWidget):
             self.paintAWave(l, r, wave[0], label, color)
 
     # 更新Y轴
-    def updateYAxis(self, channels_name=[]):
+    def updateYAxis(self, channels_name):
         self.channels_name = []
         for channel in channels_name:
-            if self.channels_index.get(channel.split('-')[0]) is not None:
+            ch0 = channel.split('-')[0]
+            ch1 = channel.split('-')[1]
+            if self.channels_index.get(ch0) is not None and (ch1.upper() == 'REF' or ch1.upper() == 'AV' or self.channels_index.get(ch1) is not None):
                 self.channels_name.append(channel)
         self.resetPickLabels()
         max_y = len(self.channels_name) + 1
@@ -1111,13 +1114,10 @@ class EEGView(QWidget):
     def processChan(self):
         try:
             self.plottedData = []
-            av = None
-            # if self.typeEEG == False:
-            #     if 'AV' in self.singleChannels:
-            #         ex_chs = tuple([self.channels_name.index(x) for x in self.exclude_av if x in self.channels_name])
-            #         temp_data = self.data
-            #         temp_data = np.delete(temp_data, ex_chs, axis=0)
-            #         av = np.mean(temp_data, axis=0)
+            ex_chs = tuple([self.channels_index[x] for x in self.exclude_av if x in self.channels_name])
+            temp_data = self.data
+            temp_data = np.delete(temp_data, ex_chs, axis=0)
+            av = np.mean(temp_data, axis=0)
 
             for i in range(len(self.channels_name)):
                 index = self.channels_index.get(self.channels_name[i].split('-')[0])
@@ -1126,10 +1126,7 @@ class EEGView(QWidget):
                     g1, g2 = label.split('-')
                     g1 = g1.strip()
                     g2 = g2.strip()
-                    try:
-                        g1_index = self.channels_index[g1]
-                    except Exception as e:
-                        print(e)
+                    g1_index = self.channels_index[g1]
                     y1 = self.data[g1_index]
                     if g2 == 'REF':
                         y2 = 0
@@ -1140,7 +1137,7 @@ class EEGView(QWidget):
                         y2 = self.data[g2_index]
                     y = y1 - y2
                 else:
-                    y = np.copy(self.data[index])
+                    y = self.data[index]
 
                 if self.subtractAverage:
                     y = y - np.mean(y)
