@@ -106,7 +106,7 @@ class EEGView(QWidget):
                                     self.pick_label, 'pickedsegment', 'red')
 
         self.canvas.draw()
-        self.showLabels()
+        self.showLabelList()
         self.showCurLabel()
 
     # 初始化View
@@ -205,7 +205,7 @@ class EEGView(QWidget):
                                     self.pick_label, 'pickedsegment', 'red')
 
         self.canvas.draw()
-        self.showLabels()
+        self.showLabelList()
         self.showCurLabel()
 
     # 设置移动长度
@@ -400,6 +400,7 @@ class EEGView(QWidget):
     def restartShow(self):
         self.paintWaves()
         self.paintStates()
+        self.paintEvents()
         self.canvas.draw()
         self.showLabelList()
         self.showlabelInfo()
@@ -1200,7 +1201,7 @@ class EEGView(QWidget):
                                     self.pick_label, 'pickedsegment', 'red')
 
         self.canvas.draw()
-        self.showLabels()
+        self.showLabelList()
         self.showCurLabel()
 
     def getSampleFilter(self):
