@@ -31,7 +31,7 @@ class EEGView(QWidget):
         # 类型数据
         self.type_info = []
         # 当前标注状态（波形、状态、事件）
-        self.annotate = EEGView.WAVE_ANNOTATE
+        self.annotate = 3
         # 是否状态显示
         self.is_status_showed = True
         self.is_waves_showed = True
@@ -386,6 +386,11 @@ class EEGView(QWidget):
     def changeShowWave(self):
         self.is_waves_showed = self.is_waves_showed is False
         self.ui.hideWave.setChecked(self.is_waves_showed)
+        if self.is_waves_showed is False and self.ui.gblabelbtn1.isChecked():
+            self.ui.gblabelbtn4.setChecked(True)
+            self.ui.gblabelbtn1.setDisabled(True)
+        else:
+            self.ui.gblabelbtn1.setDisabled(False)
         if self.is_waves_showed:
             self.paintWaves()
         else:
@@ -410,6 +415,11 @@ class EEGView(QWidget):
     def changeShowState(self):
         self.is_status_showed = self.is_status_showed is False
         self.ui.hideState.setChecked(self.is_status_showed)
+        if self.is_status_showed is False and self.ui.gblabelbtn2.isChecked():
+            self.ui.gblabelbtn4.setChecked(True)
+            self.ui.gblabelbtn2.setDisabled(True)
+        else:
+            self.ui.gblabelbtn2.setDisabled(False)
         if self.is_status_showed:
             self.paintStates()
         else:
@@ -426,6 +436,11 @@ class EEGView(QWidget):
     def changeShowEvent(self):
         self.is_Event_showed = self.is_Event_showed is False
         self.ui.hideEvent.setChecked(self.is_Event_showed)
+        if self.is_Event_showed is False and self.ui.gblabelbtn3.isChecked():
+            self.ui.gblabelbtn4.setChecked(True)
+            self.ui.gblabelbtn3.setDisabled(True)
+        else:
+            self.ui.gblabelbtn3.setDisabled(False)
         if self.is_Event_showed:
             self.paintEvents()
         else:
@@ -521,13 +536,15 @@ class EEGView(QWidget):
             return
         for event in self.events:
             color = 'orange'
-            start = (event[1] - (self.begin * self.sample_rate // self.dawnSample)) if event[1] > (
-                        self.begin * self.sample_rate // self.dawnSample) else 0
+            start = int(event[1]) * self.dawnSample / self.sample_rate
+            # start = (event[1] - (self.begin * self.sample_rate // self.dawnSample)) if event[1] > (
+            #              self.begin * self.sample_rate // self.dawnSample) else 0
             label = str(event[0]) + "|" + str(event[1]) + "|" + str(event[2]) + "|" + str(event[3])
             self.paintAEvent(start, label, color)
     def paintAEvent(self, start, label, color):
-        x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate // self.dawnSample)
-        self.Event_lines.append([label,self.axes.vlines(x[start], 0, 200, color=color)])
+        # x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate // self.dawnSample)
+
+        self.Event_lines.append([label,self.axes.vlines(start, 0, 200, color=color)])
     # 过滤样本
     def filterSamples(self):
         self.waves = []
@@ -791,6 +808,7 @@ class EEGView(QWidget):
         x, y = event.xdata, event.ydata
         if self.eventline:
             self.eventline.remove()
+            self.axes.collections.remove(self.eventline)
         lineposition = int(x * self.sample_rate)
         self.eventline = self.axes.vlines(
         lineposition / self.sample_rate, 0, 200, color='red')
