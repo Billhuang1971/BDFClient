@@ -107,7 +107,7 @@ class EEGView(QWidget):
 
         self.canvas.draw()
         self.showLabelList()
-        self.showCurLabel()
+        self.showlabelInfo()
 
     # 初始化View
     def initView(self, type_info, channels, lenTime, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, dawnSample, typeEEG, montage, sampleFilter, channels_index):
@@ -206,7 +206,7 @@ class EEGView(QWidget):
 
         self.canvas.draw()
         self.showLabelList()
-        self.showCurLabel()
+        self.showlabelInfo()
 
     # 设置移动长度
     def setMoveLength(self, moveLength):
@@ -437,7 +437,7 @@ class EEGView(QWidget):
         self.restorePreSampleColor()
         self.showLabelList()
         self.ui.tableWidget.clearSelection()
-    # 显示样本信息
+    # 显示样本列表信息
     def showLabelList(self):
         self.filterlist=list(self.labels)
         if self.is_waves_showed is False:
@@ -1086,7 +1086,7 @@ class EEGView(QWidget):
         self.ui.labelMeasureTime.setText(meas_time)
 
 
-    # 显示样本信息
+    # 显示右下角样本信息
     def showlabelInfo(self, type_name='', channel='', lent='', begin='', end='', amp=''):
         self.ui.labelType.setText(type_name)
         self.ui.labelChannel.setText(channel)
@@ -1202,7 +1202,7 @@ class EEGView(QWidget):
 
         self.canvas.draw()
         self.showLabelList()
-        self.showCurLabel()
+        self.showlabelInfo()
 
     def getSampleFilter(self):
         tempt=[]
