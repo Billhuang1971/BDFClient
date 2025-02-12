@@ -283,8 +283,6 @@ class clientAppUtil():
             if i >= chlen and n > 1:
                 bkey = cha[:-2]
                 dgroup.setdefault(bkey, bg)
-
-        print(dgroup)
         return dgroup
 
 

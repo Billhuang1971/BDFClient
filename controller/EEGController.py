@@ -30,7 +30,6 @@ class EEGController(QWidget):
         self.tableName = msg[6]
         self.pUid = msg[7]
         self.mainLabel = mainLabel
-        self.timer = QTimer()
         self.view = EEGView()
         self.speed = {
             "1x": 3000,
@@ -38,6 +37,8 @@ class EEGController(QWidget):
             "3x": 1000
         }
         self.speedText = "1x"
+        self.timer = QTimer()
+        self.timer.setInterval(self.speed[self.speedText])
         self.loading = True
 
     # 计算绘图区域物理长度
@@ -269,6 +270,7 @@ class EEGController(QWidget):
     # 隐藏状态
     def hideState(self):
         self.view.changeShowState()
+
     def hideEvents(self):
         self.view.changeShowEvent()
 
@@ -288,7 +290,16 @@ class EEGController(QWidget):
                 return
             [h, m, s] = time.split(':')
             begin = self.view.timeChange(int(h) * 3600 + int(m) * 60 + int(s))
-            self.checkSolution(begin)
+            self.view.changeAxStatus()
+            inBlock, readFrom, readTo, = self.data.queryRange(begin)
+            if inBlock is False:
+                self.loading = True
+                self.client.loadEEGData(
+                    [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample, self.dawnSample,
+                     self.tableName, self.pUid])
+            else:
+                data, labels = self.data.getData()
+                self.view.refreshWin(data, labels)
         except Exception as e:
             print("timeChange", e)
 
@@ -306,7 +317,7 @@ class EEGController(QWidget):
                 if self.timer.receivers(self.timer.timeout) > 0:
                     self.timer.timeout.disconnect()
                 self.timer.timeout.connect(self.doDowning)
-                self.timer.start(self.speed[self.speedText])
+                self.timer.start()
             else:
                 self.view.ui.btnUp.setDisabled(False)
                 self.view.ui.btnDown.setDisabled(False)
@@ -314,7 +325,6 @@ class EEGController(QWidget):
                 self.view.ui.btnUping.setText(">>")
                 self.view.startPaintLabel()
                 self.timer.stop()
-                # self.stopThread()
             self.moving = self.moving is False
         except Exception as e:
             print("onBtnDowningClicked", e)
@@ -331,10 +341,16 @@ class EEGController(QWidget):
                 self.view.ui.btnDowning.setDisabled(False)
                 self.view.ui.btnUping.setText(">>")
                 self.view.startPaintLabel()
-                self.checkSolution(begin)
                 self.timer.stop()
+            inBlock, readFrom, readTo, = self.data.queryRange(begin)
+            if inBlock is False:
+                self.loading = True
+                self.client.loadEEGData(
+                    [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample,
+                     self.dawnSample, self.tableName, self.pUid])
             else:
-                self.checkSolution(begin)
+                data, labels = self.data.getData()
+                self.view.refreshWin(data, labels)
         except Exception as e:
             print("doDowning", e)
 
@@ -355,7 +371,7 @@ class EEGController(QWidget):
                 if self.timer.receivers(self.timer.timeout) > 0:
                     self.timer.timeout.disconnect()
                 self.timer.timeout.connect(self.doUping)
-                self.timer.start(self.speed[self.speedText])
+                self.timer.start()
             else:
                 self.view.ui.btnUp.setDisabled(False)
                 self.view.ui.btnDown.setDisabled(False)
@@ -379,10 +395,15 @@ class EEGController(QWidget):
                 self.view.ui.btnUping.setDisabled(False)
                 self.view.ui.btnDowning.setText("<<")
                 self.view.startPaintLabel()
-                self.checkSolution(begin)
-                self.timer.stop()
+            inBlock, readFrom, readTo, = self.data.queryRange(begin)
+            if inBlock is False:
+                self.loading = True
+                self.client.loadEEGData(
+                    [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample,
+                     self.dawnSample, self.tableName, self.pUid])
             else:
-                self.checkSolution(begin)
+                data, labels = self.data.getData()
+                self.view.refreshWin(data, labels)
         except Exception as e:
             print("doUping", e)
 
@@ -447,7 +468,15 @@ class EEGController(QWidget):
                     elif ax == EEGView.PICK_AXHSCROLL:
                         x = int(event.xdata)
                         begin = self.view.onAxhscrollClicked(x)
-                        self.checkSolution(begin)
+                        inBlock, readFrom, readTo, = self.data.queryRange(begin)
+                        if inBlock is False:
+                            self.loading = True
+                            self.client.loadEEGData(
+                                [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample,
+                                 self.dawnSample, self.tableName, self.pUid])
+                        else:
+                            data, labels = self.data.getData()
+                            self.view.refreshWin(data, labels)
                 if self.view.isinEvent(): #进行事件标注
                     ax = self.view.clickAxStatus(event.inaxes)
                     # 点击在脑电图axes中
@@ -456,26 +485,20 @@ class EEGController(QWidget):
                     elif ax == EEGView.PICK_AXHSCROLL:
                         x = int(event.xdata)
                         begin = self.view.onAxhscrollClicked(x)
-                        self.checkSolution(begin)
+                        inBlock, readFrom, readTo, = self.data.queryRange(begin)
+                        if inBlock is False:
+                            self.loading = True
+                            self.client.loadEEGData(
+                                [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample,
+                                 self.dawnSample, self.tableName, self.pUid])
+                        else:
+                            data, labels = self.data.getData()
+                            self.view.refreshWin(data, labels)
             # 右键释放菜单
             elif event.button == 3:
                 self.view.releaseMenu()
         except Exception as e:
             print("doMouseReleaseEvent", e)
-
-    # 切换当前屏的操作
-    def checkSolution(self, begin):
-        try:
-            self.view.changeAxStatus()
-            inBlock, readFrom, readTo, = self.data.queryRange(begin)
-            if inBlock is False:
-                self.loading = True
-                self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample, self.dawnSample, self.tableName, self.pUid])
-            else:
-                data, labels = self.data.getData()
-                self.view.refreshWin(data, labels)
-        except Exception as e:
-            print("checkSolution", e)
 
     # 滚轮滚动操作
     def doScrollEvent(self, event):
@@ -492,7 +515,15 @@ class EEGController(QWidget):
             if self.loading:
                 return
             _, begin = self.view.onBtnUpClicked()
-            self.checkSolution(begin)
+            inBlock, readFrom, readTo, = self.data.queryRange(begin)
+            if inBlock is False:
+                self.loading = True
+                self.client.loadEEGData(
+                    [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample, self.dawnSample,
+                     self.tableName, self.pUid])
+            else:
+                data, labels = self.data.getData()
+                self.view.refreshWin(data, labels)
         except Exception as e:
             print("onBtnUpClicked", e)
 
@@ -502,7 +533,15 @@ class EEGController(QWidget):
             if self.loading:
                 return
             _, begin = self.view.onBtnDownClicked()
-            self.checkSolution(begin)
+            inBlock, readFrom, readTo, = self.data.queryRange(begin)
+            if inBlock is False:
+                self.loading = True
+                self.client.loadEEGData(
+                    [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample, self.dawnSample,
+                     self.tableName, self.pUid])
+            else:
+                data, labels = self.data.getData()
+                self.view.refreshWin(data, labels)
         except Exception as e:
             print("onBtnDownClicked", e)
 

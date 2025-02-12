@@ -233,7 +233,6 @@ class EEGView(QWidget):
         self.paintEvents()
         self.canvas.draw()
         self.showLabelList()
-        self.showlabelInfo()
 
     # 后退一屏
     def onBtnDownClicked(self):
@@ -245,6 +244,7 @@ class EEGView(QWidget):
             self.end = self.lenTime
             cmd = False
         self.changeTime()
+        self.changeAxStatus()
         return cmd, self.begin * self.sample_rate // self.dawnSample
 
     # 前进一屏
@@ -257,6 +257,7 @@ class EEGView(QWidget):
             self.end = self.winTime
             cmd = False
         self.changeTime()
+        self.changeAxStatus()
         return cmd, self.begin * self.sample_rate // self.dawnSample
 
     # 时间改变
@@ -644,6 +645,7 @@ class EEGView(QWidget):
         else:
             self.begin = max(0, self.lenTime - self.winTime)
             self.end = self.lenTime
+        self.changeAxStatus()
         return self.begin * self.sample_rate // self.dawnSample
 
     # 改变时间轴当前屏幕位置浮标
