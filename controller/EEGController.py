@@ -128,8 +128,16 @@ class EEGController(QWidget):
         try:
             if REPData[3][0] == '0':
                 QMessageBox.information(self, '提示', "插入样本失败")
+                return
+            cmd = REPData[3][2][0]
+            type_id = REPData[3][2][1]
+            if cmd == 1:
+                label = self.view.insertWave(type_id)
+            elif cmd == 2:
+                label = self.view.insertState(type_id)
             else:
-                QMessageBox.information(self, '提示', "插入样本成功")
+                label = self.view.insertEvent(type_id)
+            self.data.insertSample(label)
         except Exception as e:
             print("insertSampleRes", e)
 
@@ -221,10 +229,9 @@ class EEGController(QWidget):
     def handleMenuAction(self, t):
         try:
             cmd, label = self.view.checkMenuAction(t)
-            if cmd == 0:
+            if cmd == EEGView.NO_ACTION:
                 return
-            if cmd == 1:
-                self.data.insertSample(label)
+            if cmd == EEGView.ADD_SAMPLE:
                 self.client.insertSample([label, self.tableName, self.check_id, self.file_id, self.user_id, self.dawnSample])
             # else:
             #
@@ -417,10 +424,6 @@ class EEGController(QWidget):
             #不是左键
             if mouseevent.button != 1:
                 return
-            if self.view.isinState():
-                return
-            if self.view.isinEvent():#进行事件标注
-                return
             if self.view.isinWave(): #进行波形标注
                 # 鼠标左键
                 # 点击y轴标签
@@ -459,41 +462,24 @@ class EEGController(QWidget):
                 return
             # 左键
             if event.button == 1:
-                if self.view.isinState():
-                    ax = self.view.clickAxStatus(event.inaxes)
-                    # 点击在脑电图axes中
-                    if ax == EEGView.PICK_AXES:
+                ax = self.view.clickAxStatus(event.inaxes)
+                if ax == EEGView.PICK_AXHSCROLL:
+                    x = int(event.xdata)
+                    begin = self.view.onAxhscrollClicked(x)
+                    inBlock, readFrom, readTo, = self.data.queryRange(begin)
+                    if inBlock is False:
+                        self.loading = True
+                        self.client.loadEEGData(
+                            [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample,
+                             self.dawnSample, self.tableName, self.pUid])
+                    else:
+                        data, labels = self.data.getData()
+                        self.view.refreshWin(data, labels)
+                elif ax == EEGView.PICK_AXES:
+                    if self.view.isinState():
                         self.view.drawStateLine(event)
-                    # 点击在跳转滚动条上
-                    elif ax == EEGView.PICK_AXHSCROLL:
-                        x = int(event.xdata)
-                        begin = self.view.onAxhscrollClicked(x)
-                        inBlock, readFrom, readTo, = self.data.queryRange(begin)
-                        if inBlock is False:
-                            self.loading = True
-                            self.client.loadEEGData(
-                                [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample,
-                                 self.dawnSample, self.tableName, self.pUid])
-                        else:
-                            data, labels = self.data.getData()
-                            self.view.refreshWin(data, labels)
-                if self.view.isinEvent(): #进行事件标注
-                    ax = self.view.clickAxStatus(event.inaxes)
-                    # 点击在脑电图axes中
-                    if ax == EEGView.PICK_AXES:
+                    elif self.view.isinEvent():
                         self.view.drawEvent(event)
-                    elif ax == EEGView.PICK_AXHSCROLL:
-                        x = int(event.xdata)
-                        begin = self.view.onAxhscrollClicked(x)
-                        inBlock, readFrom, readTo, = self.data.queryRange(begin)
-                        if inBlock is False:
-                            self.loading = True
-                            self.client.loadEEGData(
-                                [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample,
-                                 self.dawnSample, self.tableName, self.pUid])
-                        else:
-                            data, labels = self.data.getData()
-                            self.view.refreshWin(data, labels)
             # 右键释放菜单
             elif event.button == 3:
                 self.view.releaseMenu()
@@ -612,11 +598,11 @@ class EEGController(QWidget):
         sampleMessage.setAttribute(Qt.WA_DeleteOnClose)
 
     def sampleselect_btn(self,button):
-        if button.text()=='状态':
+        if button.text() == '状态':
             self.view.annotatesignal(0)
-        elif button.text()=='波形':
+        elif button.text() == '波形':
             self.view.annotatesignal(1)
-        elif button.text()=='事件':
+        elif button.text() == '事件':
             self.view.annotatesignal(2)
 
     def onSampleConfirmed(self, sampleMessage, sampleFilter):
