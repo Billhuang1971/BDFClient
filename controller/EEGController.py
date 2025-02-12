@@ -30,12 +30,12 @@ class EEGController(QWidget):
         self.tableName = msg[6]
         self.pUid = msg[7]
         self.mainLabel = mainLabel
-        self.sampleFilter=[]
+        self.timer = QTimer()
         self.view = EEGView()
         self.speed = {
-            "1x": 3,
-            "2x": 1.5,
-            "3x": 1
+            "1x": 3000,
+            "2x": 1500,
+            "3x": 1000
         }
         self.speedText = "1x"
         self.loading = True
@@ -237,6 +237,7 @@ class EEGController(QWidget):
     # 改变移动速度的操作
     def onMoveSpeedChanged(self):
         self.speedText = self.view.ui.moveSpeed.currentText()
+        self.timer.setInterval(self.speed[self.speedText])
 
     # 改变秒跨度的操作
     def secondsSpanChange(self):
@@ -291,7 +292,7 @@ class EEGController(QWidget):
         except Exception as e:
             print("timeChange", e)
 
-    # 自动播放后退
+    # 点击自动向后播放按钮
     def onBtnDowningClicked(self):
         try:
             if self.loading:
@@ -302,16 +303,18 @@ class EEGController(QWidget):
                 self.view.ui.btnDowning.setDisabled(True)
                 self.view.ui.btnUping.setText("■")
                 self.view.stopPaintLabel()
-                self.thread = threading.Thread(target=self.doDowning)
-                self.thread.start()
+                if self.timer.receivers(self.timer.timeout) > 0:
+                    self.timer.timeout.disconnect()
+                self.timer.timeout.connect(self.doDowning)
+                self.timer.start(self.speed[self.speedText])
             else:
                 self.view.ui.btnUp.setDisabled(False)
                 self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnDowning.setDisabled(False)
                 self.view.ui.btnUping.setText(">>")
                 self.view.startPaintLabel()
-                self.view.restartShow()
-                self.stopThread()
+                self.timer.stop()
+                # self.stopThread()
             self.moving = self.moving is False
         except Exception as e:
             print("onBtnDowningClicked", e)
@@ -319,28 +322,21 @@ class EEGController(QWidget):
     # 自东播放后退的算法
     def doDowning(self):
         try:
-            while True:
-                if self.loading:
-                    continue
-                time.sleep(self.speed[self.speedText])
-                cmd, begin = self.view.onBtnDownClicked()
-                if cmd is False:
-                    self.view.ui.btnUp.setDisabled(False)
-                    self.view.ui.btnDown.setDisabled(False)
-                    self.view.ui.btnUping.setDisabled(False)
-                    self.view.ui.btnDowning.setText("<<")
-                    self.view.startPaintLabel()
-                    self.checkSolution(begin)
-                    self.stopThread()
-                    return
-                else:
-                    self.checkSolution(begin)
+            if self.loading:
+                return
+            cmd, begin = self.view.onBtnDownClicked()
+            if cmd is False:
+                self.view.ui.btnUp.setDisabled(False)
+                self.view.ui.btnDown.setDisabled(False)
+                self.view.ui.btnDowning.setDisabled(False)
+                self.view.ui.btnUping.setText(">>")
+                self.view.startPaintLabel()
+                self.checkSolution(begin)
+                self.timer.stop()
+            else:
+                self.checkSolution(begin)
         except Exception as e:
             print("doDowning", e)
-
-    # 关闭自动播放开启的线程
-    def stopThread(self):
-        self._async_raise(self.thread.ident, SystemExit)
 
     def exit(self):
         pass
@@ -356,16 +352,17 @@ class EEGController(QWidget):
                 self.view.ui.btnUping.setDisabled(True)
                 self.view.ui.btnDowning.setText("■")
                 self.view.stopPaintLabel()
-                self.thread = threading.Thread(target=self.doUping)
-                self.thread.start()
+                if self.timer.receivers(self.timer.timeout) > 0:
+                    self.timer.timeout.disconnect()
+                self.timer.timeout.connect(self.doUping)
+                self.timer.start(self.speed[self.speedText])
             else:
                 self.view.ui.btnUp.setDisabled(False)
                 self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnUping.setDisabled(False)
                 self.view.ui.btnDowning.setText("<<")
                 self.view.startPaintLabel()
-                self.view.restartShow()
-                self.stopThread()
+                self.timer.stop()
             self.moving = self.moving is False
         except Exception as e:
             print("onBtnUpingClicked", e)
@@ -373,40 +370,21 @@ class EEGController(QWidget):
     # 自动播放前进算法
     def doUping(self):
         try:
-            while True:
-                if self.loading:
-                    continue
-                time.sleep(self.speed[self.speedText])
-                cmd, begin = self.view.onBtnUpClicked()
-                if cmd is False:
-                    self.view.ui.btnUp.setDisabled(False)
-                    self.view.ui.btnDown.setDisabled(False)
-                    self.view.ui.btnDowning.setDisabled(False)
-                    self.view.ui.btnUping.setText(">>")
-                    self.view.startPaintLabel()
-                    self.checkSolution(begin)
-                    self.stopThread()
-                    return
-                else:
-                    self.checkSolution(begin)
+            if self.loading:
+                return
+            cmd, begin = self.view.onBtnUpClicked()
+            if cmd is False:
+                self.view.ui.btnUp.setDisabled(False)
+                self.view.ui.btnDown.setDisabled(False)
+                self.view.ui.btnUping.setDisabled(False)
+                self.view.ui.btnDowning.setText("<<")
+                self.view.startPaintLabel()
+                self.checkSolution(begin)
+                self.timer.stop()
+            else:
+                self.checkSolution(begin)
         except Exception as e:
             print("doUping", e)
-
-    # 停止线程的算法
-    def _async_raise(self, tid, exctype):
-        try:
-            tid = ctypes.c_long(tid)
-            if not inspect.isclass(exctype):
-                exctype = type(exctype)
-            res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-                tid, ctypes.py_object(exctype))
-            if res == 0:
-                raise ValueError("invalid thread id")
-            elif res != 1:
-                ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
-                raise SystemError("PyThreadState_SetAsyncExc failed")
-        except Exception as err:
-            print(err)
 
     # 响应选中对象事件
     def handlePickEvent(self, event):
@@ -542,8 +520,6 @@ class EEGController(QWidget):
     def on_return_clicked(self):
         self.view.close()
         self.switchFromEEG.emit(self.return_from)
-    #def subtractAverage(self):
-        #self.view.remove_mean(self.leftTime,self.rightTime,'on')
 
     def onrRefClicked(self):
         # 当前方案名
@@ -551,9 +527,6 @@ class EEGController(QWidget):
         montagesDialog = QDialogRef(self.montage, curRefName)
 
         montagesDialog.ui.pb_ok.clicked.connect(lambda: self.onRefConfirmed(montagesDialog))
-        # montagesView.ui.pb_cancel.clicked.connect(
-        #     lambda: self.montagesView.close()  # 取消按钮事件，直接关闭窗口
-        # )
         montagesDialog.ui.pb_cancel.clicked.connect(
             lambda: montagesDialog.close()  # 取消按钮事件，直接关闭窗口
         )

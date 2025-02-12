@@ -228,6 +228,12 @@ class EEGView(QWidget):
         self.is_waves_showed = self.curShowWaves
         self.is_status_showed = self.curShowStates
         self.is_Event_showed = self.curshowEvents
+        self.paintWaves()
+        self.paintStates()
+        self.paintEvents()
+        self.canvas.draw()
+        self.showLabelList()
+        self.showlabelInfo()
 
     # 后退一屏
     def onBtnDownClicked(self):
@@ -285,8 +291,9 @@ class EEGView(QWidget):
 
     # 绘制秒线
     def paintTimeLine(self):
-        for x in range(self.begin, self.end + 1):
-            self.time_lines.append(self.axes.vlines(x, 0, 200, colors='black', alpha=0.7))
+        if self.showSecondLine:
+            for x in range(self.begin, self.end + 1):
+                self.time_lines.append(self.axes.vlines(x, 0, 200, colors='black', alpha=0.7))
 
     # 删除秒线
     def removeTimeLine(self):
@@ -402,14 +409,6 @@ class EEGView(QWidget):
         self.restorePreSampleColor()
         self.showLabelList()
         self.ui.tableWidget.clearSelection()
-
-    def restartShow(self):
-        self.paintWaves()
-        self.paintStates()
-        self.paintEvents()
-        self.canvas.draw()
-        self.showLabelList()
-        self.showlabelInfo()
 
     # 改变状态显示
     def changeShowState(self):
@@ -530,7 +529,8 @@ class EEGView(QWidget):
         label = str(state[0]) + "|" + str(state[1]) + "|" + str(state[2]) + "|" + str(state[3])
         x0 = state[1]/(self.sample_rate//self.dawnSample)
         x1 = state[2]/(self.sample_rate//self.dawnSample)
-        self.state_lines.append([label,self.axes.axvspan(x0, x1, label=label, facecolor=color, alpha=0.3, picker=True)])
+        self.state_lines.append([label, self.axes.axvspan(x0, x1, label=label, facecolor=color, alpha=0.3, picker=True)])
+
     def paintEvents(self):
         if self.is_Event_showed is False:
             return
@@ -541,6 +541,7 @@ class EEGView(QWidget):
             #              self.begin * self.sample_rate // self.dawnSample) else 0
             label = str(event[0]) + "|" + str(event[1]) + "|" + str(event[2]) + "|" + str(event[3])
             self.paintAEvent(start, label, color)
+
     def paintAEvent(self, start, label, color):
         # x = np.linspace(self.begin, self.end, (self.end - self.begin) * self.sample_rate // self.dawnSample)
 
@@ -809,10 +810,11 @@ class EEGView(QWidget):
         if self.eventline:
             self.eventline.remove()
             self.axes.collections.remove(self.eventline)
-        lineposition = int(x * self.sample_rate)
+        self.lineposition = int(x * self.sample_rate)
         self.eventline = self.axes.vlines(
-        lineposition / self.sample_rate, 0, 200, color='red')
+        self.lineposition / self.sample_rate, 0, 200, color='red')
         self.canvas.draw()
+
     # 恢复上一个选中的样本颜色
     def restorePreSampleColor(self):
         if self.cur_sample_index < 0:
@@ -985,7 +987,7 @@ class EEGView(QWidget):
     # 判断样本是波形还是状态
     def checkMenuAction(self, type):
         if self.annotate == EEGView.STATE_ANNOTATE:
-            if self.state_left is None or self.state_right is None:
+            if self.state_left is None or self.state_right is None or self.is_status_showed is False:
                 QMessageBox.information(self.view, ' ', "无效选择")
                 return 0, []
             begin = self.state_left // self.dawnSample
@@ -1003,6 +1005,13 @@ class EEGView(QWidget):
                     break
                 idx += 1
             self.states.insert(idx, state)
+            idx = 0
+            while idx < len(self.filterlist):
+                if state[1] < self.filterlist[idx][1] or (
+                        state[1] == self.filterlist[idx][1] and state[2] < self.filterlist[idx][2]):
+                    break
+                idx += 1
+            self.filterlist.insert(idx, state)
             self.paintAState(state, "green")
             lBit = (self.state_left // self.sample_rate) * self.nDotWin // self.lenTime
             rBit = (self.state_right // self.sample_rate) * self.nDotWin // self.lenTime
@@ -1017,7 +1026,10 @@ class EEGView(QWidget):
             self.state_right_line = None
             self.canvas.draw()
             return 1, state
-        if self.pick_second is not None:
+        elif self.annotate == EEGView.WAVE_ANNOTATE:
+            if self.pick_first is None or self.pick_second is None or self.is_waves_showed is False:
+                QMessageBox.information(self.view, ' ', "无效选择")
+                return 0, []
             begin = self.pick_first
             end = self.pick_second
             wave = [self.pick_channel, begin, end, type[0]]
@@ -1033,6 +1045,12 @@ class EEGView(QWidget):
                     break
                 idx += 1
             self.waves.insert(idx, wave)
+            idx = 0
+            while idx < len(self.filterlist):
+                if wave[1] < self.filterlist[idx][1] or (wave[1] == self.filterlist[idx][1] and wave[2] < self.filterlist[idx][2]):
+                    break
+                idx += 1
+            self.filterlist.insert(idx, wave)
             color = 'blue'
             l = (wave[1] - (self.begin * self.sample_rate // self.dawnSample)) if wave[1] > (self.begin * self.sample_rate // self.dawnSample) else 0
             r = (wave[2] - (self.begin * self.sample_rate // self.dawnSample)) if wave[2] < (self.end * self.sample_rate // self.dawnSample) else (self.end - self.begin) * (self.sample_rate // self.dawnSample)
@@ -1050,6 +1068,49 @@ class EEGView(QWidget):
             self.pick_first = None
             self.pick_channel = None
             return 1, wave
+        elif self.annotate == EEGView.EVENT_ANNOTATE:
+            if self.lineposition is None or self.is_Event_showed is False:
+                QMessageBox.information(self.view, ' ', "无效选择")
+                return 0, []
+            begin = self.lineposition
+            end = self.lineposition
+            event = ['all', begin, end, type[0]]
+            idx = 0
+            while idx < len(self.filterlist):
+                if event[1] < self.filterlist[idx][1] or (
+                        event[1] == self.filterlist[idx][1] and event[2] < self.filterlist[idx][2]):
+                    break
+                idx += 1
+            self.filterlist.insert(idx, event)
+            idx = 0
+            while idx < len(self.labels):
+                if event[1] < self.labels[idx][1] or (
+                        event[1] == self.labels[idx][1] and event[2] < self.labels[idx][2]):
+                    break
+                idx += 1
+            self.labels.insert(idx, event)
+            idx = 0
+            while idx < len(self.events):
+                if event[1] < self.events[idx][1] or (
+                        event[1] == self.events[idx][1] and event[2] < self.events[idx][2]):
+                    break
+                idx += 1
+            self.events.insert(idx, event)
+            color = 'orange'
+            self.paintAEvent()
+            lBit = (self.state_left // self.sample_rate) * self.nDotWin // self.lenTime
+            rBit = (self.state_right // self.sample_rate) * self.nDotWin // self.lenTime
+            self.labelBit[lBit: rBit] = True
+            self.paintLabelBit()
+            self.showLabelList()
+            self.state_left = None
+            self.state_right = None
+            self.state_left_line.remove()
+            self.state_right_line.remove()
+            self.state_left_line = None
+            self.state_right_line = None
+            self.canvas.draw()
+
         if self.is_waves_showed and self.is_status_showed:
             if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.labels):
                 self.labels[self.cur_sample_index][3] = type[0]
