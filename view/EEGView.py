@@ -430,17 +430,17 @@ class EEGView(QWidget):
     def changeShowState(self):
         self.is_status_showed = self.is_status_showed is False
         self.ui.hideState.setChecked(self.is_status_showed)
-        if self.is_status_showed is False :
+        if self.is_status_showed is False : #关闭显示
             if self.ui.gblabelbtn2.isChecked():
                 self.ui.gblabelbtn4.setChecked(True)
                 self.annotate = EEGView.NO_ANNOTATE
             self.ui.gblabelbtn2.setDisabled(True)
-        else:
-            self.ui.gblabelbtn2.setDisabled(False)
-        if self.is_status_showed:
-            self.paintStates()
-        else:
+            self.showbtnfilter(signal=False)
             self.removeLines(sample=2)
+        else:#打开显示
+            self.showbtnfilter(signal=True, type='状态')
+            self.ui.gblabelbtn2.setDisabled(False)
+            self.paintStates()
         self.canvas.draw()
         self.restorePreSampleColor()
         self.showLabelList()
@@ -448,17 +448,17 @@ class EEGView(QWidget):
     def changeShowEvent(self):
         self.is_Event_showed = self.is_Event_showed is False
         self.ui.hideEvent.setChecked(self.is_Event_showed)
-        if self.is_Event_showed is False:
+        if self.is_Event_showed is False:# 关闭显示
             if self.ui.gblabelbtn3.isChecked():
                 self.ui.gblabelbtn4.setChecked(True)
                 self.annotate = EEGView.NO_ANNOTATE
             self.ui.gblabelbtn3.setDisabled(True)
-        else:
-            self.ui.gblabelbtn3.setDisabled(False)
-        if self.is_Event_showed:
-            self.paintEvents()
-        else:
+            self.showbtnfilter(signal=False)
             self.removeLines(sample=3)
+        else:#打开显示
+            self.showbtnfilter(signal=True, type='事件')
+            self.ui.gblabelbtn3.setDisabled(False)
+            self.paintEvents()
         self.canvas.draw()
         self.restorePreSampleColor()
         self.showLabelList()
