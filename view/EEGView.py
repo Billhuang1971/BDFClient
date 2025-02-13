@@ -1252,6 +1252,7 @@ class EEGView(QWidget):
         self.canvas.draw()
         self.filterSamples()
         self.showLabelList()
+        self.showlabelInfo()
         return label
 
     # 显示病人相关信息
