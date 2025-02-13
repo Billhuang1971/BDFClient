@@ -41,7 +41,7 @@ class EEGController(QWidget):
     def startEEG(self):
         try:
             self.view.show()
-            self.nSecWin, nDotSec = self.view.calcSen()
+            self.nSecWin, self.nDotSec = self.view.calcSen()
             self.nWinBlock = 11
             self.view.setMoveLength(self.nSecWin)
 
@@ -50,7 +50,7 @@ class EEGController(QWidget):
             self.client.insertSampleSig.connect(self.insertSampleRes)
             self.client.updateSampleSig.connect(self.updateSampleRes)
             self.client.deleteSampleSig.connect(self.deleteSampleRes)
-            self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, nDotSec, self.nWinBlock, self.tableName, self.pUid])
+            self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, self.nDotSec, self.nWinBlock, self.tableName, self.pUid])
         except Exception as e:
             print("startEEG", e)
 
@@ -127,7 +127,8 @@ class EEGController(QWidget):
             if REPData[3][0] == '0':
                 QMessageBox.information(self, '提示', "删除样本失败")
                 return
-            label = self.view.deleteSample()
+            labelBit = REPData[3][2][0]
+            label = self.view.deleteSample(labelBit)
             self.data.deleteSample(label)
         except Exception as e:
             print("deleteSampleRes", e)
@@ -215,6 +216,8 @@ class EEGController(QWidget):
         self.view.popMenu2.addSeparator()
         self.view.popMenu3.addAction(cancelAction)
         self.view.popMenu3.addSeparator()
+        self.view.popMenu4.addAction(cancelAction)
+        self.view.popMenu4.addSeparator()
         delAction = QAction("删除样本", self, triggered=self.delSample)
         self.view.popMenu1.addAction(delAction)
         self.view.popMenu1.addSeparator()
@@ -222,6 +225,8 @@ class EEGController(QWidget):
         self.view.popMenu2.addSeparator()
         self.view.popMenu3.addAction(delAction)
         self.view.popMenu3.addSeparator()
+        self.view.popMenu4.addAction(delAction)
+        self.view.popMenu4.addSeparator()
         # 向右键菜单栏添加波形和状态
         sms = {}
         groups = ['正常波形', '异常波形', '伪迹波形', '正常状态', '异常状态', '伪迹状态', '正常事件', '异常事件']
@@ -264,7 +269,7 @@ class EEGController(QWidget):
         label = self.view.delSample()
         if label is None:
             return
-        self.client.deleteSample([label, self.tableName, self.check_id, self.file_id, self.user_id, self.dawnSample])
+        self.client.deleteSample([label, self.tableName, self.check_id, self.file_id, self.user_id, self.dawnSample, self.nDotSec * self.nSecWin, self.lenFile])
 
     # 改变移动速度的操作
     def onMoveSpeedChanged(self):
@@ -274,8 +279,8 @@ class EEGController(QWidget):
     # 改变秒跨度的操作
     def secondsSpanChange(self):
         try:
-            self.nSecWin, nDotSec = self.view.secondsSpanChange()
-            self.dawnSample, self.lenWin, readFrom = self.view.reCalc(nDotSec, self.nSecWin)
+            self.nSecWin, self.nDotSec = self.view.secondsSpanChange()
+            self.dawnSample, self.lenWin, readFrom = self.view.reCalc(self.nDotSec, self.nSecWin)
             self.lenBlock = min(self.lenFile, self.nWinBlock * self.lenWin)
             self.data.resetEEGData(self.lenBlock, self.lenWin, readFrom)
             self.client.loadEEGData([self.check_id, self.file_id, readFrom, readFrom + self.lenBlock, self.dawnSample, self.tableName, self.pUid])

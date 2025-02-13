@@ -149,6 +149,7 @@ class EEGView(QWidget):
             self.popMenu1 = QMenu(self.canvas)
             self.popMenu2 = QMenu(self.canvas)
             self.popMenu3 = QMenu(self.canvas)
+            self.popMenu4 = QMenu(self.canvas)
             self.updateYAxis(channels)
             self.setAxHscroll()
             self.showPatientInfo(patientInfo, fileName,
@@ -276,7 +277,7 @@ class EEGView(QWidget):
     # 时间改变
     def timeChange(self, begin):
         if begin < 0 or begin + self.winTime > self.lenTime:
-            self.view.ui.editTime.setText("00:00:00")
+            self.ui.editTime.setText("00:00:00")
             self.beign = 0
             self.end = self.winTime
         else:
@@ -557,7 +558,7 @@ class EEGView(QWidget):
         self.waves = []
         self.states = []
         self.events = []
-        self.filterlist=list(self.labels)
+        self.filterlist = list(self.labels)
         for sample in self.labels: #从当前屏所有样本开始筛
             matched = False#标记是否成功添加
             if sample[0]!='all': #wave
@@ -770,6 +771,8 @@ class EEGView(QWidget):
                     for l in lines:
                         l.remove()
                     self.wave_lines = []
+                    self.state_lines = []
+                    self.Event_lines = []
                 elif sample == 1: #全删波形
                     for l in self.wave_lines:
                         l[1].remove()
@@ -894,7 +897,7 @@ class EEGView(QWidget):
         elif self.annotate == EEGView.EVENT_ANNOTATE:
             self.popMenu3.exec_(QCursor.pos())
         else:
-            return
+            self.popMenu4.exec_(QCursor.pos())
 
     # 绘制线透明度
     def focusLines(self):
@@ -935,17 +938,14 @@ class EEGView(QWidget):
 
     # 恢复上一个选中的样本颜色
     def restorePreSampleColor(self):
-        if self.cur_sample_index < 0:
-            return
-        if self.cur_sample_index >= len(self.filterlist):
+        if self.cur_sample_index < 0 or self.cur_sample_index >= len(self.filterlist):
             return
         sample = self.filterlist[self.cur_sample_index]
-        if sample[0] == 'all' and sample[1]!=sample[2]:
-            self.changeSampleColor(sample, 'green')
-        elif sample[0]!='all' and sample[1]!=sample[2]:
-            self.changeSampleColor(sample, 'blue')
-        elif sample[0]=='all' and sample[1]==sample[2]:
-            self.changeSampleColor(sample, 'orange')
+        if sample[0] == 'all':
+            color = 'orange' if sample[1] == sample[2] else 'green'
+        else:
+            color = 'blue'
+        self.changeSampleColor(sample, color)
         self.showlabelInfo()
         for col in range(self.ui.tableWidget.columnCount()):
             self.ui.tableWidget.item(self.cur_sample_index, col).setSelected(False)
@@ -1059,25 +1059,22 @@ class EEGView(QWidget):
     # 改变样本颜色
     def changeSampleColor(self, sample, color):
         s_label = str(sample[0]) + "|" + str(sample[1]) + "|" + str(sample[2]) + "|" + str(sample[3])
-        lines = self.axes.get_lines()
-        if sample[0] == 'all' and sample[1]!=sample[2]:
+        if sample[0] == 'all' and sample[1] != sample[2]:
             for s in self.state_lines:
-                if s[0]==s_label:
+                if s[0] == s_label:
                     s[1].set_facecolor(color)
-            self.canvas.draw()
-        elif sample[0]!='all' and sample[1]!=sample[2]: #波形
-            for l in lines:
-                label = l.get_label()
-                if label == s_label:
-                    l.set_color(color)
                     break
-            self.canvas.draw()
-        elif sample[0]=='all' and sample[1]==sample[2]:#事件
+        elif sample[0] != 'all': #波形
+            for l in self.wave_lines:
+                if l[0] == s_label:
+                    l[1].set_color(color)
+                    break
+        elif sample[0]=='all' and sample[1]==sample[2]: #事件
             for l in self.Event_lines:
                 if l[0] == s_label:
                     l[1].set_color(color)
                     break
-            self.canvas.draw()
+        self.canvas.draw()
 
     # 取消选中
     def cancelSelect(self):
@@ -1185,28 +1182,28 @@ class EEGView(QWidget):
     # 判断样本是波形还是状态
     def checkMenuAction(self, type_id):
         if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.filterlist):
-            label = self.filterlist[self.cur_sample_index]
+            label = list(self.filterlist[self.cur_sample_index])
             label[3] = type_id
             return EEGView.UPDATE_SAMPLE, label
         else:
             label = []
             if self.annotate == EEGView.STATE_ANNOTATE:
                 if self.state_left is None or self.state_right is None or self.is_status_showed is False:
-                    QMessageBox.information(self.view, ' ', "无效选择")
+                    QMessageBox.information(self, ' ', "无效选择")
                     return EEGView.NO_ACTION, label
                 begin = self.state_left // self.dawnSample
                 end = self.state_right // self.dawnSample
                 label = ["all", begin, end, type_id]
             elif self.annotate == EEGView.WAVE_ANNOTATE:
                 if self.pick_first is None or self.pick_second is None or self.is_waves_showed is False:
-                    QMessageBox.information(self.view, ' ', "无效选择")
+                    QMessageBox.information(self, ' ', "无效选择")
                     return EEGView.NO_ACTION, label
                 begin = self.pick_first
                 end = self.pick_second
                 label = [self.pick_channel, begin, end, type_id]
             elif self.annotate == EEGView.EVENT_ANNOTATE:
                 if self.lineposition is None or self.is_Event_showed is False:
-                    QMessageBox.information(self.view, ' ', "无效选择")
+                    QMessageBox.information(self, ' ', "无效选择")
                     return EEGView.NO_ACTION, label
                 begin = self.lineposition
                 end = self.lineposition
@@ -1227,11 +1224,12 @@ class EEGView(QWidget):
 
     def delSample(self):
         if self.cur_sample_index < 0 or self.cur_sample_index >= len(self.filterlist):
-            QMessageBox.information(self.view, ' ', "无效选择")
+            QMessageBox.information(self, ' ', "无效选择")
             return None
         return self.filterlist[self.cur_sample_index]
 
-    def deleteSample(self):
+    def deleteSample(self, labelBit):
+        self.labelBit = labelBit
         label = self.filterlist[self.cur_sample_index]
         idx = 0
         while idx < len(self.labels):
@@ -1247,6 +1245,7 @@ class EEGView(QWidget):
         else:
             sample = 1
         self.removeLines([str(label[0]) + "|" + str(label[1]) + "|" + str(label[2]) + "|" + str(label[3])], sample)
+        self.paintLabelBit()
         self.canvas.draw()
         self.filterSamples()
         self.showLabelList()
@@ -1397,19 +1396,36 @@ class EEGView(QWidget):
         return self.type_info, tempt, banType
 
     def updateSample(self, type_id):
-        self.filterlist[self.cur_sample_index][3] = type_id
-        label = self.filterlist
+        label = self.filterlist[self.cur_sample_index]
+        label1 = str(label[0]) + "|" + str(label[1]) + "|" + str(label[2]) + "|" + str(label[3])
+        label2 = str(label[0]) + "|" + str(label[1]) + "|" + str(label[2]) + "|" + str(type_id)
+        self.restorePreSampleColor()
         idx = 0
         while idx < len(self.labels):
             if self.labels[idx][0] == label[0] and self.labels[idx][1] == label[1] and self.labels[idx][2] == label[2]:
-                self.labels[idx][3] = label[3]
+                self.labels[idx][3] = type_id
                 break
             idx += 1
-        self.restorePreSampleColor()
-        self.canvas.draw()
+        if label[0] != 'all':
+            for wave in self.wave_lines:
+                if wave[0] == label1:
+                    wave[1].set_label(label2)
+                    wave[0] = label2
+                    break
+        elif label[1] == label[2]:
+            for event in self.Event_lines:
+                if event[0] == label1:
+                    event[1].set_label(label2)
+                    event[0] = label2
+                    break
+        else:
+            for state in self.state_lines:
+                if state[0] == label1:
+                    state[1].set_label(label2)
+                    state[0] = label2
+                    break
         self.filterSamples()
         self.showLabelList()
-        self.showlabelInfo()
         return label
 
     def annotatesignal(self, signal):
