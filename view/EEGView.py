@@ -423,7 +423,6 @@ class EEGView(QWidget):
         self.canvas.draw()
         self.restorePreSampleColor()
         self.showLabelList()
-        self.ui.tableWidget.clearSelection()
 
     # 改变状态显示
     def changeShowState(self):
@@ -442,7 +441,6 @@ class EEGView(QWidget):
         self.canvas.draw()
         self.restorePreSampleColor()
         self.showLabelList()
-        self.ui.tableWidget.clearSelection()
     def changeShowEvent(self):
         self.is_Event_showed = self.is_Event_showed is False
         self.ui.hideEvent.setChecked(self.is_Event_showed)
@@ -459,7 +457,6 @@ class EEGView(QWidget):
         self.canvas.draw()
         self.restorePreSampleColor()
         self.showLabelList()
-        self.ui.tableWidget.clearSelection()
 
     # 显示样本列表信息
     def showLabelList(self):
@@ -514,6 +511,7 @@ class EEGView(QWidget):
         self.ui.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)
         self.ui.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.ui.tableWidget.resizeRowsToContents()
+        self.ui.tableWidget.clearSelection()
 
     # 绘制当前屏幕状态
     def paintStates(self):
@@ -558,16 +556,17 @@ class EEGView(QWidget):
         self.waves = []
         self.states = []
         self.events = []
-        for sample in self.labels:
-            matched = False
+        self.filterlist=list(self.labels)
+        for sample in self.labels: #从当前屏所有样本开始筛
+            matched = False#标记是否成功添加
             if sample[0]!='all': #wave
-                for types in self.filtertype:
+                for types in self.filtertype: #根据样本选择的情况筛选
                     if types[0]==sample[3]:
-                        self.waves.append(sample)
+                        self.waves.append(sample) #将每个样本添加到指定的数组（用于绘图）
                         matched = True
                         break
-                if not matched:
-                    self.filterlist.remove(sample)
+                if not matched: #若该样本不在样本选择中
+                    self.filterlist.remove(sample) #从filterlist中移除该样本
             elif sample[0] == 'all' and sample[1]!=sample[2]:#state
                 for types in self.filtertype:
                     if types[0]==sample[3]:
@@ -764,9 +763,7 @@ class EEGView(QWidget):
     def removeLines(self, ch=None, sample=False):
         #删除所有线条且删除状态以及事件
         if (ch is None or len(ch) == 0) and sample is False:
-            for state in self.state_lines:
-                state[1].remove()
-            self.state_lines = []
+            self.removeStates()
             self.wave_lines = []
             lines = self.axes.get_lines()
             for l in lines:
@@ -779,7 +776,7 @@ class EEGView(QWidget):
                 label = l.get_label() if sample else l.get_label().split('|')[0]
                 if label in ch:
                     l.remove()
-        #删除所有当前屏样本
+        #删除所有当前屏波形样本
         if ch is None and sample is True:
             lines = self.axes.get_lines()
             for l in lines:
