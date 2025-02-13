@@ -587,9 +587,12 @@ class EEGController(QWidget):
         return grouped_states, sampleFilter
 
     def onSampleBtnClicked(self):
-        sampleFilter = self.view.getSampleFilter() #获取所有的type
-        sampleMessage = QDialogSample(self.grouped_states, sampleFilter)
-        sampleMessage.ui.pb_ok.clicked.connect(lambda: self.onSampleConfirmed(sampleMessage,sampleFilter))
+        type_info,sampleFilter,banType = self.view.getSampleFilter() #所有teype, 筛选后的type，禁用的type（由显示样本控制）
+        sampleFilterName=[]
+        for tempt in sampleFilter:
+            sampleFilterName.append(tempt[1])
+        sampleMessage = QDialogSample(self.grouped_states, sampleFilterName,banType)
+        sampleMessage.ui.pb_ok.clicked.connect(lambda: self.onSampleConfirmed(sampleMessage,sampleFilter,type_info))
         sampleMessage.ui.pb_cancel.clicked.connect(
             lambda: sampleMessage.close()  # 取消按钮事件，直接关闭窗口
         )
@@ -605,14 +608,39 @@ class EEGController(QWidget):
         elif button.text() == '事件':
             self.view.annotatesignal(2)
 
-    def onSampleConfirmed(self, sampleMessage, sampleFilter):
-        sampleFilter = set(sampleFilter)
-        for radio_button in sampleMessage.ui.ck_g: #遍历按钮确认是否选中
-            if radio_button.isChecked() == False and radio_button.text() in sampleFilter:
-                sampleFilter.remove(radio_button.text())
-            if radio_button.isChecked() == True and radio_button.text() not in sampleFilter:
-                sampleFilter.add(radio_button.text())
-        sampleFilter = list(sampleFilter) #已选择的type
+    def onSampleConfirmed(self, sampleMessage, sampleFilter,type_info):
+        # 将 sampleFilter 转换为集合，方便快速查找和去重
+        sampleFilter = set(tuple(item) for item in sampleFilter)  # 将列表转换为元组，因为集合中的元素必须是可哈希的
+
+        # 遍历按钮确认是否选中
+        for radio_button in sampleMessage.ui.ck_g:
+            # 获取按钮的文本（type）
+            button_text = radio_button.text()
+
+            # 检查 sampleFilter 中是否存在与按钮文本匹配的 type
+            # 遍历 sampleFilter，查找是否有元素的第二个值（type）与按钮文本匹配
+            matching_items = [item for item in sampleFilter if item[1] == button_text]
+
+            if radio_button.isChecked() == False:
+                # 如果按钮未选中，且 sampleFilter 中存在匹配的 type，则移除该元素
+                for item in matching_items:
+                    sampleFilter.remove(item)
+            elif radio_button.isChecked() == True:
+                # 如果按钮选中，且 sampleFilter 中不存在匹配的 type，则添加新元素
+                if not matching_items:
+                    # 假设 id 是自动生成的，这里可以使用一个占位符（如 0）
+                    click_items= [item for item in type_info if item[1] == button_text]
+                    click_items=click_items[0]
+                    if button_text==click_items[1]:
+                        sampleFilter.add(click_items)
+        # sampleFilter = set(sampleFilter)
+        # for radio_button in sampleMessage.ui.ck_g: #遍历按钮确认是否选中
+        #     if radio_button.isChecked() == False and radio_button.text() in sampleFilter:
+        #         sampleFilter.remove(radio_button.text())
+        #     if radio_button.isChecked() == True and radio_button.text() not in sampleFilter:
+        #         sampleFilter.add(radio_button.text())
+        # sampleFilter = list(sampleFilter) #已选择的type
+        sampleFilter = list(sampleFilter) #将 sampleFilter 转换回列表
         self.view.setSelectedTypes(sampleFilter)
         sampleMessage.close()
 

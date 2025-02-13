@@ -16,10 +16,10 @@ from PyQt5.QtWidgets import QLabel, QDialog
 
 
 class Ui_Sample(QDialog):
-    def setupUi(self,  Setting, dgroup,samplefilter):
+    def setupUi(self,  Setting, dgroup,samplefilter,banType):
         Setting.setObjectName("Setting")
         Setting.resize(1380, 766)
-
+        self.banType=banType
         self.dgroup = dgroup
         self.samplefilter = samplefilter
         self.montage = None
@@ -133,8 +133,9 @@ class Ui_Sample(QDialog):
                 # else:
                 #     self.ck_g[index].setChecked(False)
                 if chs[j] not in self.samplefilter:
-                    self.ck_g[index].setDisabled(True)
                     self.ck_g[index].setChecked(False)
+                    if chs[j] not in self.banType:
+                        self.ck_g[index].setDisabled(True)
                 else:
                     self.ck_g[index].setChecked(True)
                 index += 1

@@ -43,6 +43,7 @@ class EEGView(QWidget):
         self.type_info = []
         # 当前标注状态（波形、状态、事件）
         self.annotate = EEGView.NO_ANNOTATE
+        self.filtertype = []
         # 是否状态显示
         self.is_status_showed = True
         self.is_waves_showed = True
@@ -94,7 +95,7 @@ class EEGView(QWidget):
     # 减平均
     def changeSubtractAverage(self):
         self.subtractAverage = self.subtractAverage is False
-        self.filterlist = list(self.labels)
+        #self.filterlist = list(self.labels)
         self.removeLines()
         self.processChan()
         self.paintEEG()
@@ -137,7 +138,8 @@ class EEGView(QWidget):
             self.exclude_av = ['Ldelt1', 'Ldelt2', 'Rdelt1', 'Rdelt2', 'A1', 'A2', 'M1', 'M2', 'LOC', 'ROC',
                                'CHIN1', 'CHIN2', 'ECGL', 'ECGR', 'LAT1', 'LAT2', 'RAT1', 'RAT2',
                                'CHEST', 'ABD', 'FLOW', 'SNORE', 'DIF5', 'DIF6']
-            self.type_info = type_info
+            self.type_info = type_info #原数据库中所有类型
+            self.filtertype =list(self.type_info)
             self.dawnSample = dawnSample
             self.begin = 0
             self.end = self.winTime
@@ -193,7 +195,7 @@ class EEGView(QWidget):
 
     def sensitivityChange(self):
         self.sensitivity = int(self.ui.sensitivity.lineEdit().text())
-        self.filterlist = list(self.labels)
+        #self.filterlist = list(self.labels)
         self.removeLines()
         self.processChan()
         self.paintEEG()
@@ -408,12 +410,13 @@ class EEGView(QWidget):
         if self.is_waves_showed is False and self.ui.gblabelbtn1.isChecked():
             self.ui.gblabelbtn4.setChecked(True)
             self.ui.gblabelbtn1.setDisabled(True)
+            self.annotate=EEGView.NO_ANNOTATE
         else:
             self.ui.gblabelbtn1.setDisabled(False)
         if self.is_waves_showed:
             self.paintWaves()
         else:
-            self.removeLines(self.wave_lines, True)
+            self.removeLines(sample=True)
             self.wave_lines = []
             self.resetPickLabels()
             self.focusLines()
@@ -429,17 +432,13 @@ class EEGView(QWidget):
         if self.is_status_showed is False and self.ui.gblabelbtn2.isChecked():
             self.ui.gblabelbtn4.setChecked(True)
             self.ui.gblabelbtn2.setDisabled(True)
+            self.annotate = EEGView.NO_ANNOTATE
         else:
             self.ui.gblabelbtn2.setDisabled(False)
         if self.is_status_showed:
             self.paintStates()
         else:
-            for state in self.state_lines:
-                state[1].remove()
-            self.cancelStateAnnotate()
-            self.state_lines = []
-            self.resetPickLabels()
-            self.focusLines()
+            self.removeStates(signal=True)
         self.canvas.draw()
         self.restorePreSampleColor()
         self.showLabelList()
@@ -450,16 +449,13 @@ class EEGView(QWidget):
         if self.is_Event_showed is False and self.ui.gblabelbtn3.isChecked():
             self.ui.gblabelbtn4.setChecked(True)
             self.ui.gblabelbtn3.setDisabled(True)
+            self.annotate = EEGView.NO_ANNOTATE
         else:
             self.ui.gblabelbtn3.setDisabled(False)
         if self.is_Event_showed:
             self.paintEvents()
         else:
-            for event in self.Event_lines:
-                event[1].remove()
-            self.Event_lines = []
-            self.resetPickLabels()
-            self.focusLines()
+            self.removeStates(signal=False)
         self.canvas.draw()
         self.restorePreSampleColor()
         self.showLabelList()
@@ -467,19 +463,19 @@ class EEGView(QWidget):
 
     # 显示样本列表信息
     def showLabelList(self):
-        self.filterlist=list(self.labels)
-        if self.is_waves_showed is False:
-            for sample in self.filterlist.copy():
-                if sample[0] != 'all' and sample[1] != sample[2]:
-                    self.filterlist.remove(sample)
-        if self.is_status_showed is False:
-            for sample in self.filterlist.copy():
-                if sample[0] == 'all' and sample[1] != sample[2]:
-                    self.filterlist.remove(sample)
-        if self.is_Event_showed is False:
-            for sample in self.filterlist.copy():
-                if sample[0] == 'all' and sample[1] == sample[2]:
-                    self.filterlist.remove(sample)
+        #self.filterlist=list(self.labels)
+        # if self.is_waves_showed is False:
+        #     for sample in self.filterlist.copy():
+        #         if sample[0]!='all' and sample[1]!=sample[2]:
+        #             self.filterlist.remove(sample)
+        # if self.is_status_showed is False:
+        #     for sample in self.filterlist.copy():
+        #         if sample[0] == 'all' and sample[1]!=sample[2]:
+        #             self.filterlist.remove(sample)
+        # if self.is_Event_showed is False:
+        #     for sample in self.filterlist.copy():
+        #         if sample[0] == 'all' and sample[1] == sample[2]:
+        #             self.filterlist.remove(sample)
         itemName = ['开始时间', '样本类型']
         col_num = 2
         self.ui.tableWidget.setColumnCount(col_num)
@@ -503,7 +499,7 @@ class EEGView(QWidget):
                                           time.gmtime(int(self.filterlist[r][1]/(self.sample_rate/self.dawnSample))))))
                 else:
                     type_name = ""
-                    for type in self.type_info:
+                    for type in self.filtertype:
                         if type[0] == self.filterlist[r][3]:
                             type_name = type[1]
                             break
@@ -523,11 +519,11 @@ class EEGView(QWidget):
     def paintStates(self):
         if self.is_status_showed is False:
             return
-        keys = [x[0] for x in self.type_info]
+        keys = [x[0] for x in self.filtertype]
         for state in self.states:
             idx = keys.index(state[3])
-            description = self.type_info[idx][3]
-            type_name = self.type_info[idx][1]
+            description = self.filtertype[idx][3]
+            type_name = self.filtertype[idx][1]
             if description == '正常状态':
                 color = 'green'
             elif description == '异常状态':
@@ -563,12 +559,44 @@ class EEGView(QWidget):
         self.states = []
         self.events = []
         for sample in self.labels:
-            if sample[0] == 'all' and sample[1] != sample[2]:
-                self.states.append(sample)
-            elif sample[0] == 'all' and sample[1] == sample[2]:
-                self.events.append(sample)
-            elif sample[0] != 'all':
-                self.waves.append(sample)
+            matched = False
+            if sample[0]!='all': #wave
+                for types in self.filtertype:
+                    if types[0]==sample[3]:
+                        self.waves.append(sample)
+                        matched = True
+                        break
+                if not matched:
+                    self.filterlist.remove(sample)
+            elif sample[0] == 'all' and sample[1]!=sample[2]:#state
+                for types in self.filtertype:
+                    if types[0]==sample[3]:
+                        self.states.append(sample)
+                        matched = True
+                        break
+                if not matched:
+                    self.filterlist.remove(sample)
+            elif sample[0]=='all' and sample[1]==sample[2]: #event
+                for types in self.filtertype:
+                    if types[0]==sample[3]:
+                        self.events.append(sample)
+                        matched = True
+                        break
+                if not matched:
+                    self.filterlist.remove(sample)
+        # if self.is_waves_showed is False:
+        #     for sample in self.filterlist.copy():
+        #         if sample[0]!='all' and sample[1]!=sample[2]:
+        #             self.filterlist.remove(sample)
+        # if self.is_status_showed is False:
+        #     for sample in self.filterlist.copy():
+        #         if sample[0] == 'all' and sample[1]!=sample[2]:
+        #             self.filterlist.remove(sample)
+        # if self.is_Event_showed is False:
+        #     for sample in self.filterlist.copy():
+        #         if sample[0] == 'all' and sample[1] == sample[2]:
+        #             self.filterlist.remove(sample)
+
 
     # 绘制当前屏幕波形
     def paintWaves(self):
@@ -734,6 +762,7 @@ class EEGView(QWidget):
 
     # 删除line对象
     def removeLines(self, ch=None, sample=False):
+        #删除所有线条且删除状态以及事件
         if (ch is None or len(ch) == 0) and sample is False:
             for state in self.state_lines:
                 state[1].remove()
@@ -743,11 +772,48 @@ class EEGView(QWidget):
             for l in lines:
                 l.remove()
             return
-        lines = self.axes.get_lines()
-        for l in lines:
-            label = l.get_label() if sample else l.get_label().split('|')[0]
-            if label in ch:
-                l.remove()
+        #删指定波形样本
+        if ch is not None and sample is False:
+            lines = self.axes.get_lines()
+            for l in lines:
+                label = l.get_label() if sample else l.get_label().split('|')[0]
+                if label in ch:
+                    l.remove()
+        #删除所有当前屏样本
+        if ch is None and sample is True:
+            lines = self.axes.get_lines()
+            for l in lines:
+                label = l.get_label() if sample else l.get_label().split('|')[0]
+                if label in self.wave_lines:
+                    l.remove()
+    def removeStates(self,signal=''):
+        #状态和事件都删
+        if signal=='':
+            for state in self.state_lines:
+                state[1].remove()
+            self.cancelStateAnnotate()
+            self.state_lines=[]
+            for event in self.Event_lines:
+                event[1].remove()
+            if self.eventline is not None:
+                self.eventline.remove()
+                self.eventline = None
+            self.Event_lines = []
+        #仅状态
+        elif signal is True:
+            for state in self.state_lines:
+                state[1].remove()
+            self.cancelStateAnnotate()
+            self.state_lines=[]
+        #仅事件
+        elif signal is False:
+            for event in self.Event_lines:
+                event[1].remove()
+            if self.eventline is not None:
+                self.eventline.remove()
+                self.eventline = None
+            self.Event_lines = []
+
 
     # 判断点击第几个点
     def clickPointStatus(self, label):
@@ -790,8 +856,10 @@ class EEGView(QWidget):
             self.popMenu2.exec_(QCursor.pos())
         elif self.annotate == EEGView.WAVE_ANNOTATE:
             self.popMenu1.exec_(QCursor.pos())
-        else:
+        elif self.annotate == EEGView.EVENT_ANNOTATE:
             self.popMenu3.exec_(QCursor.pos())
+        else:
+            return
 
     # 绘制线透明度
     def focusLines(self):
@@ -857,7 +925,7 @@ class EEGView(QWidget):
             b_t = time.strftime('%H:%M:%S', time.gmtime(label[1]//(self.sample_rate//self.dawnSample)))
             e_t = time.strftime('%H:%M:%S', time.gmtime(label[2]//(self.sample_rate//self.dawnSample)))
             type_name = ""
-            for type in self.type_info:
+            for type in self.filtertype:
                 if type[0] == label[3]:
                     type_name = type[1]
                     break
@@ -869,7 +937,7 @@ class EEGView(QWidget):
             b_t = time.strftime('%H:%M:%S', time.gmtime(label[1]//(self.sample_rate//self.dawnSample)))
             e_t = time.strftime('%H:%M:%S', time.gmtime(label[2]//(self.sample_rate//self.dawnSample)))
             type_name = ""
-            for type in self.type_info:
+            for type in self.filtertype:
                 if type[0] == label[3]:
                     type_name = type[1]
                     break
@@ -887,7 +955,7 @@ class EEGView(QWidget):
             b_t = time.strftime('%H:%M:%S', time.gmtime(label[1] // (self.sample_rate // self.dawnSample)))
             e_t = time.strftime('%H:%M:%S', time.gmtime(label[2] // (self.sample_rate // self.dawnSample)))
             type_name = ""
-            for type in self.type_info:
+            for type in self.filtertype:
                 if type[0] == label[3]:
                     type_name = type[1]
                     break
@@ -1170,7 +1238,16 @@ class EEGView(QWidget):
 
 
     def setSelectedTypes(self, sampleFilter):
-        self.type_info = sampleFilter
+        self.filtertype = sampleFilter
+        self.filterSamples()
+        self.removeStates()
+        self.removeLines(sample=True)
+        self.paintWaves()
+        self.paintStates()
+        self.paintEvents()
+        self.canvas.draw()
+        self.showLabelList()
+        self.showlabelInfo()
 
 
     def delSample(self):
@@ -1303,14 +1380,22 @@ class EEGView(QWidget):
 
     def getSampleFilter(self):
         tempt=[]
+        banType=[]
         for i in self.type_info:
             if self.is_waves_showed and (i[3][-2:]=='波形' or i[2][-2:]=='波形'):
-                tempt.append(i[1])
+                banType.append(i[1])
             elif self.is_status_showed and (i[3][-2:] =='状态'or i[2][-2:]=='状态'):
-                tempt.append(i[1])
+                banType.append(i[1])
             elif self.is_Event_showed and i[3][-2:]=='事件':
-                tempt.append(i[1])
-        return tempt
+                banType.append(i[1])
+        for i in self.filtertype:
+            if self.is_waves_showed and (i[3][-2:]=='波形' or i[2][-2:]=='波形'):
+                tempt.append(i)
+            elif self.is_status_showed and (i[3][-2:] =='状态'or i[2][-2:]=='状态'):
+                tempt.append(i)
+            elif self.is_Event_showed and i[3][-2:]=='事件':
+                tempt.append(i)
+        return self.type_info,tempt,banType
 
     def updateSample(self,sampleFilter):
         self.sampleFilter = sampleFilter
