@@ -416,8 +416,7 @@ class EEGView(QWidget):
         if self.is_waves_showed:
             self.paintWaves()
         else:
-            self.removeLines(sample=True)
-            self.wave_lines = []
+            self.removeLines(sample=1)
             self.resetPickLabels()
             self.focusLines()
         self.canvas.draw()
@@ -437,7 +436,7 @@ class EEGView(QWidget):
         if self.is_status_showed:
             self.paintStates()
         else:
-            self.removeStates(signal=True)
+            self.removeLines(sample=2)
         self.canvas.draw()
         self.restorePreSampleColor()
         self.showLabelList()
@@ -453,7 +452,7 @@ class EEGView(QWidget):
         if self.is_Event_showed:
             self.paintEvents()
         else:
-            self.removeStates(signal=False)
+            self.removeLines(sample=3)
         self.canvas.draw()
         self.restorePreSampleColor()
         self.showLabelList()
@@ -760,29 +759,51 @@ class EEGView(QWidget):
         self.pick_second = None
 
     # 删除line对象
-    def removeLines(self, ch=None, sample=False):
-        #删除所有线条且删除状态以及事件
-        if (ch is None or len(ch) == 0) and sample is False:
-            self.removeStates()
-            self.wave_lines = []
-            lines = self.axes.get_lines()
-            for l in lines:
-                l.remove()
-            return
-        #删指定波形样本
-        if ch is not None and sample is False:
-            lines = self.axes.get_lines()
-            for l in lines:
-                label = l.get_label() if sample else l.get_label().split('|')[0]
-                if label in ch:
+    def removeLines(self, ch=None, sample=0): #ch=label
+        #删除所有
+        if (ch is None or len(ch) == 0):
+            if sample==0: #线条、波形、状态、事件 全删
+                self.removeStates()
+                lines = self.axes.get_lines()
+                for l in lines:
                     l.remove()
-        #删除所有当前屏波形样本
-        if ch is None and sample is True:
-            lines = self.axes.get_lines()
-            for l in lines:
-                label = l.get_label() if sample else l.get_label().split('|')[0]
-                if label in self.wave_lines:
-                    l.remove()
+                self.wave_lines = []
+            elif sample==1: #全删波形
+                for l in self.wave_lines:
+                    l[1].remove()
+                self.wave_lines = []
+            elif sample==2:#全删状态
+                self.removeStates(True)
+            elif sample==3: #全删事件
+                self.removeStates(False)
+            elif sample==4: #全删样本
+                for l in self.wave_lines:
+                    l[1].remove()
+                self.wave_lines = []
+                self.removeStates(True)
+                self.removeStates(False)
+        else: #指定删除
+            if sample==0:
+                lines = self.axes.get_lines()
+                for l in lines:
+                    label = l.get_label()
+                    if label in ch:
+                        l.remove()
+            if sample==1:#删除指定波形
+                for l in self.wave_lines:
+                    if l[0] in ch:
+                        l[1].remove()
+                        self.wave_lines.remove(l)
+            elif sample==2: #删除指定状态
+                for l in self.state_lines:
+                    if l[0] in ch:
+                        l[1].remove()
+                        self.state_lines.remove(l)
+            elif sample == 3:  # 删除指定事件
+                for l in self.Event_lines:
+                    if l[0] in ch:
+                        l[1].remove()
+                        self.Event_lines.remove(l)
     def removeStates(self,signal=''):
         #状态和事件都删
         if signal=='':
@@ -1015,9 +1036,10 @@ class EEGView(QWidget):
                 break
         if idx == -1:
             return
-        self.wave_lines.append(label)
-        self.axes.plot(x[start:end], self.plottedData[idx, start:end], color=color, picker=True, label=label,
-                       alpha=self.channels_alpha[channel], linewidth=1)
+        self.wave_lines.append([label,self.axes.plot(x[start:end], self.plottedData[idx, start:end], color=color, picker=True, label=label,
+                       alpha=self.channels_alpha[channel], linewidth=1)])
+        # self.axes.plot(x[start:end], self.plottedData[idx, start:end], color=color, picker=True, label=label,
+        #                alpha=self.channels_alpha[channel], linewidth=1)
 
     # 改变样本颜色
     def changeSampleColor(self, sample, color):
@@ -1237,8 +1259,7 @@ class EEGView(QWidget):
     def setSelectedTypes(self, sampleFilter):
         self.filtertype = sampleFilter
         self.filterSamples()
-        self.removeStates()
-        self.removeLines(sample=True)
+        self.removeLines(sample=4)
         self.paintWaves()
         self.paintStates()
         self.paintEvents()
