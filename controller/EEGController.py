@@ -125,12 +125,12 @@ class EEGController(QWidget):
     def deleteSampleRes(self, REPData):
         try:
             if REPData[3][0] == '0':
-                QMessageBox.information(self, '提示', "插入样本失败")
+                QMessageBox.information(self, '提示', "删除样本失败")
                 return
             label = self.view.deleteSample()
             self.data.deleteSample(label)
         except Exception as e:
-            print("updateSampleRes", e)
+            print("deleteSampleRes", e)
 
     # 更新样本返回信息
     def updateSampleRes(self, REPData):

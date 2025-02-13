@@ -761,6 +761,7 @@ class EEGView(QWidget):
 
     # 删除line对象
     def removeLines(self, ch=None, sample=0): #ch=label
+        print(ch)
         #删除所有
         if (ch is None or len(ch) == 0):
             if sample==0: #线条、波形、状态、事件 全删
@@ -1232,8 +1233,9 @@ class EEGView(QWidget):
                 sample = 2
         else:
             sample = 1
-        self.removeLines([], sample)
-        self.draw()
+        self.restorePreSampleColor()
+        self.removeLines([str(label[0]) + "|" + str(label[1]) + "|" + str(label[2]) + "|" + str(label[3])], sample)
+        self.canvas.draw()
         self.filterSamples()
         self.showLabelList()
         return label
