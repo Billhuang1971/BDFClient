@@ -279,8 +279,7 @@ class EEGController(QWidget):
     # 改变秒跨度的操作
     def secondsSpanChange(self):
         try:
-            self.nSecWin, self.nDotSec = self.view.secondsSpanChange()
-            self.dawnSample, self.lenWin, readFrom = self.view.reCalc(self.nDotSec, self.nSecWin)
+            self.nSecWin, self.nDotSec, self.dawnSample, self.lenWin, readFrom = self.view.secondsSpanChange()
             self.lenBlock = min(self.lenFile, self.nWinBlock * self.lenWin)
             self.data.resetEEGData(self.lenBlock, self.lenWin, readFrom)
             self.client.loadEEGData([self.check_id, self.file_id, readFrom, readFrom + self.lenBlock, self.dawnSample, self.tableName, self.pUid])

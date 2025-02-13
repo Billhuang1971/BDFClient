@@ -184,15 +184,19 @@ class EEGView(QWidget):
         figureHeightMM = (figureHeight / self.yDPI) * 25.4
         self.axesXWidthMM = x_fraction * figureWidthMM
         self.axesYWidthMM = y_fraction * figureHeightMM
-        return self.secondsSpanChange()
+        return self.getDotSec()
 
-    # 改变秒跨度操作
-    def secondsSpanChange(self):
+    def getDotSec(self):
         self.secondsSpan = int(self.ui.secondsSpan.lineEdit().text())
         self.winTime = int(round(self.axesXWidthMM / self.secondsSpan))
         px = int(round(self.secondsSpan * self.xDPI / 25.4))
         self.nDotWin = self.winTime * px
         return self.winTime, px
+
+    # 改变秒跨度操作
+    def secondsSpanChange(self):
+        nSecWin, nDotSec = self.getDotSec()
+        return nSecWin, nDotSec, self.reCalc(nSecWin, nDotSec)
 
     def sensitivityChange(self):
         self.sensitivity = int(self.ui.sensitivity.lineEdit().text())
