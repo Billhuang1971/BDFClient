@@ -1,8 +1,3 @@
-import ctypes
-import inspect
-import threading
-import time
-
 
 from PyQt5.Qt import *
 import matplotlib as mpl
@@ -40,6 +35,7 @@ class EEGController(QWidget):
         self.timer = QTimer()
         self.timer.setInterval(self.speed[self.speedText])
         self.loading = True
+        self.types_actions = {}
 
     # 计算绘图区域物理长度
     def startEEG(self):
@@ -52,6 +48,8 @@ class EEGController(QWidget):
             self.client.openEEGFileResSig.connect(self.openEEGFileRes)
             self.client.loadEEGDataSig.connect(self.loadEEGDataRes)
             self.client.insertSampleSig.connect(self.insertSampleRes)
+            self.client.updateSampleSig.connect(self.updateSampleRes)
+            self.client.deleteSampleSig.connect(self.deleteSampleRes)
             self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, nDotSec, self.nWinBlock, self.tableName, self.pUid])
         except Exception as e:
             print("startEEG", e)
@@ -123,6 +121,29 @@ class EEGController(QWidget):
         else:
             self.dgroup = self.montage
 
+    # 删除样本返回信息
+    def deleteSampleRes(self, REPData):
+        try:
+            if REPData[3][0] == '0':
+                QMessageBox.information(self, '提示', "插入样本失败")
+                return
+            label = self.view.deleteSample()
+            self.data.deleteSample(label)
+        except Exception as e:
+            print("updateSampleRes", e)
+
+    # 更新样本返回信息
+    def updateSampleRes(self, REPData):
+        try:
+            if REPData[3][0] == '0':
+                QMessageBox.information(self, '提示', "插入样本失败")
+                return
+            type_id = REPData[3][2][0]
+            label = self.view.updateSample(type_id)
+            self.data.updateSample(label)
+        except Exception as e:
+            print("updateSampleRes", e)
+
     # 插入样本返回信息
     def insertSampleRes(self, REPData):
         try:
@@ -173,7 +194,6 @@ class EEGController(QWidget):
         self.view.ui.sensitivity.lineEdit().editingFinished.connect(self.sensitivityChange)
         self.view.ui.returnBtn.clicked.connect(self.on_return_clicked)
         self.view.ui.gblabelbtngroup.buttonClicked.connect(self.sampleselect_btn)
-        #self.view.ui.subtractAverage.clicked.connect(self.subtractAverage)
 
         # 导联选择绑定
         self.view.ui.scenarioSelectionBtn.clicked.connect(self.onrRefClicked)
@@ -213,6 +233,7 @@ class EEGController(QWidget):
             sms[g] = self.view.popMenu3.addMenu(g)
         for t in type_info:
             action = QAction(t[1], self)
+            self.types_actions[t[1]] = action
             action.triggered.connect(lambda chk, t=t: self.handleMenuAction(t))
             if sms.get(t[3]) is None:
                 continue
@@ -228,19 +249,22 @@ class EEGController(QWidget):
     # 样本插入更新和删除操作
     def handleMenuAction(self, t):
         try:
-            cmd, label = self.view.checkMenuAction(t)
+            cmd, label = self.view.checkMenuAction(t[0])
             if cmd == EEGView.NO_ACTION:
                 return
             if cmd == EEGView.ADD_SAMPLE:
                 self.client.insertSample([label, self.tableName, self.check_id, self.file_id, self.user_id, self.dawnSample])
-            # else:
-            #
+            elif cmd == EEGView.UPDATE_SAMPLE:
+                self.client.updateSample([label, self.tableName, self.check_id, self.file_id, self.user_id, self.dawnSample])
         except Exception as e:
             print("handleMenuAction", e)
 
     # 删除样本
     def delSample(self):
         label = self.view.delSample()
+        if label is None:
+            return
+        self.client.deleteSample([label, self.tableName, self.check_id, self.file_id, self.user_id, self.dawnSample])
 
     # 改变移动速度的操作
     def onMoveSpeedChanged(self):
@@ -297,7 +321,6 @@ class EEGController(QWidget):
                 return
             [h, m, s] = time.split(':')
             begin = self.view.timeChange(int(h) * 3600 + int(m) * 60 + int(s))
-            self.view.changeAxStatus()
             inBlock, readFrom, readTo, = self.data.queryRange(begin)
             if inBlock is False:
                 self.loading = True
@@ -587,7 +610,7 @@ class EEGController(QWidget):
         return grouped_states, sampleFilter
 
     def onSampleBtnClicked(self):
-        type_info,sampleFilter,banType = self.view.getSampleFilter() #所有teype, 筛选后的type，禁用的type（由显示样本控制）
+        type_info, sampleFilter, banType = self.view.getSampleFilter() #所有teype, 筛选后的type，禁用的type（由显示样本控制）
         sampleFilterName=[]
         for tempt in sampleFilter:
             sampleFilterName.append(tempt[1])
@@ -641,6 +664,8 @@ class EEGController(QWidget):
         #         sampleFilter.add(radio_button.text())
         # sampleFilter = list(sampleFilter) #已选择的type
         sampleFilter = list(sampleFilter) #将 sampleFilter 转换回列表
+        for key, val in self.types_actions.items():
+            val.setEnabled(any(key == sample[1] for sample in sampleFilter))
         self.view.setSelectedTypes(sampleFilter)
         sampleMessage.close()
 

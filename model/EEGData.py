@@ -113,3 +113,19 @@ class EEGData(object):
                 break
             idx += 1
         self.labels.insert(idx, label)
+
+    def updateSample(self, label):
+        idx = 0
+        while idx < len(self.labels):
+            if label[0] == self.labels[idx][0] and label[1] == self.labels[idx][1] and label[2] == self.labels[idx][2]:
+                self.labels[idx][3] = label[3]
+                break
+            idx += 1
+
+    def deleteSample(self, label):
+        idx = 0
+        while idx < len(self.labels):
+            if label == self.labels[idx]:
+                break
+            idx += 1
+        self.labels.pop(idx)

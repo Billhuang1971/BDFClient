@@ -447,6 +447,8 @@ class client(QObject, socketClient):
     openEEGFileResSig = pyqtSignal(list)
     loadEEGDataSig = pyqtSignal(list)
     insertSampleSig = pyqtSignal(list)
+    updateSampleSig = pyqtSignal(list)
+    deleteSampleSig = pyqtSignal(list)
 
 
     def __init__(self, s_ip=None, s_port=None, cAppUtil=None):
@@ -480,8 +482,25 @@ class client(QObject, socketClient):
         msg = ['EEG', 2, self.tUser[0], REQdata]
         self.sendRequest(msg)
 
+    def updateSample(self, REQdata):
+        REQdata.insert(0, self.macAddr)
+        msg = ['EEG', 3, self.tUser[0], REQdata]
+        self.sendRequest(msg)
+
+    def deleteSample(self, REQdata):
+        REQdata.insert(0, self.macAddr)
+        msg = ['EEG', 4, self.tUser[0], REQdata]
+        self.sendRequest(msg)
+
     def insertSampleRes(self, REPmsg):
         self.insertSampleSig.emit(list(REPmsg))
+
+    def updateSampleRes(self, REPmsg):
+        self.updateSampleSig.emit(list(REPmsg))
+
+    def deleteSampleRes(self, REPmsg):
+        self.deleteSampleSig.emit(list(REPmsg))
+
 
     ## dsj [ ===
     # 学习评估/提取课程学习测试内容
@@ -4473,6 +4492,10 @@ class client(QObject, socketClient):
             self.loadEEGDataRes(REQmsg)
         elif REQmsg[0] == 'EEG' and REQmsg[1] == 2:
             self.insertSampleRes(REQmsg)
+        elif REQmsg[0] == 'EEG' and REQmsg[1] == 3:
+            self.updateSampleRes(REQmsg)
+        elif REQmsg[0] == 'EEG' and REQmsg[1] == 4:
+            self.deleteSampleRes(REQmsg)
 
         else:
             print(f"{REQmsg[0]}.{REQmsg[1]}未定义")
