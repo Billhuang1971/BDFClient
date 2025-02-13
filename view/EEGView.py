@@ -441,6 +441,7 @@ class EEGView(QWidget):
         self.canvas.draw()
         self.restorePreSampleColor()
         self.showLabelList()
+
     def changeShowEvent(self):
         self.is_Event_showed = self.is_Event_showed is False
         self.ui.hideEvent.setChecked(self.is_Event_showed)
@@ -618,7 +619,6 @@ class EEGView(QWidget):
                 self.channels_name.append(channel)
         self.resetPickLabels()
         max_y = len(self.channels_name) + 1
-        # self.axes.clear()
         self.axes.set_ylim([0, max_y])
         self.axes.set_yticks(range(max_y))
         self.axes.set_yticklabels(['Reset'] + self.channels_name)
@@ -761,51 +761,66 @@ class EEGView(QWidget):
 
     # 删除line对象
     def removeLines(self, ch=None, sample=0): #ch=label
-        print(ch)
-        #删除所有
-        if (ch is None or len(ch) == 0):
-            if sample==0: #线条、波形、状态、事件 全删
-                self.removeStates()
-                lines = self.axes.get_lines()
-                for l in lines:
-                    l.remove()
-                self.wave_lines = []
-            elif sample==1: #全删波形
-                for l in self.wave_lines:
-                    l[1].remove()
-                self.wave_lines = []
-            elif sample==2:#全删状态
-                self.removeStates(True)
-            elif sample==3: #全删事件
-                self.removeStates(False)
-            elif sample==4: #全删样本
-                for l in self.wave_lines:
-                    l[1].remove()
-                self.wave_lines = []
-                self.removeStates(True)
-                self.removeStates(False)
-        else: #指定删除
-            if sample==0:
-                lines = self.axes.get_lines()
-                for l in lines:
-                    label = l.get_label()
-                    if label in ch:
+        try:
+            #删除所有
+            if ch is None:
+                if sample == 0: #线条、波形、状态、事件 全删
+                    self.removeStates()
+                    lines = self.axes.get_lines()
+                    for l in lines:
                         l.remove()
-            if sample==1:#删除指定波形
-                for l in self.wave_lines:
-                    if l[0] in ch:
+                    self.wave_lines = []
+                elif sample == 1: #全删波形
+                    for l in self.wave_lines:
                         l[1].remove()
-                        self.wave_lines.remove(l)
-            elif sample==2: #删除指定状态
-                for l in self.state_lines:
-                    if l[0] in ch:
+                    self.wave_lines = []
+                elif sample == 2:#全删状态
+                    self.removeStates(True)
+                elif sample == 3: #全删事件
+                    self.removeStates(False)
+                elif sample == 4: #全删样本
+                    for l in self.wave_lines:
                         l[1].remove()
-                        self.state_lines.remove(l)
-            elif sample == 3:  # 删除指定事件
-                for l in self.Event_lines:
-                    if l[0] in ch:
-                        l[1].remove()
-                        self.Event_lines.remove(l)
+                    self.wave_lines = []
+                    self.removeStates(True)
+                    self.removeStates(False)
+            else: #指定删除
+                if sample == 0:
+                    lines = self.axes.get_lines()
+                    for l in lines:
+                        label = l.get_label()
+                        if label in ch:
+                            l.remove()
+                elif sample == 1:#删除指定波形
+                    idxs = []
+                    idx = 0
+                    while idx < len(self.wave_lines):
+                        if self.wave_lines[idx][0] in ch:
+                            self.wave_lines[idx][1].remove()
+                            idxs.append(idx)
+                        idx += 1
+                    self.wave_lines = [self.wave_lines[i] for i in range(len(self.wave_lines)) if i not in idxs]
+                elif sample==2: #删除指定状态
+                    idxs = []
+                    idx = 0
+                    while idx < len(self.state_lines):
+                        if self.state_lines[idx][0] in ch:
+                            self.state_lines[idx][1].remove()
+                            idxs.append(idx)
+                        idx += 1
+                    self.state_lines = [self.state_lines[i] for i in range(len(self.state_lines)) if i not in idxs]
+                elif sample == 3:  # 删除指定事件
+                    idxs = []
+                    idx = 0
+                    while idx < len(self.Event_lines):
+                        if self.Event_lines[idx][0] in ch:
+                            self.Event_lines[idx][1].remove()
+                            idxs.append(idx)
+                        idx += 1
+                    self.Event_lines = [self.Event_lines[i] for i in range(len(self.Event_lines)) if i not in idxs]
+        except Exception as e:
+            print("removeLines", e)
+
     def removeStates(self,signal=''):
         #状态和事件都删
         if signal == '':
@@ -1038,10 +1053,8 @@ class EEGView(QWidget):
                 break
         if idx == -1:
             return
-        self.wave_lines.append([label,self.axes.plot(x[start:end], self.plottedData[idx, start:end], color=color, picker=True, label=label,
-                       alpha=self.channels_alpha[channel], linewidth=1)])
-        # self.axes.plot(x[start:end], self.plottedData[idx, start:end], color=color, picker=True, label=label,
-        #                alpha=self.channels_alpha[channel], linewidth=1)
+        self.wave_lines.append([label, self.axes.plot(x[start:end], self.plottedData[idx, start:end], color=color, picker=True, label=label,
+                       alpha=self.channels_alpha[channel], linewidth=1)[0]])
 
     # 改变样本颜色
     def changeSampleColor(self, sample, color):
@@ -1233,7 +1246,6 @@ class EEGView(QWidget):
                 sample = 2
         else:
             sample = 1
-        self.restorePreSampleColor()
         self.removeLines([str(label[0]) + "|" + str(label[1]) + "|" + str(label[2]) + "|" + str(label[3])], sample)
         self.canvas.draw()
         self.filterSamples()
@@ -1393,11 +1405,14 @@ class EEGView(QWidget):
                 self.labels[idx][3] = label[3]
                 break
             idx += 1
+        self.restorePreSampleColor()
+        self.canvas.draw()
         self.filterSamples()
         self.showLabelList()
+        self.showlabelInfo()
         return label
 
-    def annotatesignal(self,signal):
+    def annotatesignal(self, signal):
         self.annotate = signal
 
 
