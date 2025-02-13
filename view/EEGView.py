@@ -409,18 +409,19 @@ class EEGView(QWidget):
     def changeShowWave(self):
         self.is_waves_showed = self.is_waves_showed is False
         self.ui.hideWave.setChecked(self.is_waves_showed)
-        if self.is_waves_showed is False and self.ui.gblabelbtn1.isChecked():
-            self.ui.gblabelbtn4.setChecked(True)
-            self.ui.gblabelbtn1.setDisabled(True)
-            self.annotate=EEGView.NO_ANNOTATE
-        else:
-            self.ui.gblabelbtn1.setDisabled(False)
-        if self.is_waves_showed:
-            self.paintWaves()
-        else:
+        if self.is_waves_showed is False: #关闭显示
+            if self.ui.gblabelbtn1.isChecked(): #已经选中要取消选中
+                self.ui.gblabelbtn4.setChecked(True)
+                self.annotate = EEGView.NO_ANNOTATE
+            self.ui.gblabelbtn1.setDisabled(True)#禁用
+            self.showbtnfilter(signal=False)
             self.removeLines(sample=1)
             self.resetPickLabels()
             self.focusLines()
+        else:#打开显示
+            self.showbtnfilter(signal=True,type='波形')
+            self.ui.gblabelbtn1.setDisabled(False)
+            self.paintWaves()
         self.canvas.draw()
         self.restorePreSampleColor()
         self.showLabelList()
@@ -429,10 +430,11 @@ class EEGView(QWidget):
     def changeShowState(self):
         self.is_status_showed = self.is_status_showed is False
         self.ui.hideState.setChecked(self.is_status_showed)
-        if self.is_status_showed is False and self.ui.gblabelbtn2.isChecked():
-            self.ui.gblabelbtn4.setChecked(True)
+        if self.is_status_showed is False :
+            if self.ui.gblabelbtn2.isChecked():
+                self.ui.gblabelbtn4.setChecked(True)
+                self.annotate = EEGView.NO_ANNOTATE
             self.ui.gblabelbtn2.setDisabled(True)
-            self.annotate = EEGView.NO_ANNOTATE
         else:
             self.ui.gblabelbtn2.setDisabled(False)
         if self.is_status_showed:
@@ -446,10 +448,11 @@ class EEGView(QWidget):
     def changeShowEvent(self):
         self.is_Event_showed = self.is_Event_showed is False
         self.ui.hideEvent.setChecked(self.is_Event_showed)
-        if self.is_Event_showed is False and self.ui.gblabelbtn3.isChecked():
-            self.ui.gblabelbtn4.setChecked(True)
+        if self.is_Event_showed is False:
+            if self.ui.gblabelbtn3.isChecked():
+                self.ui.gblabelbtn4.setChecked(True)
+                self.annotate = EEGView.NO_ANNOTATE
             self.ui.gblabelbtn3.setDisabled(True)
-            self.annotate = EEGView.NO_ANNOTATE
         else:
             self.ui.gblabelbtn3.setDisabled(False)
         if self.is_Event_showed:
@@ -1377,7 +1380,6 @@ class EEGView(QWidget):
         self.showlabelInfo()
 
     def getSampleFilter(self):
-        tempt=[]
         banType=[]
         for i in self.type_info:
             if self.is_waves_showed and (i[3][-2:]=='波形' or i[2][-2:]=='波形'):
@@ -1386,14 +1388,14 @@ class EEGView(QWidget):
                 banType.append(i[1])
             elif self.is_Event_showed and i[3][-2:]=='事件':
                 banType.append(i[1])
-        for i in self.filtertype:
-            if self.is_waves_showed and (i[3][-2:]=='波形' or i[2][-2:]=='波形'):
-                tempt.append(i)
-            elif self.is_status_showed and (i[3][-2:] =='状态'or i[2][-2:]=='状态'):
-                tempt.append(i)
-            elif self.is_Event_showed and i[3][-2:]=='事件':
-                tempt.append(i)
-        return self.type_info, tempt, banType
+        # for i in self.filtertype:
+        #     if self.is_waves_showed and (i[3][-2:]=='波形' or i[2][-2:]=='波形'):
+        #         tempt.append(i)
+        #     elif self.is_status_showed and (i[3][-2:] =='状态'or i[2][-2:]=='状态'):
+        #         tempt.append(i)
+        #     elif self.is_Event_showed and i[3][-2:]=='事件':
+        #         tempt.append(i)
+        return self.type_info, self.filtertype, banType
 
     def updateSample(self, type_id):
         label = self.filterlist[self.cur_sample_index]
@@ -1428,7 +1430,44 @@ class EEGView(QWidget):
         self.showLabelList()
         return label
 
-    def annotatesignal(self, signal):
+    def annotatesignal(self,signal):
+        self.cancelSelect()
         self.annotate = signal
-
+    def showbtnfilter(self,signal,type=None): #signal 表示显示or不显示样本，type表示当前点击显示的类型
+        if signal==True:#显示样本
+            for i in self.type_info:
+                if i[3][-2:] == type or i[2][-2:] == type:
+                    self.filtertype.append(i)
+            #根据filtertype 来移除样本
+            self.filterlist=list(self.labels)
+            allowed_values = {item[0] for item in self.filtertype}
+            for sample in self.filterlist.copy():
+                if sample[3] not in allowed_values:
+                    self.filterlist.remove(sample)
+        else:#不显示样本
+            tempt = []
+            for i in self.filtertype:
+                if self.is_waves_showed and (i[3][-2:] == '波形' or i[2][-2:] == '波形'):
+                    tempt.append(i)
+                elif self.is_status_showed and (i[3][-2:] == '状态' or i[2][-2:] == '状态'):
+                    tempt.append(i)
+                elif self.is_Event_showed and i[3][-2:] == '事件':
+                    tempt.append(i)
+            self.filtertype=tempt
+            allowed_values = {item[0] for item in self.filtertype}
+            for sample in self.filterlist.copy():
+                if sample[3] not in allowed_values:
+                    self.filterlist.remove(sample)
+            # if self.is_waves_showed is False:
+            #     for sample in self.filterlist.copy():
+            #         if sample[0]!='all' and sample[1]!=sample[2]:
+            #             self.filterlist.remove(sample)
+            # if self.is_status_showed is False:
+            #     for sample in self.filterlist.copy():
+            #         if sample[0] == 'all' and sample[1]!=sample[2]:
+            #             self.filterlist.remove(sample)
+            # if self.is_Event_showed is False:
+            #     for sample in self.filterlist.copy():
+            #         if sample[0] == 'all' and sample[1] == sample[2]:
+            #             self.filterlist.remove(sample)
 
