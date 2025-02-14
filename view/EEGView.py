@@ -669,6 +669,19 @@ class EEGView(QWidget):
         self.removeLines(['pickedsegment'], sample=1)
         self.pick_first = None
         self.pick_second = None
+        self.pick_channel = None
+        self.state_left = None
+        self.state_right = None
+        if self.state_left_line is not None:
+            self.state_left_line.remove()
+            self.state_left_line = None
+        if self.state_right_line is not None:
+            self.state_right_line.remove()
+            self.state_left_line = None
+        self.lineposition = None
+        if self.eventline is not None:
+            self.eventline.remove()
+            self.eventline = None
 
     # 取消状态标注
     def cancelStateAnnotate(self):
@@ -898,6 +911,7 @@ class EEGView(QWidget):
         x, y = event.xdata, event.ydata
         if self.eventline:
             self.eventline.remove()
+        self.restorePreSampleColor()
         self.lineposition = int(x * self.sample_rate)
         self.eventline = self.axes.vlines(
         self.lineposition / self.sample_rate, 0, 200, color='red')
@@ -920,6 +934,8 @@ class EEGView(QWidget):
 
     # 点击一个列表样本
     def pickCurSample(self, row):
+        self.resetPickLabels()
+        self.focusLines()
         self.restorePreSampleColor() #恢复前一个选中的线条颜色
         self.cur_sample_index = row
         label = self.filterlist[self.cur_sample_index]
@@ -1005,9 +1021,6 @@ class EEGView(QWidget):
                 break
         if row >= 0 and row < len(self.filterlist):
             self.ui.tableWidget.selectRow(row)
-        self.pick_first = None
-        self.pick_second = None
-        self.pick_channel = None
         self.pickCurSample(row)
         self.canvas.draw()
 
