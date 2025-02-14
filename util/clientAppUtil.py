@@ -229,62 +229,6 @@ class clientAppUtil():
     #     print(dgroup)
     #     return dgroup
 
-    def bdfMontage(self, channels):
-        ch0s = ['Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'T3', 'C3', 'Cz', 'C4', 'T4', 'T5', 'P3', 'Pz', 'P4', 'P6',
-                'O1', 'O2']
-
-        dgroup = {}
-
-        chlen = len(channels)
-        if chlen <= 0:
-            return dgroup
-        i = 0
-        while i < chlen:
-            cha = channels[i]
-            if cha.upper() in ch0s:
-                return {}
-            bg = []
-            i += 1
-            try:
-                suffix = cha.split('-')[1] if len(cha.split('-')) > 1 else None
-                suffix = '-' + suffix
-                cha = cha.split('-')[0]
-                n = int(cha[-1])
-            except ValueError:
-                continue
-            if n != 1:
-                continue
-            bkey = cha[:-1]
-            if suffix is not None:
-                cha = cha + suffix
-            bg.append(cha)
-            while i < chlen:
-                n += 1
-                cha = channels[i]
-                cha = cha.split('-')[0]
-                if cha.upper() in ch0s:
-                    return {}
-                if cha == f'{bkey}{n}':
-                    if suffix is not None:
-                        cha = cha + suffix
-                    bg.append(cha)
-                    i += 1
-                else:
-                    index = min(bkey.find('-'), bkey.find('_')) if bkey.find('-') != -1 and bkey.find(
-                        '_') != -1 else max(bkey.find('-'), bkey.find('_'))
-                    # 如果找到了'-'或'_'，返回切片前的部分
-                    if index != -1:
-                        bkey = bkey[:index]
-                    else:
-                        bkey = bkey[:-1]
-                    if n > 1:
-                        dgroup.setdefault(bkey, bg)
-                    break
-            if i >= chlen and n > 1:
-                bkey = cha[:-2]
-                dgroup.setdefault(bkey, bg)
-        return dgroup
-
 
 
     def makeTxt(self, file_path):

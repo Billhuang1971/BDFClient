@@ -101,7 +101,7 @@ class EEGController(QWidget):
         list1 = []
         list2 = []
         if typeEEG == True:
-            self.dgroup = self.appUtil.bdfMontage(self.channels)
+            self.dgroup = self.view.bdfMontage(self.channels)
             dgroupKeys = list(self.dgroup.keys())
             glen = len(dgroupKeys)
             for i in range(glen):
@@ -168,7 +168,7 @@ class EEGController(QWidget):
         try:
             msg = REPData[3][2]
             data = msg[0]
-            labels = msg[1]#channel,begin,end,typeid
+            labels = msg[1] #channel,begin,end,typeid
             self.data.setData(data, labels)
             data, labels = self.data.getData()
             self.view.refreshWin(data, labels)
@@ -664,9 +664,7 @@ class EEGController(QWidget):
         sampleMessage.close()
 
     def onChannelBtnClicked(self):
-        type, curRefName, dgroup, shownChannels = self.view.checkType()
-        if type == True:
-            dgroup = self.appUtil.bdfMontage(self.view.refList['default'])
+        curRefName, dgroup, shownChannels = self.view.checkType()
         channelMessage = QDialogChannel(curRefName, dgroup, shownChannels)
         channelMessage.ui.pb_ok.clicked.connect(lambda: self.onChannelConfirmed(channelMessage))
         channelMessage.ui.pb_cancel.clicked.connect(
