@@ -1197,9 +1197,8 @@ class EEGView(QWidget):
                 if self.lineposition is None or self.is_Event_showed is False:
                     QMessageBox.information(self, ' ', "无效选择")
                     return EEGView.NO_ACTION, label
-                begin = self.lineposition
-                end = self.lineposition
-                label = ['all', begin, end, type_id]
+                position = self.lineposition // self.dawnSample
+                label = ['all', position, position, type_id]
             return EEGView.ADD_SAMPLE, label
 
     def setSelectedTypes(self, sampleFilter):
