@@ -38,7 +38,6 @@ class EEGView(QWidget):
         self.ui = Ui_EEGView()
         self.ui.setupUi(self)
 
-        self.cursor = None
         # 类型数据
         self.type_info = []
         # 当前标注状态（波形、状态、事件）
@@ -590,7 +589,7 @@ class EEGView(QWidget):
         hsel_patch = mpl.patches.Rectangle((0, 0), self.lenTime,
                                            1,
                                            edgecolor='k',
-                                           facecolor=(0.75, 0.75, 0.75),
+                                           facecolor='none',
                                            alpha=0.25, linewidth=1,
                                            clip_on=False)
         self.ax_hscroll.add_patch(hsel_patch)
@@ -644,7 +643,7 @@ class EEGView(QWidget):
         try:
             if self.scroll_position is not None:
                 self.scroll_position.remove()
-            self.scroll_position = self.ax_hscroll.axvline(self.begin, color='r', linewidth=0.5)
+            self.scroll_position = self.ax_hscroll.axvline(self.begin, color='r', linewidth=1)
             self.canvas.draw()
         except Exception as e:
             print("changeAxStatus", e)
