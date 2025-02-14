@@ -104,24 +104,11 @@ class EEGView(QWidget):
         self.paintEvents()
         self.removeTimeLine()
         self.paintTimeLine()
-        if self.pick_first is not None:
-            if self.pick_second is None:
-                if self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample:
-                    self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
-            else:
-                if (
-                        self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample) or (
-                        self.pick_second >= self.begin * self.sample_rate // self.dawnSample and self.pick_second < self.end * self.sample_rate // self.dawnSample) or (
-                        self.pick_first < self.begin * self.sample_rate // self.dawnSample and self.pick_second >= self.end * self.sample_rate // self.dawnSample):
-                    self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.dawnSample, 0),
-                                    min(self.winTime * self.sample_rate // self.dawnSample,
-                                        self.pick_second - self.begin * self.sample_rate // self.dawnSample),
-                                    self.pick_label, 'pickedsegment', 'red')
-
+        self.pick_first = []
+        self.pick_second = []
         self.canvas.draw()
         self.showLabelList()
         self.showlabelInfo()
-
     # 初始化View
     def initView(self, type_info, channels, lenTime, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, dawnSample, typeEEG, montage, sampleFilter, channels_index):
         try:
@@ -210,20 +197,6 @@ class EEGView(QWidget):
         self.paintEvents()
         self.removeTimeLine()
         self.paintTimeLine()
-        if self.pick_first is not None:
-            if self.pick_second is None:
-                if self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample:
-                    self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
-            else:
-                if (
-                        self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample) or (
-                        self.pick_second >= self.begin * self.sample_rate // self.dawnSample and self.pick_second < self.end * self.sample_rate // self.dawnSample) or (
-                        self.pick_first < self.begin * self.sample_rate // self.dawnSample and self.pick_second >= self.end * self.sample_rate // self.dawnSample):
-                    self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.dawnSample, 0),
-                                    min(self.winTime * self.sample_rate // self.dawnSample,
-                                        self.pick_second - self.begin * self.sample_rate // self.dawnSample),
-                                    self.pick_label, 'pickedsegment', 'red')
-
         self.canvas.draw()
         self.showLabelList()
         self.showlabelInfo()
@@ -394,16 +367,7 @@ class EEGView(QWidget):
             self.paintEvents()
             self.removeTimeLine()
             self.paintTimeLine()
-            if self.pick_first is not None:
-                if self.pick_second is None:
-                    if self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample:
-                        self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
-                else:
-                    if (self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample) or (self.pick_second >= self.begin * self.sample_rate // self.dawnSample and self.pick_second < self.end * self.sample_rate // self.dawnSample) or (self.pick_first < self.begin * self.sample_rate // self.dawnSample and self.pick_second >= self.end * self.sample_rate // self.dawnSample):
-                        self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.dawnSample, 0),
-                                        min(self.winTime * self.sample_rate // self.dawnSample, self.pick_second - self.begin * self.sample_rate // self.dawnSample),
-                                        self.pick_label, 'pickedsegment', 'red')
-
+            self.crossWinpaint()
             self.canvas.draw()
             self.showLabelList()
             self.showlabelInfo()
@@ -821,7 +785,7 @@ class EEGView(QWidget):
         if signal == '':
             for state in self.state_lines:
                 state[1].remove()
-            self.cancelStateAnnotate()
+            # self.cancelStateAnnotate()
             self.state_lines=[]
             for event in self.Event_lines:
                 event[1].remove()
@@ -1350,19 +1314,8 @@ class EEGView(QWidget):
         self.paintEvents()
         self.removeTimeLine()
         self.paintTimeLine()
-        if self.pick_first is not None:
-            if self.pick_second is None:
-                if self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample:
-                    self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
-            else:
-                if (
-                        self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample) or (
-                        self.pick_second >= self.begin * self.sample_rate // self.dawnSample and self.pick_second < self.end * self.sample_rate // self.dawnSample) or (
-                        self.pick_first < self.begin * self.sample_rate // self.dawnSample and self.pick_second >= self.end * self.sample_rate // self.dawnSample):
-                    self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.dawnSample, 0),
-                                    min(self.winTime * self.sample_rate // self.dawnSample,
-                                        self.pick_second - self.begin * self.sample_rate // self.dawnSample),
-                                    self.pick_label, 'pickedsegment', 'red')
+        self.pick_first =[]
+        self.pick_second =[]
 
         self.canvas.draw()
         self.showLabelList()
@@ -1515,3 +1468,17 @@ class EEGView(QWidget):
                 bkey = cha[:-2]
                 dgroup.setdefault(bkey, bg)
         return dgroup
+    def crossWinpaint(self):
+        if self.pick_first is not None:
+            if self.pick_second is None:
+                if self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample:
+                    self.axes.plot(self.pick_X, self.pick_Y, 'ro', label="pp", markersize=4)
+            else:
+                if (
+                        self.pick_first >= self.begin * self.sample_rate // self.dawnSample and self.pick_first < self.end * self.sample_rate // self.dawnSample) or (
+                        self.pick_second >= self.begin * self.sample_rate // self.dawnSample and self.pick_second < self.end * self.sample_rate // self.dawnSample) or (
+                        self.pick_first < self.begin * self.sample_rate // self.dawnSample and self.pick_second >= self.end * self.sample_rate // self.dawnSample):
+                    self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.dawnSample, 0),
+                                    min(self.winTime * self.sample_rate // self.dawnSample,
+                                        self.pick_second - self.begin * self.sample_rate // self.dawnSample),
+                                    self.pick_label, 'pickedsegment', 'red')
