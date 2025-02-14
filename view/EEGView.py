@@ -470,58 +470,48 @@ class EEGView(QWidget):
 
     # 显示样本列表信息
     def showLabelList(self):
-        #self.filterlist=list(self.labels)
-        # if self.is_waves_showed is False:
-        #     for sample in self.filterlist.copy():
-        #         if sample[0]!='all' and sample[1]!=sample[2]:
-        #             self.filterlist.remove(sample)
-        # if self.is_status_showed is False:
-        #     for sample in self.filterlist.copy():
-        #         if sample[0] == 'all' and sample[1]!=sample[2]:
-        #             self.filterlist.remove(sample)
-        # if self.is_Event_showed is False:
-        #     for sample in self.filterlist.copy():
-        #         if sample[0] == 'all' and sample[1] == sample[2]:
-        #             self.filterlist.remove(sample)
-        itemName = ['开始时间', '样本类型']
-        col_num = 2
-        self.ui.tableWidget.setColumnCount(col_num)
-        for i in range(col_num):
-            header_item = QTableWidgetItem(itemName[i])
-            font = header_item.font()
-            font.setPointSize(8)
-            header_item.setFont(font)
-            header_item.setForeground(QBrush(Qt.black))
-            self.ui.tableWidget.setHorizontalHeaderItem(i, header_item)
-        self.ui.tableWidget.horizontalHeader().setHighlightSections(False)
-        self.ui.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-
-        row_num = len(self.filterlist)
-        self.ui.tableWidget.setRowCount(row_num)
-        for r in range(row_num):
-            for c in range(col_num):
-                if c == 0:
-                    item = QTableWidgetItem(
-                        str(time.strftime('%H:%M:%S',
-                                          time.gmtime(int(self.filterlist[r][1]/(self.sample_rate/self.dawnSample))))))
-                else:
-                    type_name = ""
-                    for type in self.filtertype:
-                        if type[0] == self.filterlist[r][3]:
-                            type_name = type[1]
-                            break
-                    item = QTableWidgetItem(str(type_name))
-                item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                font = item.font()
+        try:
+            itemName = ['开始时间', '样本类型']
+            col_num = 2
+            self.ui.tableWidget.setColumnCount(col_num)
+            for i in range(col_num):
+                header_item = QTableWidgetItem(itemName[i])
+                font = header_item.font()
                 font.setPointSize(8)
-                item.setFont(font)
-                self.ui.tableWidget.setItem(r, c, item)
-        self.ui.tableWidget.verticalHeader().setVisible(False)
-        self.ui.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.ui.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.ui.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.ui.tableWidget.resizeRowsToContents()
-        self.ui.tableWidget.clearSelection()
+                header_item.setFont(font)
+                header_item.setForeground(QBrush(Qt.black))
+                self.ui.tableWidget.setHorizontalHeaderItem(i, header_item)
+            self.ui.tableWidget.horizontalHeader().setHighlightSections(False)
+            self.ui.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+            row_num = len(self.filterlist)
+            self.ui.tableWidget.setRowCount(row_num)
+            for r in range(row_num):
+                for c in range(col_num):
+                    if c == 0:
+                        item = QTableWidgetItem(
+                            str(time.strftime('%H:%M:%S',
+                                              time.gmtime(int(self.filterlist[r][1]/(self.sample_rate/self.dawnSample))))))
+                    else:
+                        type_name = ""
+                        for type in self.filtertype:
+                            if type[0] == self.filterlist[r][3]:
+                                type_name = type[1]
+                                break
+                        item = QTableWidgetItem(str(type_name))
+                    item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    font = item.font()
+                    font.setPointSize(8)
+                    item.setFont(font)
+                    self.ui.tableWidget.setItem(r, c, item)
+            self.ui.tableWidget.verticalHeader().setVisible(False)
+            self.ui.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            self.ui.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)
+            self.ui.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
+            self.ui.tableWidget.resizeRowsToContents()
+            self.ui.tableWidget.clearSelection()
+        except Exception as e:
+            print("showLabelList", e)
 
     # 绘制当前屏幕状态
     def paintStates(self):
@@ -563,36 +553,39 @@ class EEGView(QWidget):
 
     # 过滤样本
     def filterSamples(self):
-        self.waves = []
-        self.states = []
-        self.events = []
-        self.filterlist = list(self.labels)
-        for sample in self.labels: #从当前屏所有样本开始筛
-            matched = False#标记是否成功添加
-            if sample[0] != 'all': #wave
-                for types in self.filtertype: #根据样本选择的情况筛选
-                    if types[0] == sample[3]:
-                        self.waves.append(sample) #将每个样本添加到指定的数组（用于绘图）
-                        matched = True
-                        break
-                if not matched: #若该样本不在样本选择中
-                    self.filterlist.remove(sample) #从filterlist中移除该样本
-            elif sample[0] == 'all' and sample[1] != sample[2]:#state
-                for types in self.filtertype:
-                    if types[0] == sample[3]:
-                        self.states.append(sample)
-                        matched = True
-                        break
-                if not matched:
-                    self.filterlist.remove(sample)
-            elif sample[0]=='all' and sample[1] == sample[2]: #event
-                for types in self.filtertype:
-                    if types[0] == sample[3]:
-                        self.events.append(sample)
-                        matched = True
-                        break
-                if not matched:
-                    self.filterlist.remove(sample)
+        try:
+            self.waves = []
+            self.states = []
+            self.events = []
+            self.filterlist = list(self.labels)
+            for sample in self.labels: #从当前屏所有样本开始筛
+                matched = False#标记是否成功添加
+                if sample[0] != 'all': #wave
+                    for types in self.filtertype: #根据样本选择的情况筛选
+                        if types[0] == sample[3]:
+                            self.waves.append(sample) #将每个样本添加到指定的数组（用于绘图）
+                            matched = True
+                            break
+                    if not matched: #若该样本不在样本选择中
+                        self.filterlist.remove(sample) #从filterlist中移除该样本
+                elif sample[0] == 'all' and sample[1] != sample[2]:#state
+                    for types in self.filtertype:
+                        if types[0] == sample[3]:
+                            self.states.append(sample)
+                            matched = True
+                            break
+                    if not matched:
+                        self.filterlist.remove(sample)
+                elif sample[0]=='all' and sample[1] == sample[2]: #event
+                    for types in self.filtertype:
+                        if types[0] == sample[3]:
+                            self.events.append(sample)
+                            matched = True
+                            break
+                    if not matched:
+                        self.filterlist.remove(sample)
+        except Exception as e:
+            print("filterSamples", e)
         # if self.is_waves_showed is False:
         #     for sample in self.filterlist.copy():
         #         if sample[0]!='all' and sample[1]!=sample[2]:
@@ -1168,9 +1161,8 @@ class EEGView(QWidget):
         return state
 
     def insertEvent(self, type_id):
-        begin = self.lineposition
-        end = self.lineposition
-        event = ['all', begin, end, type_id]
+        position = self.lineposition // self.dawnSample
+        event = ['all', position, position, type_id]
         idx = 0
         while idx < len(self.labels):
             if event[1] < self.labels[idx][1] or (
@@ -1180,7 +1172,7 @@ class EEGView(QWidget):
         self.labels.insert(idx, event)
         self.resetPickLabels()
         self.focusLines()
-        self.paintAEvent(begin / self.sample_rate, str(event[0]) + "|" + str(event[1]) + "|" + str(event[2]) + "|" + str(event[3]), 'orange')
+        self.paintAEvent(self.lineposition / self.sample_rate, str(event[0]) + "|" + str(event[1]) + "|" + str(event[2]) + "|" + str(event[3]), 'orange')
         lBit = (self.lineposition // self.sample_rate) * self.nDotWin // self.lenTime
         self.labelBit[lBit: lBit + 1] = True
         self.paintLabelBit()
@@ -1190,6 +1182,7 @@ class EEGView(QWidget):
         self.canvas.draw()
         self.filterSamples()
         self.showLabelList()
+        return event
 
     # 判断样本是波形还是状态
     def checkMenuAction(self, type_id):
