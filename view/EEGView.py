@@ -719,7 +719,8 @@ class EEGView(QWidget):
         self.pick_labels = self.channels_name
         for channel in self.channels_name:
             self.channels_alpha[channel] = 1
-        self.removeLines(['pp', 'pickedsegment'])
+        self.removeLines(['pp'])
+        self.removeLines(['pickedsegment'], sample=1)
         self.pick_first = None
         self.pick_second = None
 
@@ -740,7 +741,8 @@ class EEGView(QWidget):
         self.pick_channel = None
         self.pick_first = None
         self.pick_second = None
-        self.removeLines(['pp', 'pickedsegment'])
+        self.removeLines(['pp'])
+        self.removeLines(['pickedsegment'], sample=1)
         if self.restore_pre_sample_color():
             self.cur_sample_index = -1
             self.showlabelInfo()
@@ -763,7 +765,8 @@ class EEGView(QWidget):
         else:
             self.pick_labels.append(pl)
             self.channels_alpha[pl] = 1
-        self.removeLines(['pp', 'pickedsegment'])
+        self.removeLines(['pp'])
+        self.removeLines(['pickedsegment'], sample=1)
         self.pick_first = None
         self.pick_second = None
 
@@ -1023,7 +1026,8 @@ class EEGView(QWidget):
                 self.pick_first = x
         if self.pick_first == self.pick_second:
             return
-        self.removeLines(['pp', 'pickedsegment'])
+        self.removeLines(['pp'])
+        self.removeLines(['pickedsegment'],sample=1)
         self.paintAWave(max(self.pick_first - self.begin * self.sample_rate // self.dawnSample, 0),
                         min(self.winTime * self.sample_rate // self.dawnSample, self.pick_second - self.begin * self.sample_rate // self.dawnSample),
                         self.pick_label, 'pickedsegment', 'red')
