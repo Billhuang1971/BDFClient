@@ -677,7 +677,7 @@ class EEGView(QWidget):
             self.state_left_line = None
         if self.state_right_line is not None:
             self.state_right_line.remove()
-            self.state_left_line = None
+            self.state_right_line = None
         self.lineposition = None
         if self.eventline is not None:
             self.eventline.remove()
@@ -928,8 +928,7 @@ class EEGView(QWidget):
             color = 'blue'
         self.changeSampleColor(sample, color)
         self.showlabelInfo()
-        for col in range(self.ui.tableWidget.columnCount()):
-            self.ui.tableWidget.item(self.cur_sample_index, col).setSelected(False)
+        self.ui.tableWidget.clearSelection()
         self.cur_sample_index = -1
 
     # 点击一个列表样本
