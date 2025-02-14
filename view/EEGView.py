@@ -822,6 +822,7 @@ class EEGView(QWidget):
         if self.annotate != EEGView.STATE_ANNOTATE or self.is_status_showed is False:
             return
         x, y = event.xdata, event.ydata
+        self.restorePreSampleColor()
         if self.state_left is None:
             self.state_left = int(x * self.sample_rate)
             self.state_left_line = self.axes.vlines(
@@ -846,14 +847,24 @@ class EEGView(QWidget):
 
     # 释放菜单
     def releaseMenu(self):
-        if self.annotate == EEGView.STATE_ANNOTATE:
-            self.popMenu2.exec_(QCursor.pos())
-        elif self.annotate == EEGView.WAVE_ANNOTATE:
-            self.popMenu1.exec_(QCursor.pos())
-        elif self.annotate == EEGView.EVENT_ANNOTATE:
-            self.popMenu3.exec_(QCursor.pos())
+        if self.cur_sample_index >= 0 and self.cur_sample_index < len(self.filterlist):
+            label = self.filterlist[self.cur_sample_index]
+            if label[0] == 'all':
+                if label[1] == label[2]:
+                    self.popMenu3.exec_(QCursor.pos())
+                else:
+                    self.popMenu2.exec_(QCursor.pos())
+            else:
+                self.popMenu1.exec_(QCursor.pos())
         else:
-            self.popMenu4.exec_(QCursor.pos())
+            if self.annotate == EEGView.STATE_ANNOTATE:
+                self.popMenu2.exec_(QCursor.pos())
+            elif self.annotate == EEGView.WAVE_ANNOTATE:
+                self.popMenu1.exec_(QCursor.pos())
+            elif self.annotate == EEGView.EVENT_ANNOTATE:
+                self.popMenu3.exec_(QCursor.pos())
+            else:
+                self.popMenu4.exec_(QCursor.pos())
 
     # 绘制线透明度
     def focusLines(self):
@@ -881,6 +892,7 @@ class EEGView(QWidget):
         self.axes.plot(
             mouseevent.xdata, mouseevent.ydata, 'ro', label="pp", markersize=4)
         self.canvas.draw()
+
     #绘制事件
     def drawEvent(self, event):
         x, y = event.xdata, event.ydata
