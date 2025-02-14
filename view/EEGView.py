@@ -1093,19 +1093,16 @@ class EEGView(QWidget):
         l = (wave[1] - (self.begin * self.sample_rate // self.dawnSample)) if wave[1] > (self.begin * self.sample_rate // self.dawnSample) else 0
         r = (wave[2] - (self.begin * self.sample_rate // self.dawnSample)) if wave[2] < (self.end * self.sample_rate // self.dawnSample) else (self.end - self.begin) * (self.sample_rate // self.dawnSample)
         label = str(wave[0]) + "|" + str(wave[1]) + "|" + str(wave[2]) + "|" + str(wave[3])
-        self.resetPickLabels()
-        self.focusLines()
         self.paintAWave(l, r, wave[0], label, color)
         lBit = (begin * self.dawnSample // self.sample_rate) * self.nDotWin // self.lenTime
         rBit = (end * self.dawnSample // self.sample_rate) * self.nDotWin // self.lenTime
         self.labelBit[lBit: rBit] = True
+        self.resetPickLabels()
+        self.focusLines()
         self.paintLabelBit()
         self.canvas.draw()
         self.filterSamples()
         self.showLabelList()
-        self.pick_second = None
-        self.pick_first = None
-        self.pick_channel = None
         return wave
 
     def insertState(self, type_id):
@@ -1118,19 +1115,13 @@ class EEGView(QWidget):
                 break
             idx += 1
         self.labels.insert(idx, state)
-        self.resetPickLabels()
-        self.focusLines()
         self.paintAState(state, "green")
         lBit = (self.state_left // self.sample_rate) * self.nDotWin // self.lenTime
         rBit = (self.state_right // self.sample_rate) * self.nDotWin // self.lenTime
         self.labelBit[lBit: rBit] = True
+        self.resetPickLabels()
+        self.focusLines()
         self.paintLabelBit()
-        self.state_left = None
-        self.state_right = None
-        self.state_left_line.remove()
-        self.state_right_line.remove()
-        self.state_left_line = None
-        self.state_right_line = None
         self.canvas.draw()
         self.filterSamples()
         self.showLabelList()
@@ -1146,15 +1137,12 @@ class EEGView(QWidget):
                 break
             idx += 1
         self.labels.insert(idx, event)
-        self.resetPickLabels()
-        self.focusLines()
         self.paintAEvent(self.lineposition / self.sample_rate, str(event[0]) + "|" + str(event[1]) + "|" + str(event[2]) + "|" + str(event[3]), 'orange')
         lBit = (self.lineposition // self.sample_rate) * self.nDotWin // self.lenTime
         self.labelBit[lBit: lBit + 1] = True
         self.paintLabelBit()
-        self.lineposition = None
-        self.eventline.remove()
-        self.eventline = None
+        self.resetPickLabels()
+        self.focusLines()
         self.canvas.draw()
         self.filterSamples()
         self.showLabelList()
