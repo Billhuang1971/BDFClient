@@ -562,7 +562,7 @@ class EEGView(QWidget):
                 matched = False#标记是否成功添加
                 if sample[0] != 'all': #wave
                     for types in self.filtertype: #根据样本选择的情况筛选
-                        if types[0] == sample[3]:
+                        if types[0] == sample[3] and sample[0] in self.channels_name:
                             self.waves.append(sample) #将每个样本添加到指定的数组（用于绘图）
                             matched = True
                             break
@@ -586,18 +586,6 @@ class EEGView(QWidget):
                         self.filterlist.remove(sample)
         except Exception as e:
             print("filterSamples", e)
-        # if self.is_waves_showed is False:
-        #     for sample in self.filterlist.copy():
-        #         if sample[0]!='all' and sample[1]!=sample[2]:
-        #             self.filterlist.remove(sample)
-        # if self.is_status_showed is False:
-        #     for sample in self.filterlist.copy():
-        #         if sample[0] == 'all' and sample[1]!=sample[2]:
-        #             self.filterlist.remove(sample)
-        # if self.is_Event_showed is False:
-        #     for sample in self.filterlist.copy():
-        #         if sample[0] == 'all' and sample[1] == sample[2]:
-        #             self.filterlist.remove(sample)
 
 
     # 绘制当前屏幕波形
@@ -934,7 +922,6 @@ class EEGView(QWidget):
         x, y = event.xdata, event.ydata
         if self.eventline:
             self.eventline.remove()
-            self.axes.collections.remove(self.eventline)
         self.lineposition = int(x * self.sample_rate)
         self.eventline = self.axes.vlines(
         self.lineposition / self.sample_rate, 0, 200, color='red')
@@ -1340,7 +1327,7 @@ class EEGView(QWidget):
         return self.refList[self.curRef]
 
     def checkType(self):
-        dgroup = {self.curRef: self.refList[self.curRef]} if self.typeEEG is False else self.bdfMontage(self.view.refList['default'])
+        dgroup = {self.curRef: self.refList[self.curRef]} if self.typeEEG is False else self.bdfMontage(self.refList['default'])
         return self.curRef, dgroup, self.channels_name
 
     def getShownChannel(self):
