@@ -280,8 +280,9 @@ class EEGController(QWidget):
     def secondsSpanChange(self):
         try:
             self.nSecWin, self.nDotSec, self.dawnSample, self.lenWin, readFrom = self.view.secondsSpanChange()
-            self.lenBlock = min(self.lenFile, self.nWinBlock * self.lenWin)
-            self.data.resetEEGData(self.lenBlock, self.lenWin, readFrom)
+            #一个窗口对应的脑电秒数，一秒脑电信号的屏幕像素点的数量，下采样，一屏下采样脑电数据的长度，开始样本点
+            self.lenBlock = min(self.lenFile, self.nWinBlock * self.lenWin) #数据块样本长度
+            self.data.resetEEGData(self.lenBlock, self.lenWin, readFrom)#数据块样本长度，一屏下采样脑电数据的长度，开始样本点在脑电文件中的样本索引位置
             self.client.loadEEGData([self.check_id, self.file_id, readFrom, readFrom + self.lenBlock, self.dawnSample, self.tableName, self.pUid])
         except Exception as e:
             print("secondsSpanChange", e)
@@ -638,16 +639,13 @@ class EEGController(QWidget):
     def onSampleConfirmed(self, sampleMessage, sampleFilter,type_info):
         # 将 sampleFilter 转换为集合，方便快速查找和去重
         sampleFilter = set(tuple(item) for item in sampleFilter)  # 将列表转换为元组，因为集合中的元素必须是可哈希的
-
         # 遍历按钮确认是否选中
         for radio_button in sampleMessage.ui.ck_g:
             # 获取按钮的文本（type）
             button_text = radio_button.text()
-
             # 检查 sampleFilter 中是否存在与按钮文本匹配的 type
             # 遍历 sampleFilter，查找是否有元素的第二个值（type）与按钮文本匹配
             matching_items = [item for item in sampleFilter if item[1] == button_text]
-
             if radio_button.isChecked() == False:
                 # 如果按钮未选中，且 sampleFilter 中存在匹配的 type，则移除该元素
                 for item in matching_items:
@@ -655,18 +653,10 @@ class EEGController(QWidget):
             elif radio_button.isChecked() == True:
                 # 如果按钮选中，且 sampleFilter 中不存在匹配的 type，则添加新元素
                 if not matching_items:
-                    # 假设 id 是自动生成的，这里可以使用一个占位符（如 0）
                     click_items= [item for item in type_info if item[1] == button_text]
                     click_items=click_items[0]
                     if button_text==click_items[1]:
                         sampleFilter.add(click_items)
-        # sampleFilter = set(sampleFilter)
-        # for radio_button in sampleMessage.ui.ck_g: #遍历按钮确认是否选中
-        #     if radio_button.isChecked() == False and radio_button.text() in sampleFilter:
-        #         sampleFilter.remove(radio_button.text())
-        #     if radio_button.isChecked() == True and radio_button.text() not in sampleFilter:
-        #         sampleFilter.add(radio_button.text())
-        # sampleFilter = list(sampleFilter) #已选择的type
         sampleFilter = list(sampleFilter) #将 sampleFilter 转换回列表
         for key, val in self.types_actions.items():
             val.setEnabled(any(key == sample[1] for sample in sampleFilter))
