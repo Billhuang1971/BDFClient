@@ -2,8 +2,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, QRegExp
 from PyQt5.QtGui import QRegExpValidator, QIntValidator
 from PyQt5.QtWidgets import QPushButton, QFrame, QSizePolicy, QLabel, QHBoxLayout
-
-
 class Ui_EEGView(object):
     def setupUi(self, Ui_Form):
         Ui_Form.setObjectName("Ui_Form")
@@ -464,6 +462,21 @@ class Ui_EEGView(object):
         self.labelAmp = QtWidgets.QLabel(self.gbSample)
         self.labelAmp.setObjectName("labelAmp")
         self.glSample.addWidget(self.labelAmp, 8, 1, 1, 2)
+        labelBtnstylesheet = """
+                QRadioButton {
+                    padding-left: 0px;  
+                    padding-right: 20px;  
+                    spacing: 5px; 
+                    outline: 0;
+                }
+
+                QRadioButton::indicator {
+                    width: 16px; 
+                    height: 16px;  
+                    margin-left: 0px; 
+                    margin-right: -6px; 
+                }
+                """
 
         self.gbSamplelabel = QtWidgets.QGroupBox(self.groupBox2)
         self.gbSamplelabel.setObjectName("gbSample")
@@ -485,6 +498,12 @@ class Ui_EEGView(object):
         self.layoutgbSl.addWidget(self.gblabelbtn1,1,0,1,1)
         self.layoutgbSl.addWidget(self.gblabelbtn2,1,1,1,1)
         self.layoutgbSl.addWidget(self.gblabelbtn3,1,2,1,1)
+        self.gblabelbtn1.setStyleSheet(labelBtnstylesheet)
+        self.gblabelbtn2.setStyleSheet(labelBtnstylesheet)
+        self.gblabelbtn3.setStyleSheet(labelBtnstylesheet)
+        self.gblabelbtn1.setLayoutDirection(Qt.RightToLeft)
+        self.gblabelbtn2.setLayoutDirection(Qt.RightToLeft)
+        self.gblabelbtn3.setLayoutDirection(Qt.RightToLeft)
 
         self.returnBtn = QtWidgets.QPushButton(self.groupBox2)
         self.returnBtn.setObjectName("returnBtn")

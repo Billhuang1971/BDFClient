@@ -388,6 +388,7 @@ class EEGView(QWidget):
             self.focusLines()
         else:#打开显示
             self.showbtnfilter(signal=True, type='波形')
+            self.filterSamples()
             self.ui.gblabelbtn1.setDisabled(False)
             self.paintWaves()
         self.canvas.draw()
@@ -407,6 +408,7 @@ class EEGView(QWidget):
             self.removeLines(sample=2)
         else:#打开显示
             self.showbtnfilter(signal=True, type='状态')
+            self.filterSamples()
             self.ui.gblabelbtn2.setDisabled(False)
             self.paintStates()
         self.canvas.draw()
@@ -425,6 +427,7 @@ class EEGView(QWidget):
             self.removeLines(sample=3)
         else:#打开显示
             self.showbtnfilter(signal=True, type='事件')
+            self.filterSamples()
             self.ui.gblabelbtn3.setDisabled(False)
             self.paintEvents()
         self.canvas.draw()
@@ -512,7 +515,7 @@ class EEGView(QWidget):
             self.paintAEvent(start, label, color)
 
     def paintAEvent(self, start, label, color):
-        self.Event_lines.append([label, self.axes.vlines(start, 0, 200, color=color)])
+        self.Event_lines.append([label, self.axes.vlines(start, 0, 200, color=color, linewidth=2)])
 
     # 过滤样本
     def filterSamples(self):
@@ -1392,11 +1395,11 @@ class EEGView(QWidget):
                 if i[3][-2:] == type or i[2][-2:] == type:
                     self.filtertype.append(i)
             #根据filtertype 来移除样本
-            self.filterlist=list(self.labels)
-            allowed_values = {item[0] for item in self.filtertype}
-            for sample in self.filterlist.copy():
-                if sample[3] not in allowed_values:
-                    self.filterlist.remove(sample)
+            # self.filterlist=list(self.labels)
+            # allowed_values = {item[0] for item in self.filtertype}
+            # for sample in self.filterlist.copy():
+            #     if sample[3] not in allowed_values:
+            #         self.filterlist.remove(sample)
         else:#不显示样本
             tempt = []
             for i in self.filtertype:
@@ -1411,18 +1414,18 @@ class EEGView(QWidget):
             for sample in self.filterlist.copy():
                 if sample[3] not in allowed_values:
                     self.filterlist.remove(sample)
-            # if self.is_waves_showed is False:
-            #     for sample in self.filterlist.copy():
-            #         if sample[0]!='all' and sample[1]!=sample[2]:
-            #             self.filterlist.remove(sample)
-            # if self.is_status_showed is False:
-            #     for sample in self.filterlist.copy():
-            #         if sample[0] == 'all' and sample[1]!=sample[2]:
-            #             self.filterlist.remove(sample)
-            # if self.is_Event_showed is False:
-            #     for sample in self.filterlist.copy():
-            #         if sample[0] == 'all' and sample[1] == sample[2]:
-            #             self.filterlist.remove(sample)
+            if self.is_waves_showed is False:
+                for sample in self.filterlist.copy():
+                    if sample[0]!='all' and sample[1]!=sample[2]:
+                        self.filterlist.remove(sample)
+            if self.is_status_showed is False:
+                for sample in self.filterlist.copy():
+                    if sample[0] == 'all' and sample[1]!=sample[2]:
+                        self.filterlist.remove(sample)
+            if self.is_Event_showed is False:
+                for sample in self.filterlist.copy():
+                    if sample[0] == 'all' and sample[1] == sample[2]:
+                        self.filterlist.remove(sample)
 
 
     def bdfMontage(self, channels):
