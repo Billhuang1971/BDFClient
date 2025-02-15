@@ -37,12 +37,9 @@ class diagTrainingController(QWidget):
         self.client = client
         self.User = self.client.tUser
 
-        self.client.dl_get_studyInfoResSig.connect(self.dl_get_studyInfoRes)
+        # self.client.dl_get_studyInfoResSig.connect(self.dl_get_studyInfoRes)
         self.client.dl_get_contentsResSig.connect(self.dl_get_contentsRes)
-        self.client.dl_openEEGFileResSig.connect(self.dl_openEEGFileRes)
-        self.client.dl_load_dataDynamicalResSig.connect(self.dl_load_dataDynamicalRes)
-        self.client.dl_init_SampleListResSig.connect(self.dl_init_SampleListRes)
-        self.client.dl_get_diagResSig.connect(self.dl_get_diagRes)
+        # self.client.dl_get_diagResSig.connect(self.dl_get_diagRes)
 
 
         self.widget_from_main = Widget

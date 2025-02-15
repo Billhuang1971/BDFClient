@@ -24,10 +24,10 @@ class EEGController(QWidget):
         self.return_from = msg[5]
         self.tableName = msg[6]
         self.pUid = msg[7]
-        onlyRead = msg[8]
+        self.onlyRead = msg[8]
         self.mainLabel = mainLabel
         self.view = EEGView()
-        if onlyRead:
+        if self.onlyRead:
             self.view.banAnnotate()
         self.speed = {
             "1x": 3000,
@@ -513,6 +513,8 @@ class EEGController(QWidget):
                         self.view.drawEvent(event)
             # 右键释放菜单
             elif event.button == 3:
+                if self.onlyRead:
+                    return
                 self.view.releaseMenu()
         except Exception as e:
             print("doMouseReleaseEvent", e)
