@@ -24,8 +24,11 @@ class EEGController(QWidget):
         self.return_from = msg[5]
         self.tableName = msg[6]
         self.pUid = msg[7]
+        onlyRead = msg[8]
         self.mainLabel = mainLabel
         self.view = EEGView()
+        if onlyRead:
+            self.view.banAnnotate()
         self.speed = {
             "1x": 3000,
             "2x": 1500,

@@ -65,14 +65,14 @@ class sign_InfoView(QMainWindow,QWidget):
         self.ui = Ui_diag_MainWindow()
         self.ui.setupUi(self)
 
-class diagListView(QWidget):
+class DiagListView(QWidget):
     def __init__(self,parent=None):
         super().__init__(parent)
         self.ui = Ui_diagList()
         self.ui.setupUi(self)
         #self.setWindowTitle("[诊断学习]学习诊断信息列表")
 
-    def init_table(self, diags_viewInfo,userNamesDict,studentDict,paitentNamesDict,on_clicked_manual_query,on_clicked_diag_query,on_clicked_learn_query=None):
+    def init_table(self, diags_viewInfo, userNamesDict, studentDict, paitentNamesDict, on_clicked_manual_query, on_clicked_diag_query, on_clicked_learn_query=None):
         try:
             self.ui.tableWidget.clear()
 
@@ -154,7 +154,7 @@ class diagListView(QWidget):
                self.ui.tableWidget.item(row, i).setFlags(Qt.ItemIsEditable)
                self.ui.tableWidget.item(row, i).setFont(iFont)
                i = 8
-               self.ui.tableWidget.setItem(row, i, QTableWidgetItem('{:>03}.edf'.format(str(diags_viewInfo[row][10]))))
+               self.ui.tableWidget.setItem(row, i, QTableWidgetItem('{:>03}.bdf'.format(str(diags_viewInfo[row][10]))))
                self.ui.tableWidget.item(row, i).setTextAlignment(Qt.AlignCenter)
                self.ui.tableWidget.item(row, i).setFlags(Qt.ItemIsEditable)
                self.ui.tableWidget.item(row, i).setFont(iFont)
@@ -197,6 +197,6 @@ class diagListView(QWidget):
     #    self.hide()
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    view = DiagTrainingView()
+    view = DiagListView()
     view.show()
     sys.exit(app.exec_())

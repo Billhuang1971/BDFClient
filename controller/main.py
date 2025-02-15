@@ -322,6 +322,7 @@ class MainController(QWidget):
                                                      client=self.client,
                                                      Widget2=self.view.label_5, mainMenubar=self.view.ui.menubar,
                                                      mainLayout=self.view.verticalLayout_1)
+            self.controller.switchToEEG.connect(self.switchToEEGPage)
 
         elif controller_name == "diagTestController":
             self.controller = diagTestController(appUtil=self.cAppUtil, Widget=self.view.label_4,
@@ -406,7 +407,7 @@ class MainController(QWidget):
         self.controller.startEEG()
 
     def switchFromEEGPage(self, msg):
-        controller_name=msg[0]
+        controller_name = msg[0]
         if self.sub_view is not None:
             self.sub_view.close()
         if self.controller is not None:

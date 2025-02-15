@@ -91,6 +91,13 @@ class EEGView(QWidget):
         self.secondsSpan = 30
         self.createPaintTools()
 
+
+    def banAnnotate(self):
+        self.ui.gblabelbtn1.setEnabled(False)
+        self.ui.gblabelbtn2.setEnabled(False)
+        self.ui.gblabelbtn3.setEnabled(False)
+        self.ui.gblabelbtn4.setEnabled(False)
+
     # 减平均
     def changeSubtractAverage(self):
         self.subtractAverage = self.subtractAverage is False

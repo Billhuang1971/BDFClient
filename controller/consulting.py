@@ -93,7 +93,7 @@ class consultingController(QWidget):
 
             self.prentryView.ui.tableWidget.setRowCount(row_num)
             for r in range(row_num):
-                fn='{:>03}.bdf'.format(self.pre_info[r][1])
+                fn = '{:>03}.bdf'.format(self.pre_info[r][1])
                 item = QTableWidgetItem(fn)
                 item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 font = item.font()
@@ -113,7 +113,7 @@ class consultingController(QWidget):
 
     def on_btnConfirm_clicked(self):
         self.prentryView.close()
-        self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date, ['consultingController',''], "sample_info", self.client.tUser[0]])
+        self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date, ['consultingController',''], "sample_info", self.client.tUser[0], False])
 
     def on_btnReturn_clicked(self):
         self.prentryView.close()
