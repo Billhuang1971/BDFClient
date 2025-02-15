@@ -361,8 +361,8 @@ class EEGController(QWidget):
                 self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnDowning.setDisabled(False)
                 self.view.ui.btnUping.setText(">>")
-                self.view.startPaintLabel()
                 self.timer.stop()
+                self.view.startPaintLabel()
             self.moving = self.moving is False
         except Exception as e:
             print("onBtnDowningClicked", e)
@@ -378,8 +378,9 @@ class EEGController(QWidget):
                 self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnDowning.setDisabled(False)
                 self.view.ui.btnUping.setText(">>")
-                self.view.startPaintLabel()
+                self.moving = False
                 self.timer.stop()
+                self.view.startPaintLabel()
             inBlock, readFrom, readTo, = self.data.queryRange(begin)
             if inBlock is False:
                 self.loading = True
@@ -415,8 +416,8 @@ class EEGController(QWidget):
                 self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnUping.setDisabled(False)
                 self.view.ui.btnDowning.setText("<<")
-                self.view.startPaintLabel()
                 self.timer.stop()
+                self.view.startPaintLabel()
             self.moving = self.moving is False
         except Exception as e:
             print("onBtnUpingClicked", e)
@@ -432,6 +433,8 @@ class EEGController(QWidget):
                 self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnUping.setDisabled(False)
                 self.view.ui.btnDowning.setText("<<")
+                self.moving = False
+                self.timer.stop()
                 self.view.startPaintLabel()
             inBlock, readFrom, readTo, = self.data.queryRange(begin)
             if inBlock is False:
