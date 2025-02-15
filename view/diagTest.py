@@ -66,7 +66,7 @@ class sign_InfoView(QMainWindow,QWidget):
         self.ui = Ui_diag_MainWindow()
         self.ui.setupUi(self)
 
-class diagListView(QWidget):
+class DiagListView(QWidget):
     def __init__(self,parent=None):
         super().__init__(parent)
         self.ui = Ui_diagList()
@@ -87,12 +87,12 @@ class diagListView(QWidget):
             self.ui.tableWidget.setColumnWidth(7, 80)
             self.ui.tableWidget.setColumnWidth(8, 220)
             self.ui.tableWidget.setHorizontalHeaderLabels(
-                ["班级名称",'状态', '学习说明', '起始时间', '截止时间', '检查单号','医生', '文件号', '操作'])
+                ["班级名称", '状态', '学习说明', '起始时间', '截止时间', '检查单号', '医生', '文件号', '操作'])
             ltip = {'beforeStudy':'未开始', 'studying': '学习中', 'studied':'学习完成','testing':'测试中', 'tested':'测试完成'}
 
             self.ui.tableWidget.removeRow(0)
             self.row_num = len(diags_viewInfo)
-            if self.row_num <=0:
+            if self.row_num <= 0:
                 self.ui.tableWidget.setRowCount(1)
                 self.ui.tableWidget.setItem(0, 0, QTableWidgetItem("[无]"))
                 self.ui.tableWidget.item(0, 0).setTextAlignment(Qt.AlignCenter)
@@ -148,24 +148,24 @@ class diagListView(QWidget):
               self.ui.tableWidget.item(row, i).setFlags(Qt.ItemIsEditable)
               self.ui.tableWidget.item(row, i).setFont(iFont)
               i = 7
-              self.ui.tableWidget.setItem(row, i, QTableWidgetItem('{:>03}.edf'.format(str(diags_viewInfo[row][10]))))
+              self.ui.tableWidget.setItem(row, i, QTableWidgetItem('{:>03}.bdf'.format(str(diags_viewInfo[row][10]))))
               self.ui.tableWidget.item(row, i).setTextAlignment(Qt.AlignCenter)
               self.ui.tableWidget.item(row, i).setFlags(Qt.ItemIsEditable)
               self.ui.tableWidget.item(row, i).setFont(iFont)
 
               # 添加最后一列
               layout = QHBoxLayout()
-              self.ui.tableWidget.setCellWidget(row, col_num , QWidget())
+              self.ui.tableWidget.setCellWidget(row, col_num, QWidget())
 
               manualBtn = QPushButton('脑电图标注测试')
-              manualBtn.clicked.connect(partial(on_clicked_manual_query, diags_viewInfo[row],paitentNamesDict.get(diags_viewInfo[row][8]),row))
+              manualBtn.clicked.connect(partial(on_clicked_manual_query, diags_viewInfo[row], paitentNamesDict.get(diags_viewInfo[row][8]), row))
               manualBtn.setStyleSheet('height : 50px;width:60px;font : 18px;color:blue')
               manualBtn.setFont(iFont)
               manualBtn.setCursor(Qt.PointingHandCursor)
               manualBtn.setToolTip("学习测试:脑电图标注测试")
               layout.addWidget(manualBtn)
 
-              self.ui.tableWidget.cellWidget(row, col_num ).setLayout(layout)
+              self.ui.tableWidget.cellWidget(row, col_num).setLayout(layout)
 
         except Exception as e:
             print('initTable', e)

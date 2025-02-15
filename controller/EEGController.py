@@ -24,10 +24,11 @@ class EEGController(QWidget):
         self.return_from = msg[5]
         self.tableName = msg[6]
         self.pUid = msg[7]
-        self.onlyRead = msg[8]
+        self.updateAllowed = msg[8]
+        self.insertAllowed = msg[9]
         self.mainLabel = mainLabel
         self.view = EEGView()
-        if self.onlyRead:
+        if self.insertAllowed is False:
             self.view.banAnnotate()
         self.speed = {
             "1x": 3000,
@@ -516,7 +517,7 @@ class EEGController(QWidget):
                         self.view.drawEvent(event)
             # 右键释放菜单
             elif event.button == 3:
-                if self.onlyRead:
+                if self.updateAllowed is False:
                     return
                 self.view.releaseMenu()
         except Exception as e:

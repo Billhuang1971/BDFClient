@@ -320,15 +320,12 @@ class MainController(QWidget):
         elif controller_name == "diagTrainingController":
             self.controller = diagTrainingController(appUtil=self.cAppUtil, Widget=self.view.label_4,
                                                      client=self.client,
-                                                     Widget2=self.view.label_5, mainMenubar=self.view.ui.menubar,
-                                                     mainLayout=self.view.verticalLayout_1)
+                                                     Widget2=self.view.label_5)
             self.controller.switchToEEG.connect(self.switchToEEGPage)
 
         elif controller_name == "diagTestController":
-            self.controller = diagTestController(appUtil=self.cAppUtil, Widget=self.view.label_4,
-                                                 client=self.client,
-                                                 mainMenubar=self.view.ui.menubar,
-                                                 mainLayout=self.view.verticalLayout_1)
+            self.controller = diagTestController(appUtil=self.cAppUtil, client=self.client)
+            self.controller.switchToEEG.connect(self.switchToEEGPage)
 
         elif controller_name == "diagAssessController":
             self.controller = diagAssessController(appUtil=self.cAppUtil, Widget=self.view.label_4,
@@ -417,21 +414,15 @@ class MainController(QWidget):
 
         if controller_name == "manualQueryController":
             self.controller = manualQueryController(appUtil=self.cAppUtil, client=self.client, page_number=msg[1])
-            self.controller.switchToEEG.connect(self.switchToEEGPage)
+
         elif controller_name == "consultingController":
             self.controller = consultingController(appUtil=self.cAppUtil,
                                                    client=self.client, page=msg[1])
-            self.controller.switchToEEG.connect(self.switchToEEGPage)
         elif controller_name == "diagTrainingController":
-            self.controller = diagTrainingController(appUtil=self.cAppUtil, Widget=self.view.label_4,
-                                                     client=self.client,
-                                                     Widget2=self.view.label_5, mainMenubar=self.view.ui.menubar,
-                                                     mainLayout=self.view.verticalLayout_1)
+            self.controller = diagTrainingController(appUtil=self.cAppUtil, Widget=self.view.label_5,
+                                                     client=self.client)
         elif controller_name == "diagTestController":
-            self.controller = diagTestController(appUtil=self.cAppUtil, Widget=self.view.label_4,
-                                                 client=self.client,
-                                                 mainMenubar=self.view.ui.menubar,
-                                                 mainLayout=self.view.verticalLayout_1)
+            self.controller = diagTestController(appUtil=self.cAppUtil, client=self.client)
         elif controller_name == "diagAssessController":
             self.controller = diagAssessController(appUtil=self.cAppUtil, Widget=self.view.label_4,
                                                    client=self.client,
@@ -447,7 +438,7 @@ class MainController(QWidget):
                                                         client=self.client,
                                                         mainMenubar=self.view.ui.menubar,
                                                         mainLayout=self.view.verticalLayout_1)
-
+        self.controller.switchToEEG.connect(self.switchToEEGPage)
         self.sub_view = self.controller.view
         self.view.updateForEEG(self.sub_view)
 

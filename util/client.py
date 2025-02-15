@@ -450,6 +450,9 @@ class client(QObject, socketClient):
     updateSampleSig = pyqtSignal(list)
     deleteSampleSig = pyqtSignal(list)
 
+    # 学习测试
+    checkTestedSig = pyqtSignal(list)
+
 
     def __init__(self, s_ip=None, s_port=None, cAppUtil=None):
         super().__init__()
@@ -741,7 +744,15 @@ class client(QObject, socketClient):
 
 
     #学习测试/保存并提交诊断信息
-    def dt_diagTest_commit(self,REQdata):
+    def checkTested(self, REQdata):
+        REQdata.insert(0, self.macAddr)
+        msg = ["diagTest", 29, self.tUser[0], REQdata]
+        self.sendRequest(msg)
+
+    def checkTestedRes(self, REPmsg):
+        self.checkTestedSig.emit(list(REPmsg[3]))
+
+    def dt_diagTest_commit(self, REQdata):
         REQdata.insert(0, self.macAddr)
         msg = ["diagTest", 28, self.tUser[0], REQdata]
         self.sendRequest(msg)
@@ -3715,6 +3726,8 @@ class client(QObject, socketClient):
         elif REQmsg[0] == 'testAssess' and REQmsg[1] == 1:
             self.da_get_contentsRes(REQmsg)
 
+        elif REQmsg[0] == 'diagTest' and REQmsg[1] == 29:
+            self.checkTestedRes(REQmsg)
         #学习测试/完成诊断信息
         elif REQmsg[0] == 'diagTest' and REQmsg[1] == 28:
             self.dt_diagTest_commitRes(REQmsg)

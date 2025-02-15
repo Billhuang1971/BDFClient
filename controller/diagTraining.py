@@ -26,11 +26,9 @@ from view.manual_form.combo_check_box2 import CheckableComboBox
 class diagTrainingController(QWidget):
     switchToEEG = pyqtSignal(list)
 
-    def __init__(self, appUtil=None, Widget=None, client=None, Widget2=None, mainMenubar=None, mainLayout=None):
+    def __init__(self, appUtil=None, Widget=None, client=None):
         super().__init__()
         self.view = DiagListView()
-        self.mainLayout = mainLayout
-        self.mainMenubar = mainMenubar
         self.class_id = None
         self.study_start_time = None
 
@@ -41,9 +39,7 @@ class diagTrainingController(QWidget):
         self.client.dl_get_contentsResSig.connect(self.dl_get_contentsRes)
         # self.client.dl_get_diagResSig.connect(self.dl_get_diagRes)
 
-
-        self.widget_from_main = Widget
-        self.widget_from_main2 = Widget2
+        self.widget_from_main2 = Widget
 
         self.sign_InfoView = None
 
@@ -122,7 +118,7 @@ class diagTrainingController(QWidget):
         self.page = ['file_name']
 
         self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date,
-                               ['consultingController', ''], "sample_info", diags_viewInfo[11], True])
+                               ['diagTrainingController', ''], "sample_info", diags_viewInfo[11], False, False])
 
     def on_btnNextPatient_clicked(self):
         self.stopRolling()
