@@ -51,7 +51,7 @@ class Ui_Sample(QDialog):
         self.scroll_layout = QtWidgets.QGridLayout(self.scroll_content)
 
         self.all = QtWidgets.QCheckBox(Setting, text="全选")
-        self.all.stateChanged.connect(self.allChange)
+        self.all.clicked.connect(self.allChange)
         self.scroll_layout.addWidget(self.all, 0, 0)
 
         # `y` 是控件垂直位置的偏移量，用来控制行的布局
@@ -124,6 +124,7 @@ class Ui_Sample(QDialog):
         glen = len(self.dgroupKeys)
         index = 0
         for i in range(glen):
+            flag = False
             self.lb_g[i].setText(f"{self.dgroupKeys[i]}")
             chs = self.dgroup.get(self.dgroupKeys[i])
             for j in range(len(chs)):
@@ -134,11 +135,17 @@ class Ui_Sample(QDialog):
                 #     self.ck_g[index].setChecked(False)
                 if chs[j] not in self.samplefilter:
                     self.ck_g[index].setChecked(False)
+                    self.all.setChecked(False)
+                    flag=True
                     if chs[j] not in self.banType:
                         self.ck_g[index].setDisabled(True)
                 else:
                     self.ck_g[index].setChecked(True)
                 index += 1
+            if flag==True:
+                self.lb_gSt[i]=False
+            else:
+                self.lb_gSt[i]=True
             self.ck_g[index-1].show()
             self.montage = '默认'
             #self.ck_g[index-1].setChecked(True)

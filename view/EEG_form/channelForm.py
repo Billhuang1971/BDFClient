@@ -50,7 +50,7 @@ class Ui_channel(QDialog):
         self.scroll_layout = QtWidgets.QGridLayout(self.scroll_content)
 
         self.all = QtWidgets.QCheckBox(Setting, text="全选")
-        self.all.stateChanged.connect(partial(self.allChange))
+        self.all.clicked.connect(partial(self.allChange))
         self.scroll_layout.addWidget(self.all, 0, 0)
         x = 1
         # `y` 是控件垂直位置的偏移量，用来控制行的布局
@@ -134,6 +134,7 @@ class Ui_channel(QDialog):
             #self.radioButtonMontage_1.setChecked(False)
             #self.radioButtonMontage_2.hide()
             for i in range(glen):
+                flag =False
                 self.lb_g[i].setText(f"{self.dgroupKeys[i]}")
                 chs = self.dgroup.get(self.dgroupKeys[i])
                 for j in range(len(chs)-1):
@@ -145,13 +146,20 @@ class Ui_channel(QDialog):
                         self.ck_g[index].setChecked(True)
                     else:
                         self.ck_g[index].setChecked(False)
+                        self.all.setChecked(False)
+                        flag=True
 
                     index += 1
+                if flag == True:
+                    self.lb_gSt[i] = False
+                else:
+                    self.lb_gSt[i] = True
                 #self.ck_g[index].hide()
                 #self.ck_g[index].setChecked(False)
                 #index += 1
         elif self.montage == '双极':
             for i in range(glen):
+                flag = False
                 self.lb_g[i].setText(f"{self.dgroupKeys[i]}")
                 chs = self.dgroup.get(self.dgroupKeys[i])
                 for j in range(len(chs)-2):
@@ -163,13 +171,20 @@ class Ui_channel(QDialog):
                         self.ck_g[index].setChecked(True)
                     else:
                         self.ck_g[index].setChecked(False)
+                        self.all.setChecked(False)
+                        flag = True
 
                     index += 1
+                if flag == True:
+                    self.lb_gSt[i] = False
+                else:
+                    self.lb_gSt[i] = True
                 #self.ck_g[index].hide()
                 #self.ck_g[index].setChecked(False)
                 #index += 1
         else:
             for i in range(glen):
+                flag = False
                 self.lb_g[i].setText(f"{self.dgroupKeys[i]}")
                 chs = self.dgroup.get(self.dgroupKeys[i])
                 for j in range(len(chs)):
@@ -178,8 +193,14 @@ class Ui_channel(QDialog):
                         self.ck_g[index].setChecked(True)
                     else:
                         self.ck_g[index].setChecked(False)
+                        self.all.setChecked(False)
+                        flag = True
 
                     index += 1
+                if flag == True:
+                    self.lb_gSt[i] = False
+                else:
+                    self.lb_gSt[i] = True
                 self.ck_g[index - 1].show()
                 # self.ck_g[index-1].setChecked(True)
 
