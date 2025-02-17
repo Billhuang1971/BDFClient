@@ -670,7 +670,7 @@ class EEGView(QWidget):
         try:
             if self.scroll_position is not None:
                 self.scroll_position.remove()
-            self.scroll_position = self.ax_hscroll.axvline(self.begin, color='r', linewidth=2)
+            self.scroll_position = self.ax_hscroll.axvline(self.begin, color='r', linewidth=2.5)
             self.canvas.draw()
         except Exception as e:
             print("changeAxStatus", e)

@@ -307,16 +307,16 @@ class manualQueryController(QWidget):
     # prentryView选择文件后，点击确认按钮载入数据显示图像
     def on_btnConfirm_clicked(self):
         self.prentryView.close()
-        self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date, ['manualQueryController', self.curPageIndex], "sample_info", self.client.tUser[0], True, True])
+        self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date, ['manualQueryController', self.curPageIndex], "sample_info", self.client.tUser[0], False, False])
 
 
     # prentryView返回按钮
     def on_btnReturn_clicked(self):
         self.prentryView.close()
-        if self.returnTo == 1:
-          self.view.show()
-          self.diagListView.hide()
-        else:
-          self.diagListView.show()
-          self.view.hide()
+        # if self.returnTo == 1:
+        self.view.show()
+        # self.diagListView.hide()
+        # else:
+        #   # self.diagListView.show()
+        #   self.view.hide()
         return
