@@ -77,7 +77,7 @@ class EEGController(QWidget):
                 self.end_time = msg[9]
                 type_info = msg[1]
                 self.montage = msg[2]
-                self.lenBlock = msg[10]
+                lenBlock = msg[10]
                 self.lenWin = msg[12]
                 data = msg[13]
                 labels = msg[14]
@@ -93,7 +93,7 @@ class EEGController(QWidget):
                 self.view.initView(type_info, self.channels, lenTime, sample_rate, self.patientInfo, self.file_name, self.measure_date, self.start_time, self.end_time, labelBit, self.dawnSample, typeEEG, self.montage, sampleFilter, channels_index)
                 self.connetEvent(type_info)
 
-                self.data = EEGData(data, self.lenFile, self.lenBlock, self.lenWin, labels)
+                self.data = EEGData(data, self.lenFile, lenBlock, self.lenWin, labels)
                 data, labels = self.data.getData()
                 self.view.refreshWin(data, labels)
                 self.loading = False
@@ -283,11 +283,12 @@ class EEGController(QWidget):
     # 改变秒跨度的操作
     def secondsSpanChange(self):
         try:
-            self.nSecWin, self.nDotSec, self.dawnSample, self.lenWin, readFrom = self.view.secondsSpanChange()
+            self.nSecWin, self.nDotSec, self.dawnSample, self.lenWin, startWin, self.lenFile = self.view.secondsSpanChange()
             #一个窗口对应的脑电秒数，一秒脑电信号的屏幕像素点的数量，下采样，一屏下采样脑电数据的长度，开始样本点
-            self.lenBlock = min(self.lenFile, self.nWinBlock * self.lenWin) #数据块样本长度
-            self.data.resetEEGData(self.lenBlock, self.lenWin, readFrom)#数据块样本长度，一屏下采样脑电数据的长度，开始样本点在脑电文件中的样本索引位置
-            self.client.loadEEGData([self.check_id, self.file_id, readFrom, readFrom + self.lenBlock, self.dawnSample, self.tableName, self.pUid])
+            lenBlock = min(self.lenFile, self.nWinBlock * self.lenWin) #数据块样本长度
+
+            readFrom, readTo = self.data.resetEEGData(lenBlock, self.lenWin, startWin, self.lenFile)#数据块样本长度，一屏下采样脑电数据的长度，开始样本点在脑电文件中的样本索引位置
+            self.client.loadEEGData([self.check_id, self.file_id, readFrom, readTo, self.dawnSample, self.tableName, self.pUid])
         except Exception as e:
             print("secondsSpanChange", e)
 
@@ -499,7 +500,7 @@ class EEGController(QWidget):
             if event.button == 1:
                 ax = self.view.clickAxStatus(event.inaxes)
                 if ax == EEGView.PICK_AXHSCROLL:
-                    x = int(event.xdata)
+                    x = round(event.xdata)
                     begin = self.view.onAxhscrollClicked(x)
                     inBlock, readFrom, readTo, = self.data.queryRange(begin)
                     if inBlock is False:

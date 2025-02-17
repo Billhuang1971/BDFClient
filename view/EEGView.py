@@ -101,7 +101,6 @@ class EEGView(QWidget):
     # 减平均
     def changeSubtractAverage(self):
         self.subtractAverage = self.subtractAverage is False
-        #self.filterlist = list(self.labels)
         self.removeLines()
         self.processChan()
         self.paintEEG()
@@ -110,8 +109,8 @@ class EEGView(QWidget):
         self.paintEvents()
         self.removeTimeLine()
         self.paintTimeLine()
-        self.pick_first = []
-        self.pick_second = []
+        self.pick_first = None
+        self.pick_second = None
         self.canvas.draw()
         self.showLabelList()
         self.showlabelInfo()
@@ -189,8 +188,8 @@ class EEGView(QWidget):
     # 改变秒跨度操作
     def secondsSpanChange(self):
         nSecWin, nDotSec = self.getDotSec()
-        readFrom = self.reCalc(nDotSec, nSecWin)
-        return nSecWin, nDotSec, self.dawnSample, self.lenWin, readFrom
+        self.reCalc(nDotSec, nSecWin)
+        return nSecWin, nDotSec, self.dawnSample, self.lenWin, self.begin * self.sample_rate // self.dawnSample, self.lenTime * self.sample_rate // self.dawnSample
 
     def sensitivityChange(self):
         self.sensitivity = int(self.ui.sensitivity.lineEdit().text())
@@ -316,8 +315,6 @@ class EEGView(QWidget):
         if self.end > self.lenTime:
             self.begin = self.lenTime - self.winTime
             self.end = self.lenTime
-        readFrom = self.begin * self.sample_rate
-        return readFrom
 
     # 更新样本
     def updateSamples(self, readFrom, readTo, case, sample_info):
@@ -645,6 +642,7 @@ class EEGView(QWidget):
         else:
             self.begin = max(0, self.lenTime - self.winTime)
             self.end = self.lenTime
+        self.changeTime()
         self.changeAxStatus()
         return self.begin * self.sample_rate // self.dawnSample
 
@@ -1335,8 +1333,8 @@ class EEGView(QWidget):
         self.paintEvents()
         self.removeTimeLine()
         self.paintTimeLine()
-        self.pick_first =[]
-        self.pick_second =[]
+        self.pick_first = None
+        self.pick_second = None
 
         self.canvas.draw()
         self.showLabelList()

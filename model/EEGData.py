@@ -96,15 +96,23 @@ class EEGData(object):
         except Exception as e:
             print("getData", e)
 
-    def resetEEGData(self, lenBlock, lenWin, startBlock):
+    def resetEEGData(self, lenBlock, lenWin, startWin, lenFile):
         self.lenBlock = lenBlock
+        self.lenWin = lenWin
+        self.lenFile = lenFile
         self.updateFrom = 0
         self.updateTo = lenBlock
-        self.lenWin = lenWin
-        self.fromBlock = 0
-        self.toBlock = lenWin
         self.case = 1
-        self.startBlock = startBlock
+
+        if self.lenBlock == self.lenFile or startWin < (lenBlock - lenWin) // 2:
+            self.startBlock = 0
+        elif startWin + lenWin + (lenBlock - lenWin) // 2 > lenFile:
+            self.startBlock = lenFile - lenBlock
+        else:
+            self.startBlock = startWin - (lenBlock - lenWin) // 2
+        self.fromBlock = startWin - self.startBlock
+        self.toBlock = self.fromBlock + lenWin
+        return self.startBlock, self.startBlock + lenBlock
 
     def insertSample(self, label):
         idx = 0

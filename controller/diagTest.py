@@ -89,13 +89,9 @@ class diagTestController(QWidget):
             QMessageBox.information(self, '提示', '打开文件失败')
             self.mainMenubar.setEnabled(True)
 
-    def checkTested(self, testing):
-        if testing:
-            self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date,
+    def checkTested(self, msg):
+        self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date,
                                    ['diagTestController', ''], "result", self.User[0], True, False])
-        else:
-            self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date,
-                                   ['diagTestController', ''], "result", self.User[0], False, False])
 
     def diagTest_commitRes(self, REPData):
         if REPData[0] == '0':
