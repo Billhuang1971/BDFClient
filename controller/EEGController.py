@@ -31,9 +31,9 @@ class EEGController(QWidget):
         if self.insertAllowed is False:
             self.view.banAnnotate()
         self.speed = {
-            "1x": 3000,
-            "2x": 1500,
-            "3x": 1000
+            "1x": 1500,
+            "2x": 1000,
+            "3x": 500
         }
         self.speedText = "1x"
         self.timer = QTimer()
