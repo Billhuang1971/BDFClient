@@ -87,8 +87,6 @@ class EEGView(QWidget):
         self.axHscrollSpan = []
         self.sen = 0
         self.plottedData = None
-
-        self.secondsSpan = 30
         self.createPaintTools()
 
 
@@ -114,6 +112,7 @@ class EEGView(QWidget):
         self.canvas.draw()
         self.showLabelList()
         self.showlabelInfo()
+
     # 初始化View
     def initView(self, type_info, channels, lenTime, sampleRate, patientInfo, fileName, measureDate, startTime, endTime, labelBit, dawnSample, typeEEG, montage, sampleFilter, channels_index):
         try:
@@ -147,6 +146,27 @@ class EEGView(QWidget):
             self.showPatientInfo(patientInfo, fileName,
                                       measureDate, startTime,
                                       endTime)
+            if self.typeEEG:
+                self.sensitivity = 50
+                for i in range(10, 100, 10):
+                    self.ui.sensitivity.addItem(str(i))
+                self.ui.sensitivity.setCurrentText("50")
+            else:
+                self.sensitivity = 10
+                for i in range(5, 16, 1):
+                    self.ui.sensitivity.addItem(str(i))
+                self.ui.sensitivity.setCurrentText("10")
+
+            self.moveLength = self.winTime
+            for i in range(max(1, self.winTime - 4), self.winTime + 4, 1):
+                self.ui.moveLength.addItem(str(i))
+            self.ui.moveLength.setCurrentText(str(self.moveLength))
+
+            self.secondsSpan = 30
+            for i in range(25, 36, 1):
+                self.ui.secondsSpan.addItem(str(i))
+            self.ui.secondsSpan.setCurrentText(str(self.secondsSpan))
+
         except Exception as e:
             print("initView", e)
 
@@ -179,7 +199,7 @@ class EEGView(QWidget):
         return self.getDotSec()
 
     def getDotSec(self):
-        self.secondsSpan = int(self.ui.secondsSpan.lineEdit().text())
+        self.secondsSpan = int(self.ui.secondsSpan.currentText())
         self.winTime = int(round(self.axesXWidthMM / self.secondsSpan))
         px = int(round(self.secondsSpan * self.xDPI / 25.4))
         self.nDotWin = self.winTime * px
@@ -193,7 +213,6 @@ class EEGView(QWidget):
 
     def sensitivityChange(self):
         self.sensitivity = int(self.ui.sensitivity.lineEdit().text())
-        #self.filterlist = list(self.labels)
         self.removeLines()
         self.processChan()
         self.paintEEG()

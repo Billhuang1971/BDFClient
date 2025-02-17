@@ -529,7 +529,6 @@ class Ui_EEGView(object):
         self.secondsLine.setText(_translate("Seconds Line", "秒线 "))
         self.subtractAverage.setText(_translate("Subtract Average", "减平均 "))
         self.sensitivityText.setText(_translate("Sensitivity Text", " 灵敏度(uV/mm): "))
-        self.sensitivity.setCurrentText("10")
         self.secondsSpanText.setText(_translate("secondsSpan Text", " 秒跨度(mm/s): "))
         self.secondsSpan.setCurrentText("30")
         self.moveLengthText.setText(_translate("MoveLength Text", " 移动长度(s): "))
