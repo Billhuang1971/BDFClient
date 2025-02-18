@@ -83,7 +83,7 @@ class diagTrainingController(QWidget):
         self.student_stateDict={}
         if REPData[3] is not None:
           for u in REPData[3]:
-            self.userNamesDict.setdefault(u[0],u[1])
+            self.userNamesDict.setdefault(u[0], u[1])
         if REPData[4] is not None:
           for p in REPData[4]:
             self.paitentNamesDict.setdefault(p[0], p[1])

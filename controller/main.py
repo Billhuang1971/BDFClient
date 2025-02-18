@@ -204,8 +204,12 @@ class MainController(QWidget):
             self.view.label_2.setText(_translate("MainWindow", "当前用户: "))
             self.view.label_3.setText(_translate("MainWindow", "当前身份： "))
 
-            if self.previous_controller=='diagLearningController':
-                self.controller.study_end()
+            if self.study_start_time != None:
+                study_end_time = datetime.now().strftime("%Y-%m-%d :%H:%M:%S")
+                msg = [self.class_id, self.client.tUser[0], self.study_start_time, study_end_time]
+                self.client.dl_study_end(msg)
+                self.study_start_time = None
+                self.class_id = None
 
             self.controller.exit()
             self.controller = None
@@ -415,7 +419,12 @@ class MainController(QWidget):
             self.controller.switchFromEEG.disconnect()
             self.controller.exit()
         self.controller = None
-
+        if self.study_start_time != None:
+            study_end_time = datetime.now().strftime("%Y-%m-%d :%H:%M:%S")
+            msg = [self.class_id, self.client.tUser[0], self.study_start_time, study_end_time]
+            self.client.dl_study_end(msg)
+            self.study_start_time = None
+            self.class_id = None
         if controller_name == "manualQueryController":
             self.controller = manualQueryController(appUtil=self.cAppUtil, client=self.client, page_number=msg[1])
 
@@ -441,8 +450,6 @@ class MainController(QWidget):
                                                         client=self.client,
                                                         mainMenubar=self.view.ui.menubar,
                                                         mainLayout=self.view.verticalLayout_1)
-        # if self.study_start_time != None:
-        #
         self.controller.switchToEEG.connect(self.switchToEEGPage)
         self.sub_view = self.controller.view
         self.view.updateForEEG(self.sub_view)
