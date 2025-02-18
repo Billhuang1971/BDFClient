@@ -627,6 +627,7 @@ class EEGView(QWidget):
         for xhtl in self.ax_hscroll.get_xticklabels():
             xhtl.set_fontsize(10)
         self.paintLabelBit()
+        self.changeAxStatus()
 
     # 绘制时间轴上样本信息
     def paintLabelBit(self):
@@ -1230,17 +1231,37 @@ class EEGView(QWidget):
                 break
             idx += 1
         self.labels.pop(idx)
+        self.filterlist.remove(self.cur_sample_index)
+        self.cur_sample_index = -1
         if label[0] == 'all':
             if label[1] == label[2]:
                 sample = 3
+                idx = 0
+                while idx < len(self.events):
+                    if label == self.events[idx]:
+                        break
+                    idx += 1
+                self.events.pop(idx)
             else:
                 sample = 2
+                idx = 0
+                while idx < len(self.states):
+                    if label == self.states[idx]:
+                        break
+                    idx += 1
+                self.states.pop(idx)
         else:
             sample = 1
+            idx = 0
+            while idx < len(self.waves):
+                if label == self.waves[idx]:
+                    break
+                idx += 1
+            self.waves.pop(idx)
+
         self.removeLines([str(label[0]) + "|" + str(label[1]) + "|" + str(label[2]) + "|" + str(label[3])], sample)
         self.paintLabelBit()
         self.canvas.draw()
-        self.filterSamples()
         self.showLabelList()
         self.showlabelInfo()
         return label
@@ -1453,59 +1474,21 @@ class EEGView(QWidget):
 
 
     def bdfMontage(self, channels):
-        ch0s = ['Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'T3', 'C3', 'Cz', 'C4', 'T4', 'T5', 'P3', 'Pz', 'P4', 'P6',
-                'O1', 'O2']
         dgroup = {}
-
-        chlen = len(channels)
-        if chlen <= 0:
-            return dgroup
-        i = 0
-        while i < chlen:
-            cha = channels[i]
-            if cha.upper() in ch0s:
-                return {}
-            bg = []
-            i += 1
-            try:
-                suffix = cha.split('-')[1] if len(cha.split('-')) > 1 else None
-                suffix = '-' + suffix
-                cha = cha.split('-')[0]
-                n = int(cha[-1])
-            except ValueError:
-                continue
-            if n != 1:
-                continue
-            bkey = cha[:-1]
-            if suffix is not None:
-                cha = cha + suffix
-            bg.append(cha)
-            while i < chlen:
-                n += 1
-                cha = channels[i]
-                cha = cha.split('-')[0]
-                if cha.upper() in ch0s:
-                    return {}
-                if cha == f'{bkey}{n}':
-                    if suffix is not None:
-                        cha = cha + suffix
-                    bg.append(cha)
-                    i += 1
-                else:
-                    index = min(bkey.find('-'), bkey.find('_')) if bkey.find('-') != -1 and bkey.find(
-                        '_') != -1 else max(bkey.find('-'), bkey.find('_'))
-                    # 如果找到了'-'或'_'，返回切片前的部分
-                    if index != -1:
-                        bkey = bkey[:index]
-                    else:
-                        bkey = bkey[:-1]
-                    if n > 1:
-                        dgroup.setdefault(bkey, bg)
+        for channel in channels:
+            ch = channel.split('-')[0]
+            idx = len(ch) - 1
+            while idx >= 0:
+                if not ch[idx].isdigit():
                     break
-            if i >= chlen and n > 1:
-                bkey = cha[:-2]
-                dgroup.setdefault(bkey, bg)
+                idx -= 1
+            key = ch[:idx + 1]
+            if key in dgroup.keys():
+                dgroup[key].append(channel)
+            else:
+                dgroup[key] = [channel]
         return dgroup
+
     def crossWinpaint(self):
         if self.pick_first is not None:
             if self.pick_second is None:

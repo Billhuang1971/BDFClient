@@ -106,6 +106,7 @@ class EEGController(QWidget):
         list2 = []
         if typeEEG == True:
             self.dgroup = self.view.bdfMontage(self.channels)
+            print(self.dgroup)
             dgroupKeys = list(self.dgroup.keys())
             glen = len(dgroupKeys)
             for i in range(glen):
