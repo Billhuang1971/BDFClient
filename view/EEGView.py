@@ -74,7 +74,7 @@ class EEGView(QWidget):
         self.eventline = None
         self.lenTime = None
         self.paint_length = None
-        self.scroll_position = None
+        self.scroll_position = None #窗口位置
         self.winTime = 0
         self.sensitivity = 10
         self.showSecondLine = True
@@ -310,8 +310,8 @@ class EEGView(QWidget):
     # 绘制秒线
     def paintTimeLine(self):
         if self.showSecondLine:
-            for x in range(self.begin, self.end + 1):
-                self.time_lines.append(self.axes.vlines(x, 0, 200, colors='black', alpha=0.7))
+            for x in range(self.begin, self.end ):
+                self.time_lines.append(self.axes.vlines(x, 0, 200, colors='red',alpha=0.7,linestyles='dashed')) #timeline color
 
     # 删除秒线
     def removeTimeLine(self):
@@ -512,11 +512,11 @@ class EEGView(QWidget):
             description = self.filtertype[idx][3]
             type_name = self.filtertype[idx][1]
             if description == '正常状态':
-                color = 'green'
+                color = 'blue' #statecolor
             elif description == '异常状态':
-                color = 'green'
+                color = 'blue'
             else:
-                color = 'green'#'dodgerblue'
+                color = 'blue'#'dodgerblue'
             self.paintAState(state, color)
 
     # 绘制一个状态
@@ -524,13 +524,13 @@ class EEGView(QWidget):
         label = str(state[0]) + "|" + str(state[1]) + "|" + str(state[2]) + "|" + str(state[3])
         x0 = state[1]/(self.sample_rate//self.dawnSample)
         x1 = state[2]/(self.sample_rate//self.dawnSample)
-        self.state_lines.append([label, self.axes.axvspan(x0, x1, label=label, facecolor=color, alpha=0.3, picker=True)])
+        self.state_lines.append([label, self.axes.axvspan(x0, x1, label=label, facecolor=color, alpha=0.2, picker=True)])
 
     def paintEvents(self):
         if self.is_Event_showed is False:
             return
         for event in self.events:
-            color = 'orange'
+            color = 'blue' #eventcolor
             start = int(event[1]) * self.dawnSample / self.sample_rate
             # start = (event[1] - (self.begin * self.sample_rate // self.dawnSample)) if event[1] > (
             #              self.begin * self.sample_rate // self.dawnSample) else 0
@@ -538,7 +538,7 @@ class EEGView(QWidget):
             self.paintAEvent(start, label, color)
 
     def paintAEvent(self, start, label, color):
-        self.Event_lines.append([label, self.axes.vlines(start, 0, 200, color=color, linewidth=2)])
+        self.Event_lines.append([label, self.axes.vlines(start, 0, 200, color=color, linewidth=2.2)])
 
     # 过滤样本
     def filterSamples(self):
@@ -582,7 +582,7 @@ class EEGView(QWidget):
         if self.is_waves_showed is False:
             return
         for wave in self.waves:
-            color = 'blue'
+            color = 'blue' #wavecolor
             l = (wave[1] - (self.begin * self.sample_rate // self.dawnSample)) if wave[1] > (self.begin * self.sample_rate // self.dawnSample) else 0
             r = (wave[2] - (self.begin * self.sample_rate // self.dawnSample)) if wave[2] < (self.end * self.sample_rate // self.dawnSample) else (self.end - self.begin) * (self.sample_rate//self.dawnSample)
             label = str(wave[0]) + "|" + str(wave[1]) + "|" + str(wave[2]) + "|" + str(wave[3])
@@ -615,7 +615,7 @@ class EEGView(QWidget):
         hsel_patch = mpl.patches.Rectangle((0, 0), self.lenTime,
                                            1,
                                            edgecolor='k',
-                                           facecolor='none',
+                                           facecolor='LightGray',
                                            alpha=0.25, linewidth=1,
                                            clip_on=False)
         self.ax_hscroll.add_patch(hsel_patch)
@@ -641,7 +641,7 @@ class EEGView(QWidget):
                 r = l + 1
                 while r <= self.nDotWin and self.labelBit[r]:
                     r += 1
-                self.axHscrollSpan.append(self.ax_hscroll.axvspan(l * self.lenTime / self.nDotWin, (r - 1) * self.lenTime / self.nDotWin, facecolor="green", alpha=0.5))
+                self.axHscrollSpan.append(self.ax_hscroll.axvspan(l * self.lenTime / self.nDotWin, (r - 1) * self.lenTime / self.nDotWin, facecolor="blue", alpha=0.5))
                 l = r
             else:
                 l += 1
@@ -671,7 +671,7 @@ class EEGView(QWidget):
         try:
             if self.scroll_position is not None:
                 self.scroll_position.remove()
-            self.scroll_position = self.ax_hscroll.axvline(self.begin, color='r', linewidth=2.5)
+            self.scroll_position = self.ax_hscroll.axvline(self.begin, color='orange', linewidth=3) #窗口浮标
             self.canvas.draw()
         except Exception as e:
             print("changeAxStatus", e)
@@ -950,9 +950,9 @@ class EEGView(QWidget):
             return
         sample = self.filterlist[self.cur_sample_index]
         if sample[0] == 'all':
-            color = 'orange' if sample[1] == sample[2] else 'green'
+            color = 'blue' if sample[1] == sample[2] else 'blue' #statecolor, eventcolor
         else:
-            color = 'blue'
+            color = 'blue' #wavecolor
         self.changeSampleColor(sample, color)
         self.showlabelInfo()
         self.ui.tableWidget.clearSelection()
@@ -1061,7 +1061,7 @@ class EEGView(QWidget):
         if idx == -1:
             return
         self.wave_lines.append([label, self.axes.plot(x[start:end], self.plottedData[idx, start:end], color=color, picker=True, label=label,
-                       alpha=self.channels_alpha[channel], linewidth=1)[0]])
+                       alpha=self.channels_alpha[channel], linewidth=1.5)[0]])
 
     # 改变样本颜色
     def changeSampleColor(self, sample, color):
@@ -1115,7 +1115,7 @@ class EEGView(QWidget):
                 break
             idx += 1
         self.labels.insert(idx, wave)
-        color = 'blue'
+        color = 'blue'#wave color
         l = (wave[1] - (self.begin * self.sample_rate // self.dawnSample)) if wave[1] > (self.begin * self.sample_rate // self.dawnSample) else 0
         r = (wave[2] - (self.begin * self.sample_rate // self.dawnSample)) if wave[2] < (self.end * self.sample_rate // self.dawnSample) else (self.end - self.begin) * (self.sample_rate // self.dawnSample)
         label = str(wave[0]) + "|" + str(wave[1]) + "|" + str(wave[2]) + "|" + str(wave[3])
@@ -1141,7 +1141,7 @@ class EEGView(QWidget):
                 break
             idx += 1
         self.labels.insert(idx, state)
-        self.paintAState(state, "green")
+        self.paintAState(state, "blue")
         lBit = (self.state_left // self.sample_rate) * self.nDotWin // self.lenTime
         rBit = (self.state_right // self.sample_rate) * self.nDotWin // self.lenTime
         self.labelBit[lBit: rBit] = True
@@ -1163,7 +1163,7 @@ class EEGView(QWidget):
                 break
             idx += 1
         self.labels.insert(idx, event)
-        self.paintAEvent(self.lineposition / self.sample_rate, str(event[0]) + "|" + str(event[1]) + "|" + str(event[2]) + "|" + str(event[3]), 'orange')
+        self.paintAEvent(self.lineposition / self.sample_rate, str(event[0]) + "|" + str(event[1]) + "|" + str(event[2]) + "|" + str(event[3]), 'blue')#eventcolor
         lBit = (self.lineposition // self.sample_rate) * self.nDotWin // self.lenTime
         self.labelBit[lBit: lBit + 1] = True
         self.paintLabelBit()
