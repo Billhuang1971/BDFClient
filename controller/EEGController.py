@@ -26,6 +26,7 @@ class EEGController(QWidget):
         self.pUid = msg[7]
         self.updateAllowed = msg[8]
         self.insertAllowed = msg[9]
+        self.fKey = msg[10]
         self.mainLabel = mainLabel
         self.view = EEGView()
         if self.insertAllowed is False:
@@ -54,7 +55,7 @@ class EEGController(QWidget):
             self.client.insertSampleSig.connect(self.insertSampleRes)
             self.client.updateSampleSig.connect(self.updateSampleRes)
             self.client.deleteSampleSig.connect(self.deleteSampleRes)
-            self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, self.nDotSec, self.nWinBlock, self.tableName, self.pUid])
+            self.client.openEEGFile([self.patient_id, self.check_id, self.file_id, self.nSecWin, self.nDotSec, self.nWinBlock, self.tableName, self.pUid, self.fKey])
         except Exception as e:
             print("startEEG", e)
 
@@ -289,7 +290,7 @@ class EEGController(QWidget):
             lenBlock = min(self.lenFile, self.nWinBlock * self.lenWin) #数据块样本长度
 
             readFrom, readTo = self.data.resetEEGData(lenBlock, self.lenWin, startWin, self.lenFile)#数据块样本长度，一屏下采样脑电数据的长度，开始样本点在脑电文件中的样本索引位置
-            self.client.loadEEGData([self.check_id, self.file_id, readFrom, readTo, self.dawnSample, self.tableName, self.pUid])
+            self.client.loadEEGData([self.check_id, self.file_id, readFrom, readTo, self.dawnSample, self.tableName, self.pUid, self.fKey])
         except Exception as e:
             print("secondsSpanChange", e)
 
@@ -337,7 +338,7 @@ class EEGController(QWidget):
                 self.loading = True
                 self.client.loadEEGData(
                     [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample, self.dawnSample,
-                     self.tableName, self.pUid])
+                     self.tableName, self.pUid, self.fKey])
             else:
                 data, labels = self.data.getData()
                 self.view.refreshWin(data, labels)
@@ -389,7 +390,7 @@ class EEGController(QWidget):
                 self.loading = True
                 self.client.loadEEGData(
                     [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample,
-                     self.dawnSample, self.tableName, self.pUid])
+                     self.dawnSample, self.tableName, self.pUid, self.fKey])
             else:
                 data, labels = self.data.getData()
                 self.view.refreshWin(data, labels)
@@ -444,7 +445,7 @@ class EEGController(QWidget):
                 self.loading = True
                 self.client.loadEEGData(
                     [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample,
-                     self.dawnSample, self.tableName, self.pUid])
+                     self.dawnSample, self.tableName, self.pUid, self.fKey])
             else:
                 data, labels = self.data.getData()
                 self.view.refreshWin(data, labels)
@@ -508,7 +509,7 @@ class EEGController(QWidget):
                         self.loading = True
                         self.client.loadEEGData(
                             [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample,
-                             self.dawnSample, self.tableName, self.pUid])
+                             self.dawnSample, self.tableName, self.pUid, self.fKey])
                     else:
                         data, labels = self.data.getData()
                         self.view.refreshWin(data, labels)
@@ -545,7 +546,7 @@ class EEGController(QWidget):
                 self.loading = True
                 self.client.loadEEGData(
                     [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample, self.dawnSample,
-                     self.tableName, self.pUid])
+                     self.tableName, self.pUid, self.fKey])
             else:
                 data, labels = self.data.getData()
                 self.view.refreshWin(data, labels)
@@ -563,7 +564,7 @@ class EEGController(QWidget):
                 self.loading = True
                 self.client.loadEEGData(
                     [self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample, self.dawnSample,
-                     self.tableName, self.pUid])
+                     self.tableName, self.pUid, self.fKey])
             else:
                 data, labels = self.data.getData()
                 self.view.refreshWin(data, labels)

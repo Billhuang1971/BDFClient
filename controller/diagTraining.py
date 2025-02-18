@@ -118,7 +118,7 @@ class diagTrainingController(QWidget):
         self.page = ['file_name']
 
         self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date,
-                               ['diagTrainingController', ''], "sample_info", diags_viewInfo[11], False, False])
+                               ['diagTrainingController', ''], "sample_info", diags_viewInfo[11], False, False, self.class_id])
 
     def on_btnNextPatient_clicked(self):
         self.stopRolling()
