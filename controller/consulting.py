@@ -13,6 +13,7 @@ class consultingController(QWidget):
         self.client.ct_get_diags_notDiagResSig.connect(self.get_diags_notDiagRes)
         self.client.ct_get_fileNameByIdDateResSig.connect(self.get_fileNameByIdDateRes)
         self.client.ct_get_diags_notDiag([self.client.tUser[0]])
+        self.client.ct_diag_refusedResSig.connect(self.diag_refusedRes)
 
         # 处理客户端传回的提取取诊断信息
     def get_diags_notDiagRes(self, REPData):
@@ -114,7 +115,7 @@ class consultingController(QWidget):
     def on_btnConfirm_clicked(self):
         self.prentryView.close()
         self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date, ['consultingController',''], "sample_info", self.client.tUser[0], True, True, None])
-
+        #file_id,file_name,check_id,patient_id,measure_date,['从哪个模块来','从那个模块的第几页来'],样本的table，用户id，是否允许更新，是否允许插入,theme_id/classid
     def on_btnReturn_clicked(self):
         self.prentryView.close()
         self.view.show()
@@ -123,4 +124,17 @@ class consultingController(QWidget):
         pass
 
     def on_clicked_diag_refused(self, diags_viewInfo,patient_name):
-        pass
+        reply = QMessageBox.information(self, "拒绝诊断信息",
+                                        f'拒绝:{patient_name},测量日期{diags_viewInfo[1]}的诊断，确定吗?',
+                                        QMessageBox.Yes | QMessageBox.No)
+        if reply == 16384:
+            self.check_id = diags_viewInfo[-4]
+            msg = [self.check_id, diags_viewInfo[2], str(diags_viewInfo[1]), patient_name]  # check_id user_id,masure_date patient_name,username
+            self.client.ct_diag_refused(msg)
+    def diag_refusedRes(self, REPData):
+        if REPData[0] == '0':
+            QMessageBox.information(self, "拒绝诊断", REPData[2], QMessageBox.Yes)
+            return False
+        QMessageBox.information(self, "拒绝诊断，操作成功", REPData[2], QMessageBox.Yes)
+        self.page = ['file_name']
+        self.client.ct_get_diags_notDiag([self.client.tUser[0]])

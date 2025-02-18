@@ -43,8 +43,8 @@ class manualQueryController(QWidget):
         self.page = ['file_name']
         msg = [self.client.tUser[0], self.curPageIndex, self.pageRows]
         self.client.mq_get_diags_Diagnosed(msg)
-
-        # self.client.mq_pagingResSig.connect(self.mq_pagingRes)
+        self.view.page_control_signal.connect(self.mq_paging)
+        self.client.mq_pagingResSig.connect(self.mq_pagingRes)
         self.client.mq_get_diags_DiagnosedResSig.connect(self.mq_get_diags_DiagnosedRes)
         # self.client.mq_get_type_infoResSig.connect(self.mq_get_type_infoRes)
         self.client.mq_get_fileNameByIdDateResSig.connect(self.mq_get_fileNameByIdDateRes)
@@ -92,44 +92,44 @@ class manualQueryController(QWidget):
     def mq_paging(self,page_to):
         if page_to[0] == "home":
             self.curPageIndex = 1
-            self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+            self.view.ui.curPage.setText(str(self.curPageIndex))
         elif page_to[0] == "pre":
             if self.curPageIndex <= 1:
                 return
             self.curPageIndex = self.curPageIndex - 1
-            self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+            self.view.ui.curPage.setText(str(self.curPageIndex))
         elif page_to[0] == "next":
             self.curPageIndex = self.curPageIndex + 1
-            self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+            self.view.ui.curPage.setText(str(self.curPageIndex))
         elif page_to[0] == "final":
             self.curPageIndex = self.curPageMax
-            self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+            self.view.ui.curPage.setText(str(self.curPageIndex))
         elif page_to[0] == "confirm":
             pp = self.diagListView.ui.skipPage.text()
             if int(pp) > self.curPageMax or int(pp) <= 0:
                 QMessageBox.information(self, "查询", f'页数：1 至 {self.curPageMax}', QMessageBox.Yes)
-                self.diagListView.ui.skipPage.setText(str(self.curPageMax))
+                self.view.ui.skipPage.setText(str(self.curPageMax))
                 return False
             self.curPageIndex = int(pp)
-            self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+            self.view.ui.curPage.setText(str(self.curPageIndex))
         elif page_to[0] == "query":
             self.curPageIndex = 1
-            self.diagListView.ui.curPage.setText(str(self.curPageIndex))
-        pname = self.diagListView.ui.comboBox.currentText()
-        pvalue = self.diagListView.ui.lineEdit.text()
+            self.view.ui.curPage.setText(str(self.curPageIndex))
+        pname = self.view.ui.comboBox.currentText()
+        pvalue = self.view.ui.lineEdit.text()
         if pname == '测量日期':
             r, pvalue = self.chkdate(pvalue)
             if r == '0':
                 return
-        mdate1 = self.diagListView.ui.lineEditDate1.text()
+        mdate1 = self.view.ui.lineEditDate1.text()
         r, mdate1 = self.chkdate(mdate1)
         if r == '0':
             return
-        mdate2 = self.diagListView.ui.lineEditDate2.text()
+        mdate2 = self.view.ui.lineEditDate2.text()
         r, mdate2 = self.chkdate(mdate2)
         if r == '0':
             return
-        self.diagListView.setDisabled(True)
+        self.view.setDisabled(True)
         msg = [self.client.tUser[0], self.curPageIndex, self.pageRows, page_to[0], pname, pvalue, mdate1, mdate2]
         self.client.mq_paging(msg)
 
@@ -143,7 +143,7 @@ class manualQueryController(QWidget):
             QMessageBox.information(self, "输入数据校验", f"输入{date_str}不正确,日期格式,如2024-9-18", QMessageBox.Yes)
             return '0', date_str
     def mq_pagingRes(self, REPData):
-        self.diagListView.setEnabled(True)
+        self.view.setEnabled(True)
         if REPData[0] == '0':
             QMessageBox.information(self, "查询", REPData[2], QMessageBox.Yes)
             return False
@@ -160,8 +160,8 @@ class manualQueryController(QWidget):
         self.curPageIndex = REPData[5]
         self.curPageMax = REPData[6]
 
-        self.diagListView.show()
-        self.diagListView.init_table(self.diags_viewInfo, self.client.tUser, self.userNamesDict, self.paitentNamesDict,
+        # self.view.show()
+        self.view.init_table(self.diags_viewInfo, self.client.tUser, self.userNamesDict, self.paitentNamesDict,
                                      self.on_clicked_manual_query, self.on_clicked_diag_query, self.curPageIndex,
                                      self.curPageMax)
     def on_btnNextFile_clicked(self):
