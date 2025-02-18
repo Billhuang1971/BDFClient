@@ -311,7 +311,7 @@ class EEGView(QWidget):
     def paintTimeLine(self):
         if self.showSecondLine:
             for x in range(self.begin, self.end ):
-                self.time_lines.append(self.axes.vlines(x, 0, 200, colors='green',alpha=0.7,linestyles='dashed')) #timeline color
+                self.time_lines.append(self.axes.vlines(x, 0, 200, colors='DarkGreen',alpha=0.7,linestyles='dashed')) #timeline color
 
     # 删除秒线
     def removeTimeLine(self):
