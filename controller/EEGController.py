@@ -290,7 +290,7 @@ class EEGController(QWidget):
             lenBlock = min(self.lenFile, self.nWinBlock * self.lenWin) #数据块样本长度
 
             readFrom, readTo = self.data.resetEEGData(lenBlock, self.lenWin, startWin, self.lenFile)#数据块样本长度，一屏下采样脑电数据的长度，开始样本点在脑电文件中的样本索引位置
-            self.client.loadEEGData([self.check_id, self.file_id, readFrom, readTo, self.dawnSample, self.tableName, self.pUid, self.fKey])
+            self.client.loadEEGData([self.check_id, self.file_id, readFrom * self.dawnSample, readTo * self.dawnSample, self.dawnSample, self.tableName, self.pUid, self.fKey])
         except Exception as e:
             print("secondsSpanChange", e)
 
