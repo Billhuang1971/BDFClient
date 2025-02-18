@@ -311,7 +311,7 @@ class EEGView(QWidget):
     def paintTimeLine(self):
         if self.showSecondLine:
             for x in range(self.begin, self.end ):
-                self.time_lines.append(self.axes.vlines(x, 0, 200, colors='red',alpha=0.7,linestyles='dashed')) #timeline color
+                self.time_lines.append(self.axes.vlines(x, 0, 200, colors='green',alpha=0.7,linestyles='dashed')) #timeline color
 
     # 删除秒线
     def removeTimeLine(self):
@@ -480,7 +480,7 @@ class EEGView(QWidget):
                     if c == 0:
                         item = QTableWidgetItem(
                             str(time.strftime('%H:%M:%S',
-                                              time.gmtime(int(self.filterlist[r][1]/(self.sample_rate/self.dawnSample))))))
+                                              time.gmtime(float(self.filterlist[r][1]/(self.sample_rate/self.dawnSample))))))
                     else:
                         type_name = ""
                         for type in self.filtertype:

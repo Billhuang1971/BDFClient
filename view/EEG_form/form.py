@@ -49,7 +49,7 @@ class Ui_EEGView(object):
         vline7.setFrameShape(QFrame.VLine)
         vline7.setFrameShadow(QFrame.Sunken)
         self.glBtn.addWidget(vline7, 0, 1,1, 1)
-        self.glBtn.setColumnMinimumWidth(0, 15)
+        self.glBtn.setColumnMinimumWidth(0, 10)
         self.btnDowning = QtWidgets.QPushButton(self.groupBox)
         self.btnDowning.setObjectName("btnDowning")
         self.glBtn.addWidget(self.btnDowning, 0, 6, 1, 2)
@@ -214,7 +214,7 @@ class Ui_EEGView(object):
         vline2.setFrameShape(QFrame.VLine)
         vline2.setFrameShadow(QFrame.Sunken)
         self.glBtn.addWidget(vline2, 0, 31, 1, 1)
-        self.glBtn.setColumnMinimumWidth(32, 15)
+        self.glBtn.setColumnMinimumWidth(32, 10)
 
         self.glCanvas.addWidget(self.groupBox, 1, 0, 1, 1)
         self.listView = QtWidgets.QListView(self.scrollAreaWidgetContents_1)
