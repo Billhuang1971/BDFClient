@@ -480,7 +480,7 @@ class EEGView(QWidget):
                     if c == 0:
                         item = QTableWidgetItem(
                             str(time.strftime('%H:%M:%S',
-                                              time.gmtime(float(self.filterlist[r][1]/(self.sample_rate/self.dawnSample))))))
+                                              time.gmtime(int(self.filterlist[r][1]/(self.sample_rate/self.dawnSample))))))
                     else:
                         type_name = ""
                         for type in self.filtertype:
@@ -966,8 +966,12 @@ class EEGView(QWidget):
         self.cur_sample_index = row
         label = self.filterlist[self.cur_sample_index]
         if label[0] == "all" and label[1] != label[2]:
-            b_t = time.strftime('%H:%M:%S', time.gmtime(label[1]//(self.sample_rate//self.dawnSample)))
-            e_t = time.strftime('%H:%M:%S', time.gmtime(label[2]//(self.sample_rate//self.dawnSample)))
+            b_t = label[1] / (self.sample_rate // self.dawnSample)
+            e_t = label[2] / (self.sample_rate // self.dawnSample)
+            msb = int(b_t * 1000) % 1000
+            mse = int(e_t * 1000) % 1000
+            b_t = time.strftime('%H:%M:%S.{:03}'.format(msb), time.gmtime(b_t))
+            e_t = time.strftime('%H:%M:%S.{:03}'.format(mse), time.gmtime(e_t))
             type_name = ""
             for type in self.filtertype:
                 if type[0] == label[3]:
@@ -978,8 +982,12 @@ class EEGView(QWidget):
             self.changeSampleColor(label, 'red')
         elif label[0]!='all' and label[1]!=label[2]:
             self.changeSampleColor(label, 'red') #改变当前选中线条颜色
-            b_t = time.strftime('%H:%M:%S', time.gmtime(label[1]//(self.sample_rate//self.dawnSample)))
-            e_t = time.strftime('%H:%M:%S', time.gmtime(label[2]//(self.sample_rate//self.dawnSample)))
+            b_t =label[1]/(self.sample_rate//self.dawnSample)
+            e_t =label[2]/(self.sample_rate//self.dawnSample)
+            msb = int(b_t * 1000) % 1000
+            mse = int(e_t * 1000) % 1000
+            b_t = time.strftime('%H:%M:%S.{:03}'.format(msb), time.gmtime(b_t))
+            e_t = time.strftime('%H:%M:%S.{:03}'.format(mse), time.gmtime(e_t))
             type_name = ""
             for type in self.filtertype:
                 if type[0] == label[3]:
@@ -996,8 +1004,12 @@ class EEGView(QWidget):
             self.showlabelInfo(type_name, label[0], str((label[2] - label[1]) / (self.sample_rate // self.dawnSample)), str(b_t), str(e_t), str(m))
         elif label[0] == 'all' and label[1] == label[2]:
             self.changeSampleColor(label, 'red')  # 改变当前选中线条颜色
-            b_t = time.strftime('%H:%M:%S', time.gmtime(label[1] // (self.sample_rate // self.dawnSample)))
-            e_t = time.strftime('%H:%M:%S', time.gmtime(label[2] // (self.sample_rate // self.dawnSample)))
+            b_t = label[1] / (self.sample_rate // self.dawnSample)
+            e_t = label[2] / (self.sample_rate // self.dawnSample)
+            msb = int(b_t * 1000) % 1000
+            mse = int(e_t * 1000) % 1000
+            b_t = time.strftime('%H:%M:%S.{:03}'.format(msb), time.gmtime(b_t))
+            e_t = time.strftime('%H:%M:%S.{:03}'.format(mse), time.gmtime(e_t))
             type_name = ""
             for type in self.filtertype:
                 if type[0] == label[3]:
