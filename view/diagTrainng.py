@@ -88,7 +88,7 @@ class DiagListView(QWidget):
             self.ui.tableWidget.setColumnWidth(8, 160)
             self.ui.tableWidget.setColumnWidth(9, 220)
             self.ui.tableWidget.setHorizontalHeaderLabels(
-                ["班级",'状态', '学习说明', '起始时间', '截止时间', '时长','检查单号', '医生','文件号', '操作'])
+                ["班级", '状态', '学习说明', '起始时间', '截止时间', '时长','检查单号', '医生','文件号', '操作'])
             ltip = {'beforeStudy':'未开始', 'studying': '学习中', 'studied':'学习完成','testing':'测试中', 'tested':'测试完成'}
 
             self.ui.tableWidget.removeRow(0)

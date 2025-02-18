@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from PyQt5.QtCore import pyqtSignal, Qt
 
 from controller.EEGController import EEGController
@@ -64,6 +66,7 @@ class MainController(QWidget):
         # 当前子模块视图
         self.sub_view = None
         self.previous_controller = None
+        self.study_start_time = None
         self.switch_page("LoginController")
         # self.controller.signal_login_user_info.connect(self.userLogin)
         self.client.logoutResSig.connect(self.logoutRes)
@@ -318,9 +321,7 @@ class MainController(QWidget):
             self.controller.switchToEEG.connect(self.switchToEEGPage)
 
         elif controller_name == "diagTrainingController":
-            self.controller = diagTrainingController(appUtil=self.cAppUtil, Widget=self.view.label_4,
-                                                     client=self.client,
-                                                     Widget2=self.view.label_5)
+            self.controller = diagTrainingController(appUtil=self.cAppUtil, client=self.client)
             self.controller.switchToEEG.connect(self.switchToEEGPage)
 
         elif controller_name == "diagTestController":
@@ -398,6 +399,9 @@ class MainController(QWidget):
             self.controller.exit()
         self.controller = None
         self.controller = EEGController(client=self.client, appUtil=self.cAppUtil, msg=msg, mainLabel=self.view.label_4)
+        if msg[5][0] == 'diagTrainingController':
+            self.class_id = msg[5][2]
+            self.study_start_time = datetime.now().strftime("%Y-%m-%d :%H:%M:%S")
         self.controller.switchFromEEG.connect(self.switchFromEEGPage)
         self.sub_view = self.controller.view
         self.view.updateForEEG(self.sub_view)
@@ -419,8 +423,7 @@ class MainController(QWidget):
             self.controller = consultingController(appUtil=self.cAppUtil,
                                                    client=self.client, page=msg[1])
         elif controller_name == "diagTrainingController":
-            self.controller = diagTrainingController(appUtil=self.cAppUtil, Widget=self.view.label_5,
-                                                     client=self.client)
+            self.controller = diagTrainingController(appUtil=self.cAppUtil, client=self.client)
         elif controller_name == "diagTestController":
             self.controller = diagTestController(appUtil=self.cAppUtil, client=self.client)
         elif controller_name == "diagAssessController":
@@ -438,6 +441,8 @@ class MainController(QWidget):
                                                         client=self.client,
                                                         mainMenubar=self.view.ui.menubar,
                                                         mainLayout=self.view.verticalLayout_1)
+        # if self.study_start_time != None:
+        #
         self.controller.switchToEEG.connect(self.switchToEEGPage)
         self.sub_view = self.controller.view
         self.view.updateForEEG(self.sub_view)
