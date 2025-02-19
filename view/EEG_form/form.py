@@ -49,7 +49,7 @@ class Ui_EEGView(object):
         vline7.setFrameShape(QFrame.VLine)
         vline7.setFrameShadow(QFrame.Sunken)
         self.glBtn.addWidget(vline7, 0, 1,1, 1)
-        self.glBtn.setColumnMinimumWidth(0, 10)
+        self.glBtn.setColumnMinimumWidth(0, 5)
         self.btnDowning = QtWidgets.QPushButton(self.groupBox)
         self.btnDowning.setObjectName("btnDowning")
         self.glBtn.addWidget(self.btnDowning, 0, 6, 1, 2)
@@ -85,7 +85,7 @@ class Ui_EEGView(object):
         self.editTimeText.setAlignment(Qt.AlignCenter)
         self.glBtn.addWidget(self.editTimeText, 0, 12, 1, 1)
 
-        self.editTime = QtWidgets.QLineEdit(self.groupBox)
+        self.editTime = (QtWidgets.QLineEdit(self.groupBox))
         self.editTime.setObjectName("editTime")
         self.editTime.setValidator(QRegExpValidator(QRegExp(r"^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$")))
         self.glBtn.addWidget(self.editTime, 0, 13, 1, 1)
@@ -101,7 +101,7 @@ class Ui_EEGView(object):
         self.secondsSpan.setValidator(QIntValidator())
         self.glBtn.addWidget(self.secondsSpan, 0, 15, 1, 1)
 
-        self.editTime.setFixedWidth(int(self.secondsSpan.sizeHint().width() * 0.8))
+        self.editTime.setFixedWidth(int(self.secondsSpan.sizeHint().width() * 0.9))
 
         self.moveLengthText = QtWidgets.QLabel(self.groupBox)
         self.moveLengthText.setObjectName("moveLengthText")
@@ -214,7 +214,7 @@ class Ui_EEGView(object):
         vline2.setFrameShape(QFrame.VLine)
         vline2.setFrameShadow(QFrame.Sunken)
         self.glBtn.addWidget(vline2, 0, 31, 1, 1)
-        self.glBtn.setColumnMinimumWidth(32, 10)
+        self.glBtn.setColumnMinimumWidth(32, 5)
 
         self.glCanvas.addWidget(self.groupBox, 1, 0, 1, 1)
         self.listView = QtWidgets.QListView(self.scrollAreaWidgetContents_1)
