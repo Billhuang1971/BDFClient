@@ -1,7 +1,7 @@
 from PyQt5.Qt import *
 
 from view.consulting import DiagListView, PrentryView
-
+from view.consulting import sign_InfoView
 
 class consultingController(QWidget):
     switchToEEG = pyqtSignal(list)
@@ -10,11 +10,17 @@ class consultingController(QWidget):
         self.view = DiagListView()
         self.client = client
         self.appUtil = appUtil
+        self.uid=None
+        self.sign_InfoView = None
+        self.User = self.client.tUser
+        self.patientname=None
         self.client.ct_get_diags_notDiagResSig.connect(self.get_diags_notDiagRes)
         self.client.ct_get_fileNameByIdDateResSig.connect(self.get_fileNameByIdDateRes)
         self.client.ct_get_diags_notDiag([self.client.tUser[0]])
         self.client.ct_diag_refusedResSig.connect(self.diag_refusedRes)
-
+        self.client.ct_get_diagResSig.connect(self.ct_get_diagRes)
+        self.client.ct_diag_updateResSig.connect(self.diag_updateRes) #保存诊断信息
+        self.client.ct_diag_commitResSig.connect(self.diag_commitRes)#提交诊断信息
         # 处理客户端传回的提取取诊断信息
     def get_diags_notDiagRes(self, REPData):
         if REPData[0] == '0':
@@ -120,9 +126,154 @@ class consultingController(QWidget):
         self.prentryView.close()
         self.view.show()
 
-    def on_clicked_diag_query(self, diags_viewInfo):
-        pass
+    def on_clicked_diag_query(self, diags_viewInfo, patient_name):
+        self.check_id = diags_viewInfo[-4]
+        self.uid = diags_viewInfo[2]
+        self.patientname=patient_name
+        if self.sign_InfoView is None:
+            # self.view.ui.btnSignInfo.setDisabled(True)
+            msg = [self.check_id, self.uid]
+            self.client.ct_get_diag(msg)
+        else:
+            try:
+                # self.sign_InfoView.setWindowFlag(Qt.WindowStaysOnTopHint,True)
+                self.sign_InfoView.show()
+                self.sign_InfoView.activateWindow()
+            except Exception as e:
+                print(f"setWindowFlag:{e}")
+    def ct_get_diagRes(self,REPData):
+        # self.view.ui.btnSignInfo.setEnabled(True)
+        if REPData[0] == '0':
+            QMessageBox.information(self, "[脑电会诊]提取诊断信息不成功", REPData[2], QMessageBox.Yes)
+            return False
 
+        self.diag = REPData[2]
+        #diag=[patient_id,measure_time（测量时间）,上传医生的id,会诊状态，diag.sign_date，alpha,slow,fast,amplitude,eyes，hyperventilation,sleep,abnormal_wave,attack_stage,summary,diag.checkid,开单医生的用户id,检查单号，cUid（上传医生）]
+        self.sign_InfoView = sign_InfoView()
+
+        if self.diag[0][3] != 'notDiagnosed' or self.diag[0][2] != self.User[0]:
+            self.sign_InfoView.ui.save_pushButton.hide()
+            self.sign_InfoView.ui.commit_pushButton.hide()
+            self.sign_InfoView.ui.alpha_lineEdit.setReadOnly(True)
+            self.sign_InfoView.ui.slow_lineEdit.setReadOnly(True)
+            self.sign_InfoView.ui.fast_lineEdit.setReadOnly(True)
+            self.sign_InfoView.ui.amplitude_lineEdit.setReadOnly(True)
+            self.sign_InfoView.ui.eyes_lineEdit.setReadOnly(True)
+            self.sign_InfoView.ui.hyperventilation_lineEdit.setReadOnly(True)
+            self.sign_InfoView.ui.sleep_lineEdit.setReadOnly(True)
+            self.sign_InfoView.ui.abnormal_wave_lineEdit.setReadOnly(True)
+            self.sign_InfoView.ui.attack_stage_lineEdit.setReadOnly(True)
+            self.sign_InfoView.ui.summary_textEdit.setReadOnly(True)
+        else:
+            self.sign_InfoView.ui.save_pushButton.clicked.connect(self.signInfo_save_pushButton_clicked)
+            self.sign_InfoView.ui.commit_pushButton.clicked.connect(self.signInfo_commit_pushButton_clicked)
+        self.sign_InfoView.ui.close_pushButton.clicked.connect(self.signInfo_close_pushButton_clicked)
+
+        if self.diag is None or len(self.diag) == 0:
+            self.sign_InfoView.ui.patient_lineEdit.setText(self.patientname)
+            self.sign_InfoView.ui.measure_date_lineEdit.setText(str(self.diag[0][1]))
+            self.sign_InfoView.ui.d_user_lineEdit_3.setText(self.userNamesDict.get(self.uid))
+            self.sign_InfoView.ui.state_lineEdit_3.setText('notDiagnosed')
+            # self.sign_InfoView.ui.sign_dateTimeEdit.setDateTime(QtCore.QDateTime.currentDateTime())
+            self.sign_InfoView.ui.sign_dateTimeEdit.setDateTime(None)
+
+            self.sign_InfoView.ui.alpha_lineEdit.setText("")
+            self.sign_InfoView.ui.slow_lineEdit.setText("")
+            self.sign_InfoView.ui.fast_lineEdit.setText("")
+            self.sign_InfoView.ui.amplitude_lineEdit.setText("")
+            self.sign_InfoView.ui.eyes_lineEdit.setText("")
+            self.sign_InfoView.ui.hyperventilation_lineEdit.setText("")
+            self.sign_InfoView.ui.sleep_lineEdit.setText("")
+            self.sign_InfoView.ui.abnormal_wave_lineEdit.setText("")
+            self.sign_InfoView.ui.attack_stage_lineEdit.setText("")
+            self.sign_InfoView.ui.summary_textEdit.setText("")
+
+        else:
+            self.sign_InfoView.ui.patient_lineEdit.setText(self.patientname)
+            self.sign_InfoView.ui.measure_date_lineEdit.setText(str(self.diag[0][1]))
+            self.sign_InfoView.ui.d_user_lineEdit_3.setText(self.userNamesDict.get(self.uid))
+            self.sign_InfoView.ui.state_lineEdit_3.setText(self.diag[0][3])
+            dt = QDateTime.fromString(str(self.diag[0][4]), "yyyy-MM-dd hh:mm:ss")
+            self.sign_InfoView.ui.sign_dateTimeEdit.setDateTime(dt)
+            self.sign_InfoView.ui.alpha_lineEdit.setText(self.diag[0][5])
+            self.sign_InfoView.ui.slow_lineEdit.setText(self.diag[0][6])
+            self.sign_InfoView.ui.fast_lineEdit.setText(self.diag[0][7])
+            self.sign_InfoView.ui.amplitude_lineEdit.setText(self.diag[0][8])
+            self.sign_InfoView.ui.eyes_lineEdit.setText(self.diag[0][9])
+            self.sign_InfoView.ui.hyperventilation_lineEdit.setText(self.diag[0][10])
+            self.sign_InfoView.ui.sleep_lineEdit.setText(self.diag[0][11])
+            self.sign_InfoView.ui.abnormal_wave_lineEdit.setText(self.diag[0][12])
+            self.sign_InfoView.ui.attack_stage_lineEdit.setText(self.diag[0][13])
+            self.sign_InfoView.ui.summary_textEdit.setText(self.diag[0][14])
+            # self.sign_InfoView.ui.del_pushButton.setEnabled(True)
+        self.sign_InfoView.show()
+    def signInfo_save_pushButton_clicked(self):
+        reply = QMessageBox.information(self, '提示', '保存诊断,确定吗?', QMessageBox.Yes | QMessageBox.No)
+        if self.User != None and reply == 16384:
+            sign_dateTime = self.sign_InfoView.ui.sign_dateTimeEdit.dateTime().toString("yyyy-MM-dd HH:mm:ss")
+            alpha = self.sign_InfoView.ui.alpha_lineEdit.text()
+            slow = self.sign_InfoView.ui.slow_lineEdit.text()
+            fast = self.sign_InfoView.ui.fast_lineEdit.text()
+            amplitude = self.sign_InfoView.ui.amplitude_lineEdit.text()
+            eyes = self.sign_InfoView.ui.eyes_lineEdit.text()
+            hyperventilation = self.sign_InfoView.ui.hyperventilation_lineEdit.text()
+            sleep = self.sign_InfoView.ui.sleep_lineEdit.text()
+            abnormal_wave = self.sign_InfoView.ui.abnormal_wave_lineEdit.text()
+            attack_stage = self.sign_InfoView.ui.attack_stage_lineEdit.text()
+            summary = self.sign_InfoView.ui.summary_textEdit.toPlainText()
+
+            msg = [self.check_id, '', self.uid, sign_dateTime, alpha, slow, fast, amplitude, eyes,
+                   hyperventilation, sleep, abnormal_wave, attack_stage, summary]
+            self.client.ct_diag_update(msg)
+    def diag_updateRes(self,REPData):
+        # self.view.ui.btnSignInfo.setEnabled(True)
+        if REPData[0] == '0':
+            QMessageBox.information(self, "填写诊断信息不成功", REPData[2], QMessageBox.Yes)
+            return False
+        self.sign_InfoView.hide()
+    def signInfo_commit_pushButton_clicked(self):
+        if self.diag is None or len(self.diag) == 0:
+            return
+        reply = QMessageBox.information(self, '提示', '提交当前的诊断信息,提交后不能修改.确定吗?',
+                                        QMessageBox.Yes | QMessageBox.No)
+        if reply == 16384:
+            # sign_dateTime = self.sign_InfoView.ui.sign_dateTimeEdit.dateTime().toString("yyyy-MM-dd HH:mm:ss")
+            sign_dateTime = None
+            alpha = self.sign_InfoView.ui.alpha_lineEdit.text()
+            slow = self.sign_InfoView.ui.slow_lineEdit.text()
+            fast = self.sign_InfoView.ui.fast_lineEdit.text()
+            amplitude = self.sign_InfoView.ui.amplitude_lineEdit.text()
+            eyes = self.sign_InfoView.ui.eyes_lineEdit.text()
+            hyperventilation = self.sign_InfoView.ui.hyperventilation_lineEdit.text()
+            sleep = self.sign_InfoView.ui.sleep_lineEdit.text()
+            abnormal_wave = self.sign_InfoView.ui.abnormal_wave_lineEdit.text()
+            attack_stage = self.sign_InfoView.ui.attack_stage_lineEdit.text()
+            summary = self.sign_InfoView.ui.summary_textEdit.toPlainText()
+            msg = [self.check_id, '', self.uid, sign_dateTime, alpha, slow, fast, amplitude, eyes,
+                   hyperventilation, sleep, abnormal_wave, attack_stage, summary]
+            REQ = [msg, self.measure_date, self.patientname, self.User[2]]
+            self.sign_InfoView.hide()
+            self.client.ct_diag_commit(REQ)
+    def diag_commitRes(self,REPData):
+        if REPData[0] == '0':
+            QMessageBox.information(self, "完成诊断", REPData[2], QMessageBox.Yes)
+            return False
+        QMessageBox.information(self, "完成诊断，操作成功", REPData[2], QMessageBox.Yes)
+        # self.view.show()
+
+        self.page = ['file_name']
+        self.get_diags_notDiag()
+    def get_diags_notDiag(self):
+        self.check_id = None
+        self.file_id = None
+        self.measure_date = None
+        self.file_name = None
+        self.page = ['file_name']
+        msg = [self.client.tUser[0]]
+        self.client.ct_get_diags_notDiag(msg)
+    def signInfo_close_pushButton_clicked(self):
+        self.sign_InfoView.close()
+        self.sign_InfoView = None
     def on_clicked_diag_refused(self, diags_viewInfo,patient_name):
         reply = QMessageBox.information(self, "拒绝诊断信息",
                                         f'拒绝:{patient_name},测量日期{diags_viewInfo[1]}的诊断，确定吗?',
