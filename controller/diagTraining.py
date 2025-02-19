@@ -109,7 +109,7 @@ class diagTrainingController(QWidget):
         self.page = ['file_name']
 
         self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date,
-                               ['diagTrainingController', '', self.class_id], "sample_info", diags_viewInfo[11], False, False, None])
+                               ['diagTrainingController', '', [self.class_id]], "sample_info", diags_viewInfo[11], False, False, None])
 
 
     def on_clicked_diag_query(self, diags_viewInfo, patient_name):

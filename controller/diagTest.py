@@ -90,7 +90,7 @@ class diagTestController(QWidget):
 
     def checkTested(self, msg):
         self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date,
-                                   ['diagTestController', '', self.class_id], "result", self.User[0], True, False, self.class_id])
+                                   ['diagTestController', '', [self.class_id, self.check_id, self.file_id, self.uid]], "result", self.User[0], True, False, self.class_id])
 
     def diagTest_commitRes(self, REPData):
         if REPData[0] == '0':

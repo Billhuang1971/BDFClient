@@ -67,7 +67,7 @@ class MainController(QWidget):
         self.sub_view = None
         self.previous_controller = None
         self.study_start_time = None
-        self.class_id = None
+        self.toEEGInfo = None
         self.switch_page("LoginController")
         # self.controller.signal_login_user_info.connect(self.userLogin)
         self.client.logoutResSig.connect(self.logoutRes)
@@ -207,10 +207,10 @@ class MainController(QWidget):
 
             if self.study_start_time != None:
                 study_end_time = datetime.now().strftime("%Y-%m-%d :%H:%M:%S")
-                msg = [self.class_id, self.client.tUser[0], self.study_start_time, study_end_time]
+                msg = [self.toEEGInfo[0], self.client.tUser[0], self.study_start_time, study_end_time]
                 self.client.dl_study_end(msg)
                 self.study_start_time = None
-                self.class_id = None
+                self.toEEGInfo = None
 
             self.controller.exit()
             self.controller = None
@@ -405,10 +405,10 @@ class MainController(QWidget):
         self.controller = None
         self.controller = EEGController(client=self.client, appUtil=self.cAppUtil, msg=msg, mainLabel=self.view.label_4)
         if msg[5][0] == 'diagTrainingController':
-            self.class_id = msg[5][2]
+            self.toEEGInfo = msg[5][2]
             self.study_start_time = datetime.now().strftime("%Y-%m-%d :%H:%M:%S")
         elif msg[5][0] == 'diagTestController':
-            self.class_id = msg[5][2]
+            self.toEEGInfo = msg[5][2]
         self.controller.switchFromEEG.connect(self.switchFromEEGPage)
         self.sub_view = self.controller.view
         self.view.updateForEEG(self.sub_view)
@@ -431,14 +431,16 @@ class MainController(QWidget):
         elif controller_name == "diagTrainingController":
             if self.study_start_time != None:
                 study_end_time = datetime.now().strftime("%Y-%m-%d :%H:%M:%S")
-                msg = [self.class_id, self.client.tUser[0], self.study_start_time, study_end_time]
+                msg = [self.toEEGInfo[0], self.client.tUser[0], self.study_start_time, study_end_time]
                 self.client.dl_study_end(msg)
                 self.study_start_time = None
-                self.class_id = None
+                self.toEEGInfo = None
             self.controller = diagTrainingController(appUtil=self.cAppUtil, client=self.client)
         elif controller_name == "diagTestController":
-            if self.class_id != None:
-                self.client.updateState([self.class_id, self.client.tUser[0]])
+            if self.toEEGInfo is not None:
+                self.toEEGInfo.append(self.client.tUser[0])
+                self.client.testOver(self.toEEGInfo)
+                self.toEEGInfo = None
             self.controller = diagTestController(appUtil=self.cAppUtil, client=self.client)
         elif controller_name == "diagAssessController":
             self.controller = diagAssessController(appUtil=self.cAppUtil, Widget=self.view.label_4,
