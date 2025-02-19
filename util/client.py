@@ -923,6 +923,10 @@ class client(QObject, socketClient):
     def dt_get_contentsRes(self, REPmsg):
         self.dt_get_contentsResSig.emit(list(REPmsg[3]))
 
+    def updateState(self, REQdata):
+        REQdata.insert(0, self.macAddr)
+        msg = ["diagTest", 30, self.tUser[0], REQdata]
+        self.sendRequest(msg)
 
     # 诊断学习/提取诊断信息
     def dl_get_diag(self, REQdata):

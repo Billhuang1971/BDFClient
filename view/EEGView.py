@@ -350,29 +350,6 @@ class EEGView(QWidget):
                 idx -= 1
             self.sample_info = sample_info + self.sample_info[idx + 1:]
 
-    # def remove_mean(data, lowlim, highlim, g_submean):
-    #     """
-    #     如果 g.submean 是 'on'，从信号中去除均值。
-    #
-    #     参数:
-    #     data -- EEG信号数据，格式为 (通道数, 时间点数)
-    #     lowlim -- 数据开始点
-    #     highlim -- 数据结束点
-    #     g_submean -- 是否去均值操作
-    #
-    #     返回:
-    #     data_no_mean -- 去均值后的EEG数据
-    #     """
-    #     if g_submean == 'on':
-    #         # 计算每个通道在指定区间的均值
-    #         mean_data = np.mean(data[:, lowlim:highlim], axis=1)
-    #         # 从每个通道的信号中减去均值
-    #         data_no_mean = data - mean_data[:, np.newaxis]
-    #     else:
-    #         data_no_mean = data  # 不进行去均值操作
-    #
-    #     return data_no_mean
-
     # 更新当前屏
     def refreshWin(self, data, labels):
         try:
@@ -506,17 +483,17 @@ class EEGView(QWidget):
     def paintStates(self):
         if self.is_status_showed is False:
             return
-        keys = [x[0] for x in self.filtertype]
+        # keys = [x[0] for x in self.filtertype]
         for state in self.states:
-            idx = keys.index(state[3])
-            description = self.filtertype[idx][3]
-            type_name = self.filtertype[idx][1]
-            if description == '正常状态':
-                color = 'blue' #statecolor
-            elif description == '异常状态':
-                color = 'blue'
-            else:
-                color = 'blue'#'dodgerblue'
+            # idx = keys.index(state[3])
+            # description = self.filtertype[idx][3]
+            # if description == '正常状态':
+            #     color = 'blue' #statecolor
+            # elif description == '异常状态':
+            #     color = 'blue'
+            # else:
+            #     color = 'blue'#'dodgerblue'
+            color = 'blue'
             self.paintAState(state, color)
 
     # 绘制一个状态
@@ -550,29 +527,38 @@ class EEGView(QWidget):
             for sample in self.labels: #从当前屏所有样本开始筛
                 matched = False#标记是否成功添加
                 if sample[0] != 'all': #wave
-                    for types in self.filtertype: #根据样本选择的情况筛选
-                        if types[0] == sample[3] and sample[0] in self.channels_name:
-                            self.waves.append(sample) #将每个样本添加到指定的数组（用于绘图）
-                            matched = True
-                            break
-                    if not matched: #若该样本不在样本选择中
-                        self.filterlist.remove(sample) #从filterlist中移除该样本
+                    if sample[3] is None:
+                        self.waves.append(sample)
+                    else:
+                        for types in self.filtertype: #根据样本选择的情况筛选
+                            if types[0] == sample[3] and sample[0] in self.channels_name:
+                                self.waves.append(sample) #将每个样本添加到指定的数组（用于绘图）
+                                matched = True
+                                break
+                        if not matched: #若该样本不在样本选择中
+                            self.filterlist.remove(sample) #从filterlist中移除该样本
                 elif sample[0] == 'all' and sample[1] != sample[2]:#state
-                    for types in self.filtertype:
-                        if types[0] == sample[3]:
-                            self.states.append(sample)
-                            matched = True
-                            break
-                    if not matched:
-                        self.filterlist.remove(sample)
-                elif sample[0]=='all' and sample[1] == sample[2]: #event
-                    for types in self.filtertype:
-                        if types[0] == sample[3]:
-                            self.events.append(sample)
-                            matched = True
-                            break
-                    if not matched:
-                        self.filterlist.remove(sample)
+                    if sample[3] is None:
+                        self.states.append(sample)
+                    else:
+                        for types in self.filtertype:
+                            if types[0] == sample[3] or sample[3] is None:
+                                self.states.append(sample)
+                                matched = True
+                                break
+                        if not matched:
+                            self.filterlist.remove(sample)
+                elif sample[0] == 'all' and sample[1] == sample[2]: #event
+                    if sample[3] is None:
+                        self.events.append(sample)
+                    else:
+                        for types in self.filtertype:
+                            if types[0] == sample[3] or sample[3] is None:
+                                self.events.append(sample)
+                                matched = True
+                                break
+                        if not matched:
+                            self.filterlist.remove(sample)
         except Exception as e:
             print("filterSamples", e)
 
