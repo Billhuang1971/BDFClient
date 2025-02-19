@@ -67,6 +67,7 @@ class MainController(QWidget):
         self.sub_view = None
         self.previous_controller = None
         self.study_start_time = None
+        self.class_id = None
         self.switch_page("LoginController")
         # self.controller.signal_login_user_info.connect(self.userLogin)
         self.client.logoutResSig.connect(self.logoutRes)
@@ -406,6 +407,8 @@ class MainController(QWidget):
         if msg[5][0] == 'diagTrainingController':
             self.class_id = msg[5][2]
             self.study_start_time = datetime.now().strftime("%Y-%m-%d :%H:%M:%S")
+        elif msg[5][0] == 'diagTestController':
+            self.class_id = msg[5][2]
         self.controller.switchFromEEG.connect(self.switchFromEEGPage)
         self.sub_view = self.controller.view
         self.view.updateForEEG(self.sub_view)
@@ -419,12 +422,6 @@ class MainController(QWidget):
             self.controller.switchFromEEG.disconnect()
             self.controller.exit()
         self.controller = None
-        if self.study_start_time != None:
-            study_end_time = datetime.now().strftime("%Y-%m-%d :%H:%M:%S")
-            msg = [self.class_id, self.client.tUser[0], self.study_start_time, study_end_time]
-            self.client.dl_study_end(msg)
-            self.study_start_time = None
-            self.class_id = None
         if controller_name == "manualQueryController":
             self.controller = manualQueryController(appUtil=self.cAppUtil, client=self.client, page_number=msg[1])
 
@@ -432,8 +429,16 @@ class MainController(QWidget):
             self.controller = consultingController(appUtil=self.cAppUtil,
                                                    client=self.client, page=msg[1])
         elif controller_name == "diagTrainingController":
+            if self.study_start_time != None:
+                study_end_time = datetime.now().strftime("%Y-%m-%d :%H:%M:%S")
+                msg = [self.class_id, self.client.tUser[0], self.study_start_time, study_end_time]
+                self.client.dl_study_end(msg)
+                self.study_start_time = None
+                self.class_id = None
             self.controller = diagTrainingController(appUtil=self.cAppUtil, client=self.client)
         elif controller_name == "diagTestController":
+            if self.class_id != None:
+                self.client.updateState([self.class_id, self.client.tUser[0]])
             self.controller = diagTestController(appUtil=self.cAppUtil, client=self.client)
         elif controller_name == "diagAssessController":
             self.controller = diagAssessController(appUtil=self.cAppUtil, Widget=self.view.label_4,

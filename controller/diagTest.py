@@ -72,12 +72,11 @@ class diagTestController(QWidget):
 
     def on_clicked_manual_query(self, diags_viewInfo, patient_name, trow):
         self.class_id = diags_viewInfo[0]
-        self.study_start_time = None
         self.check_id = diags_viewInfo[6]
         self.patient_id = diags_viewInfo[8]
         self.measure_date = diags_viewInfo[9]
         self.patient_name = patient_name
-        self.row=trow
+        self.row = trow
         self.file_name = '{:>03}.bdf'.format(str(diags_viewInfo[10]))
         self.file_id = diags_viewInfo[10]
         self.uid = diags_viewInfo[11]
@@ -91,7 +90,7 @@ class diagTestController(QWidget):
 
     def checkTested(self, msg):
         self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date,
-                                   ['diagTestController', ''], "result", self.User[0], True, False, self.class_id])
+                                   ['diagTestController', '', self.class_id], "result", self.User[0], True, False, self.class_id])
 
     def diagTest_commitRes(self, REPData):
         if REPData[0] == '0':
