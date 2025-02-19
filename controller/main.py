@@ -334,10 +334,8 @@ class MainController(QWidget):
             self.controller.switchToEEG.connect(self.switchToEEGPage)
 
         elif controller_name == "diagAssessController":
-            self.controller = diagAssessController(appUtil=self.cAppUtil, Widget=self.view.label_4,
-                                                   client=self.client,
-                                                   mainMenubar=self.view.ui.menubar,
-                                                   mainLayout=self.view.verticalLayout_1)
+            self.controller = diagAssessController(appUtil=self.cAppUtil, client=self.client)
+            self.controller.switchToEEG.connect(self.switchToEEGPage)
 
         elif controller_name == "reserchingController":
             self.controller = reserchingController(appUtil=self.cAppUtil, Widget=self.view.label_4,
@@ -443,10 +441,7 @@ class MainController(QWidget):
                 self.toEEGInfo = None
             self.controller = diagTestController(appUtil=self.cAppUtil, client=self.client)
         elif controller_name == "diagAssessController":
-            self.controller = diagAssessController(appUtil=self.cAppUtil, Widget=self.view.label_4,
-                                                   client=self.client,
-                                                   mainMenubar=self.view.ui.menubar,
-                                                   mainLayout=self.view.verticalLayout_1)
+            self.controller = diagAssessController(appUtil=self.cAppUtil, client=self.client)
         elif controller_name == "reserchingController":
             self.controller = reserchingController(appUtil=self.cAppUtil, Widget=self.view.label_4,
                                                    client=self.client,

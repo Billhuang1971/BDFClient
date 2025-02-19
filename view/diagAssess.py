@@ -82,7 +82,7 @@ class sign_InfoView(QMainWindow,QWidget):
         self.ui = Ui_diag_MainWindow()
         self.ui.setupUi(self)
 
-class diagListView(QWidget):
+class DiagListView(QWidget):
     def __init__(self,parent=None):
         super().__init__(parent)
         self.ui = Ui_diagList()
