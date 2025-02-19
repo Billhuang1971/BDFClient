@@ -6,6 +6,7 @@ from PyQt5.QtGui import QFont
 
 from view.manual_form.diagList import Ui_diagList
 from view.manual_form.prentry import Ui_Prentry
+from view.manual_form.sign_info import Ui_diag_MainWindow
 
 from PyQt5.QtWidgets import *
 
@@ -14,7 +15,11 @@ class PrentryView(QWidget):
         super().__init__(parent)
         self.ui = Ui_Prentry()
         self.ui.setupUi(self)
-
+class sign_InfoView(QMainWindow,QWidget):
+    def __init__(self,parent=None):
+        super().__init__(parent)
+        self.ui = Ui_diag_MainWindow()
+        self.ui.setupUi(self)
 class DiagListView(QWidget):
     def __init__(self,parent=None):
         super().__init__(parent)
@@ -109,12 +114,17 @@ class DiagListView(QWidget):
               manualBtn.setToolTip("脑电会诊:选择脑电数据文件")
               layout.addWidget(manualBtn)
 
-              if diags_viewInfo[row][3] == 'diagnosed':
-                 diagBtn = QPushButton('查看诊断信息')
-                 diagBtn.clicked.connect(partial(on_clicked_diag_query, diags_viewInfo[row]))
-                 diagBtn.setStyleSheet('height : 50px;width:140px;font : 18px;color:blue')
-                 diagBtn.setCursor(Qt.PointingHandCursor)
-                 layout.addWidget(diagBtn)
+              btnSignInfo = QPushButton('填写诊断信息')
+              btnSignInfo.clicked.connect(partial(on_clicked_diag_query,diags_viewInfo[row],paitentNamesDict.get(diags_viewInfo[row][0])))
+              btnSignInfo.setStyleSheet('height : 50px;width:140px;font : 18px;color:blue')
+              btnSignInfo.setCursor(Qt.PointingHandCursor)
+              layout.addWidget(btnSignInfo)
+              # if diags_viewInfo[row][3] == 'diagnosed':
+              #    diagBtn = QPushButton('查看诊断信息')
+              #    diagBtn.clicked.connect(partial(on_clicked_diag_query, diags_viewInfo[row]))
+              #    diagBtn.setStyleSheet('height : 50px;width:140px;font : 18px;color:blue')
+              #    diagBtn.setCursor(Qt.PointingHandCursor)
+              #    layout.addWidget(diagBtn)
 
 
               self.ui.tableWidget.cellWidget(row, col_num ).setLayout(layout)
