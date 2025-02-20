@@ -10,6 +10,7 @@ from view.manual_form.manual import Ui_ManualForm
 from view.manual_form.setting import Ui_Setting
 from view.manual_form.prentry import Ui_Prentry
 from view.manual_form.sign_info import Ui_diag_MainWindow
+from view.manual_form.sign_info1 import Ui_diag_MainWindow1
 
 from PyQt5.QtWidgets import *
 
@@ -80,6 +81,12 @@ class sign_InfoView(QMainWindow,QWidget):
     def __init__(self,parent=None):
         super().__init__(parent)
         self.ui = Ui_diag_MainWindow()
+        self.ui.setupUi(self)
+
+class sign_InfoView1(QMainWindow,QWidget):
+    def __init__(self,parent=None):
+        super().__init__(parent)
+        self.ui = Ui_diag_MainWindow1()
         self.ui.setupUi(self)
 
 class DiagListView(QWidget):

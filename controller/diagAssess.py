@@ -6,7 +6,7 @@ from PyQt5 import QtWidgets, QtCore
 
 from PyQt5.Qt import *
 
-from view.diagAssess import DiagAssessView, PrentryView, sign_InfoView
+from view.diagAssess import DiagAssessView, PrentryView, sign_InfoView1
 from view.diagAssess import DiagListView
 
 
@@ -404,7 +404,7 @@ class diagAssessController(QWidget):
 
         self.diag=REPData[2]
 
-        self.sign_InfoView = sign_InfoView()
+        self.sign_InfoView = sign_InfoView1()
 
         if self.diag is None or len(self.diag) == 0:
             QMessageBox.information(self, "提取诊断信息", '提取诊断信息为空', QMessageBox.Yes)

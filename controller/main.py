@@ -290,7 +290,7 @@ class MainController(QWidget):
             self.previous_controller = controller_name
             self.view.label_4.setText("")
 
-    def generate_controller(self, controller_name,msg=None):
+    def generate_controller(self, controller_name):
         if controller_name == "LoginController":
             self.controller = loginController(client=self.client, cAppUtil=self.cAppUtil)
             self.controller.signal_login_user_info.connect(self.userLogin)
