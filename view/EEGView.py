@@ -1229,7 +1229,7 @@ class EEGView(QWidget):
                 break
             idx += 1
         self.labels.pop(idx)
-        self.filterlist.remove(self.cur_sample_index)
+        self.filterlist.pop(self.cur_sample_index)
         self.cur_sample_index = -1
         if label[0] == 'all':
             if label[1] == label[2]:
