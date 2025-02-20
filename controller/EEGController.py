@@ -263,7 +263,7 @@ class EEGController(QWidget):
             if cmd == EEGView.NO_ACTION:
                 return
             if cmd == EEGView.ADD_SAMPLE:
-                self.client.insertSample([label, self.tableName, self.check_id, self.file_id, self.user_id, self.dawnSample])
+                self.client.insertSample([label, self.tableName, self.check_id, self.file_id, self.user_id, self.dawnSample, self.fKey])
             elif cmd == EEGView.UPDATE_SAMPLE:
                 self.client.updateSample([label, self.tableName, self.check_id, self.file_id, self.user_id, self.dawnSample, self.fKey])
         except Exception as e:
