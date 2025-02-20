@@ -73,14 +73,14 @@ class diagListView(QWidget):
         self.ui.comboBox2.removeItem(1)
         self.ui.comboBox2.removeItem(1)
 
-    def init_table(self, diags_viewInfo, userNamesDict, paitentNamesDict,  themeDict, on_clicked_manual_query,on_clicked_theme_commit,curPageIndex=1,maxPages=1):
+    def init_table(self, diags_viewInfo, userNamesDict, paitentNamesDict,  themeDict, on_clicked_manual_query,on_clicked_theme_commit, on_clicked_label_commit, curPageIndex=1,maxPages=1):
         try:
 
             self.ui.tableWidget.clear()
             self.ui.curPage.setText(str(curPageIndex))
             self.ui.totalPage.setText(f"共{maxPages}页")
 
-            self.ui.tableWidget.setColumnCount(9)
+            self.ui.tableWidget.setColumnCount(10)
             self.ui.tableWidget.setColumnWidth(0, 260)
             self.ui.tableWidget.setColumnWidth(1, 120)
             self.ui.tableWidget.setColumnWidth(2, 400)
@@ -90,8 +90,9 @@ class diagListView(QWidget):
             self.ui.tableWidget.setColumnWidth(6, 200)
             self.ui.tableWidget.setColumnWidth(7, 100)
             self.ui.tableWidget.setColumnWidth(8, 200)
+            self.ui.tableWidget.setColumnWidth(9, 200)
             self.ui.tableWidget.setHorizontalHeaderLabels(
-                ["主题", '主题状态', '标注说明','检查单号','病人', '文件号', '任务状态', '标注员','操作'])
+                ["主题", '主题状态', '标注说明','检查单号','病人', '文件号', '任务状态', '标注员', '打开文件', '评判'])
 
             ltip = {'notStarted': '未开始', 'labelling': '标注中', 'labelled': '标注完成', 'qualified': '合格',
                     'notqualified': '不合格'}
@@ -114,9 +115,9 @@ class diagListView(QWidget):
             iFont = QFont("", 14)
             self.ui.tableWidget.horizontalHeader().setStretchLastSection(True)
             cur_theme_id = None
-            theme_idValues=themeDict.keys()
+            theme_idValues = themeDict.keys()
             for row in range(0, self.row_num):
-                if cur_theme_id is  None or cur_theme_id!=diags_viewInfo[row][0]:
+                if cur_theme_id is None or cur_theme_id != diags_viewInfo[row][0]:
                     i = 0
                     self.ui.tableWidget.setItem(row, i, QTableWidgetItem(diags_viewInfo[row][1]))
                     self.ui.tableWidget.item(row, i).setTextAlignment(Qt.AlignCenter)
@@ -124,7 +125,7 @@ class diagListView(QWidget):
                     self.ui.tableWidget.item(row, i).setFont(iFont)
 
                     i = 1
-                    if diags_viewInfo[row][0] not in theme_idValues or  themeDict.get(diags_viewInfo[row][0])<=0:
+                    if diags_viewInfo[row][0] not in theme_idValues or themeDict.get(diags_viewInfo[row][0]) <= 0:
                        layout5 = QHBoxLayout()
                        self.ui.tableWidget.setCellWidget(row, i, QWidget())
                        usableBtn = QPushButton('可用')
@@ -188,7 +189,7 @@ class diagListView(QWidget):
 
                 # 添加最后一列
                 layout = QHBoxLayout()
-                self.ui.tableWidget.setCellWidget(row, col_num , QWidget())
+                container1 = QWidget()
 
                 manualBtn = QPushButton('查看标注')
                 manualBtn.clicked.connect(partial(on_clicked_manual_query, diags_viewInfo[row],paitentNamesDict.get(diags_viewInfo[row][9])))
@@ -196,13 +197,40 @@ class diagListView(QWidget):
                 manualBtn.setCursor(Qt.PointingHandCursor)
                 manualBtn.setToolTip("执行查看:脑电数据图标注")
                 layout.addWidget(manualBtn)
-
-
-
                 layout.setStretch(0, 1)
                 layout.setStretch(1, 1)
+                container1.setLayout(layout)
 
-                self.ui.tableWidget.cellWidget(row, col_num ).setLayout(layout)
+                self.ui.tableWidget.setCellWidget(row, 8, container1)
+
+                layout1 = QHBoxLayout()
+                container2 = QWidget()
+
+                qualifiedBtn = QPushButton('合格')
+                qualifiedBtn.clicked.connect(
+                    partial(on_clicked_label_commit, diags_viewInfo[row], 'qualified'))
+                qualifiedBtn.setStyleSheet('height : 50px;font : 18px;color:blue')
+                qualifiedBtn.setCursor(Qt.PointingHandCursor)
+                qualifiedBtn.setToolTip("合格")
+                layout1.addWidget(qualifiedBtn)
+
+                notQualifiedBtn = QPushButton('不合格')
+                notQualifiedBtn.clicked.connect(
+                    partial(on_clicked_label_commit, diags_viewInfo[row], 'notqualified'))
+                notQualifiedBtn.setStyleSheet('height : 50px;font : 18px;color:blue')
+                notQualifiedBtn.setCursor(Qt.PointingHandCursor)
+                notQualifiedBtn.setToolTip("不合格")
+
+                layout1.addWidget(notQualifiedBtn)
+                layout1.setStretch(0, 1)
+                layout1.setStretch(1, 1)
+                container2.setLayout(layout1)
+                self.ui.tableWidget.setCellWidget(row, 9, container2)
+                if diags_viewInfo[row][3] != 'labelled':
+                    notQualifiedBtn.setEnabled(False)
+                    qualifiedBtn.setEnabled(False)
+                    qualifiedBtn.setStyleSheet('height : 50px;font : 18px;color:black')
+                    notQualifiedBtn.setStyleSheet('height : 50px;font : 18px;color:black')
 
         except Exception as e:
             print('initTable', e)

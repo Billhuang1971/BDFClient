@@ -345,10 +345,8 @@ class MainController(QWidget):
             self.controller.switchToEEG.connect(self.switchToEEGPage)
 
         elif controller_name == "reserchingQueryController":
-            self.controller = reserchingQueryController(appUtil=self.cAppUtil, Widget=self.view.label_4,
-                                                        client=self.client,
-                                                        mainMenubar=self.view.ui.menubar,
-                                                        mainLayout=self.view.verticalLayout_1)
+            self.controller = reserchingQueryController(appUtil=self.cAppUtil, client=self.client)
+            self.controller.switchToEEG.connect(self.switchToEEGPage)
 
         elif controller_name == "dataImportController":
             self.controller = dataImportController(client=self.client, cAppUtil=self.cAppUtil,mainMenubar=self.view.ui.menubar)
@@ -449,10 +447,7 @@ class MainController(QWidget):
                                                    mainMenubar=self.view.ui.menubar,
                                                    mainLayout=self.view.verticalLayout_1)
         elif controller_name == "reserchingQueryController":
-            self.controller = reserchingQueryController(appUtil=self.cAppUtil, Widget=self.view.label_4,
-                                                        client=self.client,
-                                                        mainMenubar=self.view.ui.menubar,
-                                                        mainLayout=self.view.verticalLayout_1)
+            self.controller = reserchingQueryController(appUtil=self.cAppUtil,client=self.client)
         self.controller.switchToEEG.connect(self.switchToEEGPage)
         self.sub_view = self.controller.view
         self.view.updateForEEG(self.sub_view)
