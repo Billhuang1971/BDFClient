@@ -14,6 +14,7 @@ class consultingController(QWidget):
         self.sign_InfoView = None
         self.User = self.client.tUser
         self.patientname=None
+        self.diags_viewInfo=[]
         self.client.ct_get_diags_notDiagResSig.connect(self.get_diags_notDiagRes)
         self.client.ct_get_fileNameByIdDateResSig.connect(self.get_fileNameByIdDateRes)
         self.client.ct_get_diags_notDiag([self.client.tUser[0]])
@@ -26,8 +27,12 @@ class consultingController(QWidget):
         if REPData[0] == '0':
             QMessageBox.information(self, "提取未诊断信息不成功", REPData[2], QMessageBox.Yes)
             return False
-
-        self.diags_viewInfo = REPData[2]
+        for i in REPData[2]:
+            if i[2]==self.User[0] and i[3]=='notDiagnosed':
+                self.diags_viewInfo.append(i)
+            elif i[2]!=self.User[0] and i[3] =='diagnosed':
+                self.diags_viewInfo.append(i)
+        # self.diags_viewInfo = REPData[2]
         self.userNamesDict = {}
         self.paitentNamesDict = {}
         if REPData[3] is not None:
@@ -48,6 +53,11 @@ class consultingController(QWidget):
     def exit(self):
         self.client.ct_get_diags_notDiagResSig.disconnect()
         self.client.ct_get_fileNameByIdDateResSig.disconnect()
+        self.client.ct_diag_refusedResSig.disconnect()
+        self.client.ct_get_diagResSig.disconnect()
+        self.client.ct_diag_updateResSig.disconnect()
+        self.client.ct_diag_commitResSig.disconnect()
+
 
     def on_clicked_manual_query(self, diags_viewInfo, patient_name):
         self.check_id = diags_viewInfo[-4]
@@ -146,11 +156,9 @@ class consultingController(QWidget):
         if REPData[0] == '0':
             QMessageBox.information(self, "[脑电会诊]提取诊断信息不成功", REPData[2], QMessageBox.Yes)
             return False
-
         self.diag = REPData[2]
         #diag=[patient_id,measure_time（测量时间）,上传医生的id,会诊状态，diag.sign_date，alpha,slow,fast,amplitude,eyes，hyperventilation,sleep,abnormal_wave,attack_stage,summary,diag.checkid,开单医生的用户id,检查单号，cUid（上传医生）]
         self.sign_InfoView = sign_InfoView()
-
         if self.diag[0][3] != 'notDiagnosed' or self.diag[0][2] != self.User[0]:
             self.sign_InfoView.ui.save_pushButton.hide()
             self.sign_InfoView.ui.commit_pushButton.hide()

@@ -478,7 +478,7 @@ class createConsController(QWidget):
         try:
             self.client.getDoctorInfoResSig.disconnect()
             self.client.getCpltCheckInfoResSig.disconnect()
-            self.client.getHistoryConsResSig.disconnect()
+            # self.client.getHistoryConsResSig.disconnect()
             self.client.createConsResSig.disconnect()
             self.client.getAllConsInfoSig.disconnect()
             self.view.create_cons_page_control_signal.disconnect()

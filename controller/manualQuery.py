@@ -82,6 +82,7 @@ class manualQueryController(QWidget):
         self.client.mq_get_diags_DiagnosedResSig.disconnect()
         # self.client.mq_get_type_infoResSig.disconnect()
         self.client.mq_get_fileNameByIdDateResSig.disconnect()
+        self.client.mq_pagingResSig.disconnect()
         # self.client.mq_openEEGFileResSig.disconnect()
         # self.client.mq_load_dataDynamicalResSig.disconnect()
         # self.client.mq_init_SampleListResSig.disconnect()
