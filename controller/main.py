@@ -342,6 +342,7 @@ class MainController(QWidget):
                                                    client=self.client,
                                                    mainMenubar=self.view.ui.menubar,
                                                    mainLayout=self.view.verticalLayout_1)
+            self.controller.switchToEEG.connect(self.switchToEEGPage)
 
         elif controller_name == "reserchingQueryController":
             self.controller = reserchingQueryController(appUtil=self.cAppUtil, Widget=self.view.label_4,

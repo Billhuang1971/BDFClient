@@ -1040,7 +1040,7 @@ class EEGView(QWidget):
         self.resetPickLabels()
         self.focusLines()
         for i in range(len(self.filterlist)):
-            if self.labels[i] == label:
+            if self.filterlist[i] == label:
                 row = i
                 break
         if row >= 0 and row < len(self.filterlist):
