@@ -27,7 +27,8 @@ class reserchingController(QWidget):
     switchToEEG = pyqtSignal(list)
     def __init__(self, appUtil=None, Widget=None, client=None, mainMenubar=None, mainLayout=None):
         super().__init__()
-        self.view = ReserchingView()
+        self.view = diagListView() #首页ui
+        self.view.page_control_signal.connect(self.rg_paging)
         self.mainLayout = mainLayout
         self.mainMenubar = mainMenubar
         self.client = client
@@ -138,58 +139,45 @@ class reserchingController(QWidget):
         self.sample_list = ''
         self.end = 0
 
-        self.view.ui.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.view.ui.tableWidget.resizeColumnsToContents()
-        self.view.ui.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.view.ui.tableWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-
-        self.view.ui.btnSignInfo.clicked.connect(self.on_btnSignInfo_clicked)#删
-        self.view.ui.btnSignInfo.setText('完成当前标注任务')#删
-        self.view.ui.nextFileBtn.hide()#删
-        self.view.ui.nextPatientBtn.setText('返 回')#删
-
-        self.diagListView = diagListView() #首页ui
-        self.diagListView.page_control_signal.connect(self.rg_paging)
         self.get_notlabel() #获取进入页面信息
-        self.view.hide()
         #self.diagListView.show()
-        self.mainLayout.addWidget(self.diagListView)
+        self.mainLayout.addWidget(self.view)
 
     def rg_paging(self,page_to):
        if page_to[0] == "home":
            self.curPageIndex=1
-           self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+           self.view.ui.curPage.setText(str(self.curPageIndex))
        elif page_to[0] == "pre":
            if self.curPageIndex <= 1:
                return
            self.curPageIndex=self.curPageIndex-1
-           self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+           self.view.ui.curPage.setText(str(self.curPageIndex))
        elif page_to[0] == "next":
            self.curPageIndex=self.curPageIndex+1
-           self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+           self.view.ui.curPage.setText(str(self.curPageIndex))
        elif page_to[0] == "final":
            self.curPageIndex = self.curPageMax
-           self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+           self.view.ui.curPage.setText(str(self.curPageIndex))
        elif page_to[0] == "confirm":
-           pp=self.diagListView.ui.skipPage.text()
+           pp=self.view.ui.skipPage.text()
            if int(pp) > self.curPageMax or int(pp) <= 0:
                QMessageBox.information(self, "查询", f'页数：1 至 {self.curPageMax}', QMessageBox.Yes)
-               self.diagListView.ui.skipPage.setText(str(self.curPageMax))
+               self.view.ui.skipPage.setText(str(self.curPageMax))
                return False
            self.curPageIndex = int(pp)
-           self.diagListView.ui.curPage.setText(str(self.curPageIndex))
+           self.view.ui.curPage.setText(str(self.curPageIndex))
        elif page_to[0] == "query":
            self.curPageIndex = 1
-           self.diagListView.ui.curPage.setText(str(self.curPageIndex))
-       theme_name = self.diagListView.ui.theme_lineEdit.text()
-       theme_state = self.diagListView.ui.comboBox.currentText()
-       task_state = self.diagListView.ui.comboBox2.currentText()
-       self.diagListView.setDisabled(True)
+           self.view.ui.curPage.setText(str(self.curPageIndex))
+       theme_name = self.view.ui.theme_lineEdit.text()
+       theme_state = self.view.ui.comboBox.currentText()
+       task_state = self.view.ui.comboBox2.currentText()
+       self.view.setDisabled(True)
        msg=[self.client.tUser[0], self.curPageIndex, self.pageRows,page_to[0],theme_name,theme_state,task_state]
        self.client.rg_paging(msg)
 
     def rg_pagingRes(self, REPData):
-        self.diagListView.setEnabled(True)
+        self.view.setEnabled(True)
         if REPData[0] == '0':
             QMessageBox.information(self, "查询", REPData[2], QMessageBox.Yes)
             return False
@@ -204,9 +192,9 @@ class reserchingController(QWidget):
         self.curPageIndex = REPData[4]
         self.curPageMax = REPData[5]
 
-        self.diagListView.show()
-        self.diagListView.init_table(self.diags_viewInfo, self.userNamesDict, self.paitentNamesDict,
-                                     self.on_clicked_manual_query, self.curPageIndex,
+        self.view.show()
+        self.view.init_table(self.diags_viewInfo, self.userNamesDict, self.paitentNamesDict,
+                                     self.on_clicked_manual_query, self.on_clicked_submit,self.curPageIndex,
                                      self.curPageMax)
 
     # 获取提取取诊断信息
@@ -247,16 +235,10 @@ class reserchingController(QWidget):
         self.measure_date = None
         self.file_name = None
 
-        self.diagListView.show()
-        self.diagListView.init_table(self.diags_viewInfo, self.userNamesDict,self.paitentNamesDict,
-                                     self.on_clicked_manual_query, self.curPageIndex,self.curPageMax)
+        self.view.show()
+        self.view.init_table(self.diags_viewInfo, self.userNamesDict,self.paitentNamesDict,
+                                     self.on_clicked_manual_query, self.on_clicked_submit,self.curPageIndex,self.curPageMax,)
 
-    def timeChangeUpdateUi(self):
-        self.remove_lines(self.channels)
-        self.paint(self.data, self.begin, self.end)
-        if self.sample_list is not None:
-            self.view.ui.tableWidget.scrollToItem(self.view.ui.tableWidget.item(self.show_sample_index, 0),
-                                              QAbstractItemView.PositionAtCenter)
 
     def on_clicked_manual_query(self, diags_viewInfo, patient_name):
         self.theme_id = None
@@ -264,8 +246,6 @@ class reserchingController(QWidget):
         self.file_id = None
         self.measure_date = None
         self.file_name = None
-
-
         self.theme_id = diags_viewInfo[0]
         self.theme_name = diags_viewInfo[1]
         self.check_id = diags_viewInfo[7]
@@ -286,32 +266,31 @@ class reserchingController(QWidget):
         except:
             QMessageBox.information(self, '提示', '当前文件无效')
             self.mainMenubar.setEnabled(True)
+
+    #完成标注任务
+    def on_clicked_submit(self,diags_viewInfo, patient_name):
+        theme_id = diags_viewInfo[0]
+        check_id = diags_viewInfo[7]
+        file_id = diags_viewInfo[11]
+        uid = self.client.tUser[0]
+        msg=[theme_id,check_id,file_id,uid]
+        self.client.rg_label_commit(msg)
     def changestateRes(self,REPdata):
         self.switchToEEG.emit([self.file_id, self.file_name, self.check_id, self.patient_id, self.measure_date,
                                ['reserchingController', ''], "reslab", self.client.tUser[0], True, True, self.theme_id])
     def label_commitRes(self, REPData):
         if REPData[0] == '0':
             QMessageBox.information(self, "完成标注", REPData[2], QMessageBox.Yes)
-            self.diagListView.show()
             return False
         QMessageBox.information(self, "完成标注，操作成功", REPData[2], QMessageBox.Yes)
-        self.view.ui.btnSignInfo.setDisabled(True)
-        self.view.hide()
         self.page = ['file_name']
         self.get_notlabel()
         while self.mainLayout.count() > 1:
              witem = self.mainLayout.itemAt(self.mainLayout.count() - 1)
              witem.widget().hide()
              self.mainLayout.removeItem(witem)
-        self.mainLayout.addWidget(self.diagListView)
+        self.mainLayout.addWidget(self.view)
 
-    # 科研标注/完成标注任务
-    def on_btnSignInfo_clicked(self):
-        self.stopRolling()
-        if self.sign_InfoView is None:
-          self.view.ui.btnSignInfo.setDisabled(True)
-          msg=[self.theme_id,self.check_id,self.file_id,self.uid]
-          self.client.rg_label_commit(msg)
 
 
 

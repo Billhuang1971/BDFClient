@@ -73,7 +73,7 @@ class diagListView(QWidget):#首页ui
         self.ui.comboBox2.hide()
         # self.setWindowTitle("[科研标注]标注信息列表")
 
-    def init_table(self, diags_viewInfo, userNamesDict, paitentNamesDict, on_clicked_manual_query,curPageIndex=1,maxPages=1):
+    def init_table(self, diags_viewInfo, userNamesDict, paitentNamesDict, on_clicked_manual_query,on_clicked_submit,curPageIndex=1,maxPages=1):
         try:
 
             self.ui.tableWidget.clear()
@@ -174,6 +174,14 @@ class diagListView(QWidget):#首页ui
                 manualBtn.setCursor(Qt.PointingHandCursor)
                 manualBtn.setToolTip("科研标注:脑电数据图标注")
                 layout.addWidget(manualBtn)
+
+                completeBtn = QPushButton('提交标注任务')
+                completeBtn.clicked.connect(
+                    partial(on_clicked_submit, diags_viewInfo[row], paitentNamesDict.get(diags_viewInfo[row][9])))
+                completeBtn.setStyleSheet('height : 50px;font : 18px;color:blue')
+                completeBtn.setCursor(Qt.PointingHandCursor)
+                completeBtn.setToolTip("科研标注:提交标注任务")
+                layout.addWidget(completeBtn)
 
 
                 layout.setStretch(0, 1)
