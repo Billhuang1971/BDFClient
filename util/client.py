@@ -43,6 +43,7 @@ class client(QObject, socketClient):
     rg_update_sampleInfo12ResSig = pyqtSignal(list)
     rg_load_dataDynamicalResSig = pyqtSignal(list)
     rg_openEEGFileResSig = pyqtSignal(list)
+    changestateResSig=pyqtSignal(list)
 
     #---学习评估  diagAssess ---
     da_get_ClassContentsResSig = pyqtSignal(list)
@@ -1548,6 +1549,12 @@ class client(QObject, socketClient):
     def get_type_infoRes(self, REPmsg):
         self.get_type_infoResSig.emit(list(REPmsg[3]))
 
+    def changestate(self,REQdata):
+        REQdata.insert(0, self.macAddr)
+        msg = ["reserching", 31, self.tUser[0], REQdata]
+        self.sendRequest(msg)
+    def changestateRes(self,REPmsg):
+        self.changestateResSig.emit(list(REPmsg[3]))
     # 科研标注/提取标注信息
     def rg_paging(self, REQdata):
         REQdata.insert(0, self.macAddr)
@@ -3992,6 +3999,9 @@ class client(QObject, socketClient):
         elif REQmsg[0] == 'manual' and REQmsg[1] == 4:
             self.get_type_infoRes(REQmsg)
         # 科研标注/查询、分页
+        elif REQmsg[0] == 'reserching' and REQmsg[1] == 31:
+            self.changestateRes(REQmsg)
+
         elif REQmsg[0] == 'reserching' and REQmsg[1] == 30:
             self.rg_pagingRes(REQmsg)
             # 科研标注 /提交标注信息

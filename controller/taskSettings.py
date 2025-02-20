@@ -1009,7 +1009,7 @@ class taskSettingsController(QWidget):
         self.prentryView.ui.tableWidget.setRowCount(row_num)
         for r in range(row_num):
             for i in range(1, col_num):
-                fn = '{:>03}.edf'.format(self.pre_info[r][1])
+                fn = '{:>03}.bdf'.format(self.pre_info[r][1])
                 item = QTableWidgetItem(fn)
                 item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 font = item.font()

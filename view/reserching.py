@@ -55,7 +55,7 @@ class SettingView(QWidget):
         self.ui.setupUi(self, type_name, user_name, type_filter, user_filter)
 
 
-class diagListView(QWidget):
+class diagListView(QWidget):#首页ui
     page_control_signal = pyqtSignal(list)
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -148,7 +148,7 @@ class diagListView(QWidget):
                 self.ui.tableWidget.item(row, i).setFont(iFont)
 
                 i = 5
-                self.ui.tableWidget.setItem(row, i, QTableWidgetItem('{:>03}.edf'.format(str(diags_viewInfo[row][11]))))
+                self.ui.tableWidget.setItem(row, i, QTableWidgetItem('{:>03}.bdf'.format(str(diags_viewInfo[row][11]))))
                 self.ui.tableWidget.item(row, i).setTextAlignment(Qt.AlignCenter)
                 self.ui.tableWidget.item(row, i).setFlags(Qt.ItemIsEditable)
                 self.ui.tableWidget.item(row, i).setFont(iFont)
