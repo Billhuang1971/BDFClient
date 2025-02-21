@@ -276,10 +276,13 @@ class Ui_EEGView(object):
         self.glSample = QtWidgets.QGridLayout(self.gbSample) #glSample为gbsample里的布局
         self.glSample.setObjectName("glSample")
 
+        font_word = QtGui.QFont()
+        font_word.setFamily("Arial")
         self.waveLayout = QHBoxLayout()  # 创建一个水平布局
         #self.waveLayout.setSpacing(1)  # 设置控件之间的间距为 5
         self.hideWaveText = QLabel("波形")
         self.hideWaveText.setMaximumWidth(35)
+        self.hideWaveText.setFont(font_word)
         self.waveLayout.addWidget(self.hideWaveText)
         #self.glSample.addWidget(self.hideWaveText, 1, 0, 1, 1)
 
@@ -317,6 +320,7 @@ class Ui_EEGView(object):
 
         self.stateLayout = QHBoxLayout()  # 创建一个水平布局
         self.hideStateText = QLabel("状态")
+        self.hideStateText.setFont(font_word)
         # self.waveLayout.setSpacing(1)  # 设置控件之间的间距为 5
         self.hideStateText.setMaximumWidth(35)
         self.stateLayout.addWidget(self.hideStateText)
@@ -356,6 +360,7 @@ class Ui_EEGView(object):
         self.EventLayout = QHBoxLayout()  # 创建一个水平布局
         self.hideEventText = QLabel("事件")
         self.hideEventText.setMaximumWidth(35)
+        self.hideWaveText.setFont(font_word)
         self.EventLayout.addWidget(self.hideEventText)
 
         self.hideEvent = QtWidgets.QRadioButton(self.gbSample)

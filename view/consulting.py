@@ -128,7 +128,7 @@ class DiagListView(QWidget):
 
 
               self.ui.tableWidget.cellWidget(row, col_num ).setLayout(layout)
-
+            self.ui.tableWidget.setColumnWidth(5, 150)
         except Exception as e:
             print('initTable', e)
 

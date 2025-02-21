@@ -161,7 +161,7 @@ class Ui_Form(object):
         self.homePage = QtWidgets.QPushButton(Form)
         self.homePage.setObjectName("homePage")
         self.homePage.setFont(font2)
-        self.homePage.setStyleSheet("font-size: 14px;")
+        # self.homePage.setStyleSheet("font-size: 14px;")
         self.homePage.setMaximumSize(QtCore.QSize(48, 26))
         self.horizontalLayout_paging.addWidget(self.homePage)
 
@@ -169,7 +169,7 @@ class Ui_Form(object):
         self.prePage.setObjectName("prePage")
         self.prePage.setFont(font2)
         self.prePage.setMaximumSize(QtCore.QSize(80, 26))
-        self.prePage.setStyleSheet("font-size: 14px;")
+        # self.prePage.setStyleSheet("font-size: 14px;")
         self.horizontalLayout_paging.addWidget(self.prePage)
 
         self.curPage = QLineEdit(Form)
@@ -184,14 +184,14 @@ class Ui_Form(object):
         self.nextPage.setObjectName("nextPage")
         self.nextPage.setFont(font2)
         self.nextPage.setMaximumSize(QtCore.QSize(80, 26))
-        self.nextPage.setStyleSheet("font-size: 14px;")
+        # self.nextPage.setStyleSheet("font-size: 14px;")
         self.horizontalLayout_paging.addWidget(self.nextPage)
 
         self.finalPage = QtWidgets.QPushButton(Form)
         self.finalPage.setObjectName("finalPage")
         self.finalPage.setFont(font2)
         self.finalPage.setMaximumSize(QtCore.QSize(48, 26))
-        self.finalPage.setStyleSheet("font-size: 14px;")
+        # self.finalPage.setStyleSheet("font-size: 14px;")
         self.horizontalLayout_paging.addWidget(self.finalPage)
 
         self.totalPage = QLabel(Form)
@@ -224,7 +224,7 @@ class Ui_Form(object):
         self.confirmSkip.setFont(font2)
         self.confirmSkip.setMaximumSize(QtCore.QSize(48, 26))
         self.horizontalLayout_paging.addWidget(self.confirmSkip)
-        self.confirmSkip.setStyleSheet("font-size: 14px;")
+        # self.confirmSkip.setStyleSheet("font-size: 14px;")
         self.horizontalLayout_5.addLayout(self.horizontalLayout_paging)
 
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -239,7 +239,7 @@ class Ui_Form(object):
         # font.setBold(True)
         # font.setWeight(75)
         self.selectButton.setFont(font)
-        self.selectButton.setStyleSheet("font-size: 14px;")
+        # self.selectButton.setStyleSheet("font-size: 14px;")
         # self.selectButton.setStyleSheet("background-color: rgb(255, 0, 0);\n"
         #                                 "color: rgb(255, 255, 255);")
         # self.selectButton.setObjectName("selectButton")
@@ -300,10 +300,14 @@ class Ui_Form(object):
         # font.setBold(True)
         # font.setWeight(75)
         self.docSelBtn.setFont(font)
-        self.docSelBtn.setStyleSheet("font-size: 14px;")
+        # self.docSelBtn.setStyleSheet("font-size: 14px;")
         # self.docSelBtn.setStyleSheet("background-color: rgb(255, 0, 0);\n"
         #                              "color: rgb(255, 255, 255);")
         self.docSelBtn.setObjectName("docSelBtn")
+        self.docSelBtn.setSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding,  # 水平策略：尽可能小，但可扩展
+            QtWidgets.QSizePolicy.Fixed  # 垂直策略：固定高度
+        )
         self.horizontalLayout_2.addWidget(self.docSelBtn)
         self.delButton = QtWidgets.QPushButton(Form)
         self.delButton.setMinimumSize(QtCore.QSize(90, 0))
@@ -314,7 +318,7 @@ class Ui_Form(object):
         # font.setBold(True)
         # font.setWeight(75)
         self.delButton.setFont(font)
-        self.delButton.setStyleSheet("font-size: 14px;")
+        # self.delButton.setStyleSheet("font-size: 14px;")
         # self.delButton.setStyleSheet("background-color: rgb(255, 0, 0);\n"
         #                              "color: rgb(255, 255, 255);")
         self.delButton.setObjectName("delButton")
@@ -329,7 +333,7 @@ class Ui_Form(object):
         # font.setBold(True)
         # font.setWeight(75)
         self.verifyButton.setFont(font)
-        self.verifyButton.setStyleSheet("font-size: 14px;")
+        # self.verifyButton.setStyleSheet("font-size: 14px;")
         # self.verifyButton.setStyleSheet("background-color: rgb(255, 0, 0);\n"
         #                                 "color: rgb(255, 255, 255);")
         self.verifyButton.setObjectName("verifyButton")

@@ -401,6 +401,7 @@ class MainController(QWidget):
             self.controller.exit()
         self.controller = None
         self.controller = EEGController(client=self.client, appUtil=self.cAppUtil, msg=msg, mainLabel=self.view.label_4)
+        self.view.ui.menubar.setDisabled(True)
         if msg[5][0] == 'diagTrainingController':
             self.toEEGInfo = msg[5][2]
             self.study_start_time = datetime.now().strftime("%Y-%m-%d :%H:%M:%S")
@@ -412,6 +413,7 @@ class MainController(QWidget):
         self.controller.startEEG()
 
     def switchFromEEGPage(self, msg):
+        self.view.ui.menubar.setEnabled(True)
         controller_name = msg[0]
         if self.sub_view is not None:
             self.sub_view.close()
