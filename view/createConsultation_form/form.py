@@ -309,15 +309,22 @@ class Ui_Form(object):
             QtWidgets.QSizePolicy.Fixed  # 垂直策略：固定高度
         )
         self.horizontalLayout_2.addWidget(self.docSelBtn)
+
         self.delButton = QtWidgets.QPushButton(Form)
-        self.delButton.setMinimumSize(QtCore.QSize(90, 0))
-        self.delButton.setMaximumSize(QtCore.QSize(90, 16777215))
+        # self.delButton.setMinimumSize(QtCore.QSize(90, 0))
+        # self.delButton.setMaximumSize(QtCore.QSize(90, 16777215))
         font = QtGui.QFont()
         font.setFamily("Arial")
         font.setPointSize(14)
         # font.setBold(True)
         # font.setWeight(75)
         self.delButton.setFont(font)
+        font_metrics = self.delButton.fontMetrics()
+        text_width = font_metrics.width("重置会诊") + 10  # 增加 10px 边距
+        text_height = font_metrics.height() + 4  # 增加 4px 边距
+
+        self.delButton.setFixedSize(text_width, text_height)  # 固定为文本所需尺寸
+        # 或保留最大尺寸但设置合理的最小值
         # self.delButton.setStyleSheet("font-size: 14px;")
         # self.delButton.setStyleSheet("background-color: rgb(255, 0, 0);\n"
         #                              "color: rgb(255, 255, 255);")
