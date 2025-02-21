@@ -1930,6 +1930,7 @@ class client(QObject, socketClient):
     # 回调，处理服务端回传的退出处理结果
     def quitRes(self, revData):
         self.quitResSig.emit()
+        self.sockClose()
 
     # 修改密码功能
     # 向服务器发送修改密码请求

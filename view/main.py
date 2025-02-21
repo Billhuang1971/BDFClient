@@ -120,7 +120,7 @@ class MainView(QMainWindow):
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         studyInfo = self.label_5.text()
         if studyInfo is not None and studyInfo != '':
-            QMessageBox.information(self, '提示','当前正在[诊断学习]中，请先单击[诊断学习]窗口右边的”返回“，之后再关闭退出。',
+            QMessageBox.information(self, '提示', '当前正在[诊断学习]中，请先单击[诊断学习]窗口右边的”返回“，之后再关闭退出。',
                                     QMessageBox.Yes)
             a0.ignore()
             return

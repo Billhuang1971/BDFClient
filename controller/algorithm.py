@@ -704,7 +704,7 @@ class algorithmController(QWidget):
                         self.client.addAlgorithmFile(REQmsg)
                     else:
                         data = self.cAppUtil.readByte(file_path, self.block_size, block_id)
-                        self.progressBarView.updateProgressBar(block_id/self.block_size *100)
+                        self.progressBarView.updateProgressBar(block_id/self.block_size * 100)
                         # data = self.readFileData(file_path, self.block_size, block_id)
                         REQmsg = self.packageFileMsg('uploading', msg, data)
                         self.client.addAlgorithmFile(REQmsg)

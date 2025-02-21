@@ -397,7 +397,11 @@ class EEGController(QWidget):
             print("doDowning", e)
 
     def exit(self):
-        pass
+        self.client.openEEGFileResSig.disconnect()
+        self.client.loadEEGDataSig.disconnect()
+        self.client.insertSampleSig.disconnect()
+        self.client.updateSampleSig.disconnect()
+        self.client.deleteSampleSig.disconnect()
 
     # 自动播放前进
     def onBtnUpingClicked(self):
