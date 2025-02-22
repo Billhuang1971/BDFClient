@@ -27,7 +27,7 @@ class DiagListView(QWidget):
         self.ui.setupUi(self)
 
 
-    def init_table(self, diags_viewInfo,curUser,userNamesDict,paitentNamesDict,on_clicked_manual_query,on_clicked_diag_query,on_clicked_diag_refused=None):
+    def init_table(self, diags_viewInfo,curUser,userNamesDict,paitentNamesDict,on_clicked_manual_query,on_clicked_diag_query,refuse_state,on_clicked_diag_refused=None):
         try:
             self.ui.tableWidget.setColumnCount(7)
             self.ui.tableWidget.setHorizontalHeaderLabels(
@@ -103,8 +103,12 @@ class DiagListView(QWidget):
               if on_clicked_diag_refused is not None and diags_viewInfo[row][3]=='notDiagnosed' and diags_viewInfo[row][2]==curUser[0]:
                   refuseBtn = QPushButton('拒绝')
                   refuseBtn.clicked.connect(partial(on_clicked_diag_refused, diags_viewInfo[row],paitentNamesDict.get(diags_viewInfo[row][0])))
-                  refuseBtn.setStyleSheet('height : 50px;width:60px;font : 18px;color:blue')
+                  refuseBtn.setStyleSheet('''QPushButton{height : 50px;width:60px;font : 18px;}
+                                          QPushButton:enabled{color:blue;}   
+                                          QPushButton:disabled { color: gray;}''')
                   refuseBtn.setCursor(Qt.PointingHandCursor)
+                  if refuse_state[row]==True:
+                      refuseBtn.setDisabled(True)
                   layout.addWidget(refuseBtn)
 
               manualBtn = QPushButton('选择脑电文件...')

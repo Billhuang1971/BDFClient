@@ -28,11 +28,16 @@ class consultingController(QWidget):
             QMessageBox.information(self, "提取未诊断信息不成功", REPData[2], QMessageBox.Yes)
             return False
         self.diags_viewInfo.clear()
+        refuse_state=[]
+        count=0
         for i in REPData[2]:
             if i[2]==self.User[0] and i[3]=='notDiagnosed':
+                refuse_state.append(REPData[5][count])
                 self.diags_viewInfo.append(i)
             elif i[2]!=self.User[0] and i[3] =='diagnosed':
+                refuse_state.append(REPData[5][count])
                 self.diags_viewInfo.append(i)
+            count=count+1
         # self.diags_viewInfo = REPData[2]
         self.userNamesDict = {}
         self.paitentNamesDict = {}
@@ -47,7 +52,7 @@ class consultingController(QWidget):
         self.measure_date = None
         self.file_name = None
         self.view.init_table(self.diags_viewInfo, self.client.tUser, self.userNamesDict, self.paitentNamesDict,
-                             self.on_clicked_manual_query, self.on_clicked_diag_query, self.on_clicked_diag_refused)
+                             self.on_clicked_manual_query, self.on_clicked_diag_query,refuse_state,self.on_clicked_diag_refused)
         self.view.show()
 
     # 槽对象中的槽函数
