@@ -79,7 +79,8 @@ class Ui_Form(object):
         self.date_lineEdit.setDisplayFormat("yyyy-MM-dd")
         self.date_lineEdit.setObjectName("date_lineEdit")
         self.date_lineEdit.setCalendarPopup(True)
-        self.date_lineEdit.setMaximumSize(QtCore.QSize(16, 26))
+        self.date_lineEdit.setMaximumSize(QtCore.QSize(18, 26))
+        # self.date_lineEdit.setFixedSize(20, 30)
         self.date_lineEdit.dateChanged.connect(partial(self.dateChanged, 1))
 
         font = QtGui.QFont()
@@ -109,7 +110,7 @@ class Ui_Form(object):
         self.date_lineEdit2.setDisplayFormat("yyyy-MM-dd")
         self.date_lineEdit2.setObjectName("date_lineEdit")
         self.date_lineEdit2.setCalendarPopup(True)
-        self.date_lineEdit2.setMaximumSize(QtCore.QSize(16, 26))
+        self.date_lineEdit2.setMaximumSize(QtCore.QSize(18, 26))
         self.date_lineEdit2.dateChanged.connect(partial(self.dateChanged, 2))
 
         font = QtGui.QFont()
@@ -161,14 +162,22 @@ class Ui_Form(object):
         self.homePage = QtWidgets.QPushButton(Form)
         self.homePage.setObjectName("homePage")
         self.homePage.setFont(font2)
+        font_metrics = self.homePage.fontMetrics()
+        text_width = font_metrics.width("首页") + 10  # 增加 10px 边距
+        text_height = font_metrics.height() + 4  # 增加 4px 边距
+        self.homePage.setFixedSize(text_width, text_height)  # 固定为文本所需尺寸
         # self.homePage.setStyleSheet("font-size: 14px;")
-        self.homePage.setMaximumSize(QtCore.QSize(48, 26))
+        # self.homePage.setMaximumSize(QtCore.QSize(48, 26))
         self.horizontalLayout_paging.addWidget(self.homePage)
 
         self.prePage = QtWidgets.QPushButton(Form)
         self.prePage.setObjectName("prePage")
         self.prePage.setFont(font2)
-        self.prePage.setMaximumSize(QtCore.QSize(80, 26))
+        font_metrics = self.prePage.fontMetrics()
+        text_width = font_metrics.width("上一页") + 10  # 增加 10px 边距
+        text_height = font_metrics.height() + 4  # 增加 4px 边距
+        self.prePage.setFixedSize(text_width, text_height)  # 固定为文本所需尺寸
+        # self.prePage.setMaximumSize(QtCore.QSize(80, 26))
         # self.prePage.setStyleSheet("font-size: 14px;")
         self.horizontalLayout_paging.addWidget(self.prePage)
 
@@ -183,14 +192,21 @@ class Ui_Form(object):
         self.nextPage = QtWidgets.QPushButton(Form)
         self.nextPage.setObjectName("nextPage")
         self.nextPage.setFont(font2)
-        self.nextPage.setMaximumSize(QtCore.QSize(80, 26))
+        font_metrics = self.nextPage.fontMetrics()
+        text_width = font_metrics.width("下一页") + 10  # 增加 10px 边距
+        text_height = font_metrics.height() + 4  # 增加 4px 边距
+        self.nextPage.setFixedSize(text_width, text_height)  # 固定为文本所需尺寸
         # self.nextPage.setStyleSheet("font-size: 14px;")
         self.horizontalLayout_paging.addWidget(self.nextPage)
 
         self.finalPage = QtWidgets.QPushButton(Form)
         self.finalPage.setObjectName("finalPage")
         self.finalPage.setFont(font2)
-        self.finalPage.setMaximumSize(QtCore.QSize(48, 26))
+        font_metrics = self.finalPage.fontMetrics()
+        text_width = font_metrics.width("末页") + 10  # 增加 10px 边距
+        text_height = font_metrics.height() + 4  # 增加 4px 边距
+        self.finalPage.setFixedSize(text_width, text_height)  # 固定为文本所需尺寸
+        # self.finalPage.setMaximumSize(QtCore.QSize(48, 26))
         # self.finalPage.setStyleSheet("font-size: 14px;")
         self.horizontalLayout_paging.addWidget(self.finalPage)
 
@@ -222,7 +238,11 @@ class Ui_Form(object):
         self.confirmSkip = QtWidgets.QPushButton(Form)
         self.confirmSkip.setObjectName("confirmSkip")
         self.confirmSkip.setFont(font2)
-        self.confirmSkip.setMaximumSize(QtCore.QSize(48, 26))
+        font_metrics = self.confirmSkip.fontMetrics()
+        text_width = font_metrics.width("确定") + 10  # 增加 10px 边距
+        text_height = font_metrics.height() + 4  # 增加 4px 边距
+        self.confirmSkip.setFixedSize(text_width, text_height)  # 固定为文本所需尺寸
+        # self.confirmSkip.setMaximumSize(QtCore.QSize(48, 26))
         self.horizontalLayout_paging.addWidget(self.confirmSkip)
         # self.confirmSkip.setStyleSheet("font-size: 14px;")
         self.horizontalLayout_5.addLayout(self.horizontalLayout_paging)
@@ -231,14 +251,14 @@ class Ui_Form(object):
         self.horizontalLayout_5.addItem(spacerItem1)
 
         self.selectButton = QtWidgets.QPushButton(Form)
-        self.selectButton.setMinimumSize(QtCore.QSize(90, 0))
-        self.selectButton.setMaximumSize(QtCore.QSize(150, 16777215))
         font = QtGui.QFont()
         font.setFamily("Arial")
         font.setPointSize(14)
-        # font.setBold(True)
-        # font.setWeight(75)
         self.selectButton.setFont(font)
+        font_metrics = self.selectButton.fontMetrics()
+        text_width = font_metrics.width("会诊数据选择") + 10  # 增加 10px 边距
+        text_height = font_metrics.height() + 4  # 增加 4px 边距
+        self.selectButton.setFixedSize(text_width, text_height)  # 固定为文本所需尺寸
         # self.selectButton.setStyleSheet("font-size: 14px;")
         # self.selectButton.setStyleSheet("background-color: rgb(255, 0, 0);\n"
         #                                 "color: rgb(255, 255, 255);")
@@ -292,54 +312,40 @@ class Ui_Form(object):
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem1)
         self.docSelBtn = QtWidgets.QPushButton(Form)
-        self.docSelBtn.setMinimumSize(QtCore.QSize(90, 0))
-        self.docSelBtn.setMaximumSize(QtCore.QSize(90, 16777215))
         font = QtGui.QFont()
         font.setFamily("Arial")
         font.setPointSize(14)
-        # font.setBold(True)
-        # font.setWeight(75)
         self.docSelBtn.setFont(font)
-        # self.docSelBtn.setStyleSheet("font-size: 14px;")
-        # self.docSelBtn.setStyleSheet("background-color: rgb(255, 0, 0);\n"
-        #                              "color: rgb(255, 255, 255);")
+        font_metrics = self.docSelBtn.fontMetrics()
+        text_width = font_metrics.width("选择医生") + 10  # 增加 10px 边距
+        text_height = font_metrics.height() + 4  # 增加 4px 边距
+        self.docSelBtn.setFixedSize(text_width, text_height)  # 固定为文本所需尺寸
         self.docSelBtn.setObjectName("docSelBtn")
-        self.docSelBtn.setSizePolicy(
-            QtWidgets.QSizePolicy.MinimumExpanding,  # 水平策略：尽可能小，但可扩展
-            QtWidgets.QSizePolicy.Fixed  # 垂直策略：固定高度
-        )
         self.horizontalLayout_2.addWidget(self.docSelBtn)
 
         self.delButton = QtWidgets.QPushButton(Form)
-        # self.delButton.setMinimumSize(QtCore.QSize(90, 0))
-        # self.delButton.setMaximumSize(QtCore.QSize(90, 16777215))
         font = QtGui.QFont()
         font.setFamily("Arial")
         font.setPointSize(14)
-        # font.setBold(True)
-        # font.setWeight(75)
         self.delButton.setFont(font)
         font_metrics = self.delButton.fontMetrics()
         text_width = font_metrics.width("重置会诊") + 10  # 增加 10px 边距
         text_height = font_metrics.height() + 4  # 增加 4px 边距
-
         self.delButton.setFixedSize(text_width, text_height)  # 固定为文本所需尺寸
-        # 或保留最大尺寸但设置合理的最小值
-        # self.delButton.setStyleSheet("font-size: 14px;")
-        # self.delButton.setStyleSheet("background-color: rgb(255, 0, 0);\n"
-        #                              "color: rgb(255, 255, 255);")
         self.delButton.setObjectName("delButton")
         self.horizontalLayout_2.addWidget(self.delButton)
         self.verifyButton = QtWidgets.QPushButton(Form)
         self.verifyButton.setEnabled(True)
-        self.verifyButton.setMinimumSize(QtCore.QSize(90, 0))
-        self.verifyButton.setMaximumSize(QtCore.QSize(90, 16777215))
         font = QtGui.QFont()
         font.setFamily("Arial")
         font.setPointSize(14)
         # font.setBold(True)
         # font.setWeight(75)
         self.verifyButton.setFont(font)
+        font_metrics = self.verifyButton.fontMetrics()
+        text_width = font_metrics.width("创建会诊") + 10  # 增加 10px 边距
+        text_height = font_metrics.height() + 4  # 增加 4px 边距
+        self.delButton.setFixedSize(text_width, text_height)  # 固定为文本所需尺寸
         # self.verifyButton.setStyleSheet("font-size: 14px;")
         # self.verifyButton.setStyleSheet("background-color: rgb(255, 0, 0);\n"
         #                                 "color: rgb(255, 255, 255);")

@@ -73,7 +73,7 @@ class Ui_Form(object):
         self.date_lineEdit.setDisplayFormat("yyyy-MM-dd")
         self.date_lineEdit.setObjectName("date_lineEdit")
         self.date_lineEdit.setCalendarPopup(True)
-        self.date_lineEdit.setMaximumSize(QtCore.QSize(16, 26))
+        self.date_lineEdit.setMaximumSize(QtCore.QSize(18, 26))
         self.date_lineEdit.dateChanged.connect(partial(self.dateChanged, 1))
 
         font = QtGui.QFont()
@@ -106,7 +106,7 @@ class Ui_Form(object):
         self.date_lineEdit2.setDisplayFormat("yyyy-MM-dd")
         self.date_lineEdit2.setObjectName("date_lineEdit")
         self.date_lineEdit2.setCalendarPopup(True)
-        self.date_lineEdit2.setMaximumSize(QtCore.QSize(16, 26))
+        self.date_lineEdit2.setMaximumSize(QtCore.QSize(18, 26))
         self.date_lineEdit2.dateChanged.connect(partial(self.dateChanged, 2))
 
         font = QtGui.QFont()

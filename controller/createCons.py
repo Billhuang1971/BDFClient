@@ -482,7 +482,6 @@ class createConsController(QWidget):
             self.client.createConsResSig.disconnect()
             self.client.getAllConsInfoSig.disconnect()
             self.view.create_cons_page_control_signal.disconnect()
-            self.client.getCpltCheckInfoResSig.disconnect()
             self.prentryView.prentry_page_control_signal.disconnect()
         except Exception as e:
             print('exit', e)

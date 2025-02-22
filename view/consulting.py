@@ -126,9 +126,10 @@ class DiagListView(QWidget):
               #    diagBtn.setCursor(Qt.PointingHandCursor)
               #    layout.addWidget(diagBtn)
 
-
+              for col in range(self.ui.tableWidget.columnCount()):
+                  self.ui.tableWidget.horizontalHeader().setSectionResizeMode(col,
+                                                                              QHeaderView.ResizeToContents)
               self.ui.tableWidget.cellWidget(row, col_num ).setLayout(layout)
-            self.ui.tableWidget.setColumnWidth(5, 150)
         except Exception as e:
             print('initTable', e)
 

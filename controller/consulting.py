@@ -27,6 +27,7 @@ class consultingController(QWidget):
         if REPData[0] == '0':
             QMessageBox.information(self, "提取未诊断信息不成功", REPData[2], QMessageBox.Yes)
             return False
+        self.diags_viewInfo.clear()
         for i in REPData[2]:
             if i[2]==self.User[0] and i[3]=='notDiagnosed':
                 self.diags_viewInfo.append(i)
@@ -140,17 +141,18 @@ class consultingController(QWidget):
         self.check_id = diags_viewInfo[-4]
         self.uid = diags_viewInfo[2]
         self.patientname=patient_name
-        if self.sign_InfoView is None:
+        if self.sign_InfoView is not None:
+            self.sign_InfoView.close()
             # self.view.ui.btnSignInfo.setDisabled(True)
-            msg = [self.check_id, self.uid]
-            self.client.ct_get_diag(msg)
-        else:
-            try:
-                # self.sign_InfoView.setWindowFlag(Qt.WindowStaysOnTopHint,True)
-                self.sign_InfoView.show()
-                self.sign_InfoView.activateWindow()
-            except Exception as e:
-                print(f"setWindowFlag:{e}")
+        msg = [self.check_id, self.uid]
+        self.client.ct_get_diag(msg)
+        # else:
+        #     try:
+        #         # self.sign_InfoView.setWindowFlag(Qt.WindowStaysOnTopHint,True)
+        #         self.sign_InfoView.show()
+        #         self.sign_InfoView.activateWindow()
+        #     except Exception as e:
+        #         print(f"setWindowFlag:{e}")
     def ct_get_diagRes(self,REPData):
         # self.view.ui.btnSignInfo.setEnabled(True)
         if REPData[0] == '0':
