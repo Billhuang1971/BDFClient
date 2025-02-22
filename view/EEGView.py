@@ -627,7 +627,7 @@ class EEGView(QWidget):
                 r = l + 1
                 while r <= self.nDotWin and self.labelBit[r]:
                     r += 1
-                self.axHscrollSpan.append(self.ax_hscroll.axvspan(l * self.lenTime / self.nDotWin, (r - 1) * self.lenTime / self.nDotWin, facecolor="blue", alpha=0.5))
+                self.axHscrollSpan.append(self.ax_hscroll.axvspan(l * self.lenTime / self.nDotWin, r * self.lenTime / self.nDotWin, facecolor="blue", alpha=0.5))
                 l = r
             else:
                 l += 1

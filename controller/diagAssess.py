@@ -36,13 +36,18 @@ class diagAssessController(QWidget):
         self.measure_date = None
         self.file_name = None
 
+        self.prentryView = None
+        self.prentryView2 = None
+
         self.sign_InfoView = None
         self.get_contents()
 
     # 槽对象中的槽函数
     def exit(self):
-        self.prentryView.close()
-        self.prentryView2.close()
+        if self.prentryView is not None:
+            self.prentryView.close()
+        if self.prentryView2 is not None:
+            self.prentryView2.close()
         self.client.da_get_ClassContentsResSig.disconnect()
         self.client.da_del_ClassResSig.disconnect()
         self.client.da_get_ClassStudentResSig.disconnect()
