@@ -29,6 +29,9 @@ class DiagListView(QWidget):
 
     def init_table(self, diags_viewInfo,curUser,userNamesDict,paitentNamesDict,on_clicked_manual_query,on_clicked_diag_query,refuse_state,on_clicked_diag_refused=None):
         try:
+            self.ui.tableWidget.clearContents()  # 清空表格内容，保留表头和行数列数
+            self.ui.tableWidget.setRowCount(0)
+
             self.ui.tableWidget.setColumnCount(7)
             self.ui.tableWidget.setHorizontalHeaderLabels(
                 ["检查单号", '病人', '测量日期', '医生', '状态', '诊断时间', '操作'])
