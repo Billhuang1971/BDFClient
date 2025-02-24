@@ -31,9 +31,13 @@ class Ui_Prentry(object):
         self.horizontalLayout.addItem(spacerItem)
         self.btnConfirm = QtWidgets.QPushButton(Prentry)
         self.btnConfirm.setObjectName("btnConfirm")
+        self.btnConfirm.setMinimumSize(100, 50)  # 设置最小尺寸
+        self.btnConfirm.setStyleSheet("QPushButton { font-size: 14px; }")
         self.horizontalLayout.addWidget(self.btnConfirm)
         self.btnReturn = QtWidgets.QPushButton(Prentry)
         self.btnReturn.setObjectName("btnReturn")
+        self.btnReturn.setMinimumSize(100, 50)  # 设置最小尺寸
+        self.btnReturn.setStyleSheet("QPushButton { font-size: 14px; }")
         self.horizontalLayout.addWidget(self.btnReturn)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)

@@ -243,7 +243,7 @@ class diagLearningController(QWidget):
         self.measure_date = diags_viewInfo[9]
         self.patient_name=patient_name
 
-        self.file_name ='{:>03}.edf'.format(str(diags_viewInfo[10]))
+        self.file_name ='{:>03}.bdf'.format(str(diags_viewInfo[10]))
         self.file_id = diags_viewInfo[10]
         self.page = ['file_name']
         try:
@@ -288,7 +288,7 @@ class diagLearningController(QWidget):
         if row < 0:
             return
         self.file_id = self.pre_info[row][1]
-        self.file_name = '{:>03}.edf'.format(self.file_id)
+        self.file_name = '{:>03}.bdf'.format(self.file_id)
         self.prentryView.ui.btnConfirm.setEnabled(True)
 
 

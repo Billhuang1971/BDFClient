@@ -561,7 +561,7 @@ class createLessonController(QWidget):
                 self.prentryView.ui.tableWidget.setRowCount(row_num)
                 for r in range(row_num):
                     for i in range(0, col_num):
-                        fn = '{:>03}.edf'.format(self.pre_info[r][1])
+                        fn = '{:>03}.bdf'.format(self.pre_info[r][1])
                         item = QTableWidgetItem(fn)
                         item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                         font = item.font()
@@ -604,7 +604,7 @@ class createLessonController(QWidget):
                 return
             # for i in self.select_file_row:
             self.file_id.append(self.pre_info[row][1])
-            file_name = '{:>03}.edf'.format(self.pre_info[row][1])
+            file_name = '{:>03}.bdf'.format(self.pre_info[row][1])
             self.file_name.append(file_name)
             reply = QMessageBox.information(self, '提示', '是否选择添加当前文件', QMessageBox.Yes | QMessageBox.No)
             if reply == 16384:
@@ -1319,7 +1319,7 @@ class createLessonController(QWidget):
                     item.setFont(font)
                     self.PrentryView_info.ui.tableWidget.setItem(r, i, item)
                     i += 1
-                    fn = '{:>03}.edf'.format(content_info[r][2])
+                    fn = '{:>03}.bdf'.format(content_info[r][2])
                     item = QTableWidgetItem(fn)
                     item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                     font = item.font()

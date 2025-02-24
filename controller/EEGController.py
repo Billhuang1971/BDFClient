@@ -47,7 +47,7 @@ class EEGController(QWidget):
         try:
             self.view.show()
             self.nSecWin, self.nDotSec = self.view.calcSen()
-            self.nWinBlock = 11
+            self.nWinBlock = 21
             self.view.setMoveLength(self.nSecWin)
 
             self.client.openEEGFileResSig.connect(self.openEEGFileRes)

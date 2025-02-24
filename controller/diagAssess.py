@@ -257,7 +257,7 @@ class diagAssessController(QWidget):
                 item.setFont(font)
                 self.prentryView2.ui.tableWidget.setItem(r, 1, item)
 
-                fn = '{:>03}.edf'.format(self.classContentsInfo[r][1])
+                fn = '{:>03}.bdf'.format(self.classContentsInfo[r][1])
                 item = QTableWidgetItem(fn)
                 item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 font = item.font()
