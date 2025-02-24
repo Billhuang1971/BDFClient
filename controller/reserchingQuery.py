@@ -254,7 +254,7 @@ class reserchingQueryController(QWidget):
 
         self.patient_name = patient_name
 
-        self.file_name = '{:>03}.edf'.format(str(diags_viewInfo[11]))
+        self.file_name = '{:>03}.bdf'.format(str(diags_viewInfo[11]))
         self.file_id = diags_viewInfo[11]
         self.page = ['file_name']
         try:

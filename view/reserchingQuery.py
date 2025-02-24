@@ -170,7 +170,7 @@ class diagListView(QWidget):
                 self.ui.tableWidget.item(row, i).setFont(iFont)
 
                 i = 5
-                self.ui.tableWidget.setItem(row, i, QTableWidgetItem('{:>03}.edf'.format(str(diags_viewInfo[row][11]))))
+                self.ui.tableWidget.setItem(row, i, QTableWidgetItem('{:>03}.bdf'.format(str(diags_viewInfo[row][11]))))
                 self.ui.tableWidget.item(row, i).setTextAlignment(Qt.AlignCenter)
                 self.ui.tableWidget.item(row, i).setFlags(Qt.ItemIsEditable)
                 self.ui.tableWidget.item(row, i).setFont(iFont)

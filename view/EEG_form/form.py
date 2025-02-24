@@ -281,7 +281,7 @@ class Ui_EEGView(object):
         self.waveLayout = QHBoxLayout()  # 创建一个水平布局
         #self.waveLayout.setSpacing(1)  # 设置控件之间的间距为 5
         self.hideWaveText = QLabel("波形")
-        self.hideWaveText.setMaximumWidth(35)
+        self.hideWaveText.setMaximumWidth(40)
         self.hideWaveText.setFont(font_word)
         self.waveLayout.addWidget(self.hideWaveText)
         #self.glSample.addWidget(self.hideWaveText, 1, 0, 1, 1)
@@ -322,7 +322,7 @@ class Ui_EEGView(object):
         self.hideStateText = QLabel("状态")
         self.hideStateText.setFont(font_word)
         # self.waveLayout.setSpacing(1)  # 设置控件之间的间距为 5
-        self.hideStateText.setMaximumWidth(35)
+        self.hideStateText.setMaximumWidth(40)
         self.stateLayout.addWidget(self.hideStateText)
         #self.glSample.addWidget(self.hideStateText, 1, 2, 1, 1)
         self.hideState = QtWidgets.QRadioButton(self.gbSample)
@@ -359,8 +359,8 @@ class Ui_EEGView(object):
 
         self.EventLayout = QHBoxLayout()  # 创建一个水平布局
         self.hideEventText = QLabel("事件")
-        self.hideEventText.setMaximumWidth(35)
-        self.hideWaveText.setFont(font_word)
+        self.hideEventText.setMaximumWidth(40)
+        self.hideEventText.setFont(font_word)
         self.EventLayout.addWidget(self.hideEventText)
 
         self.hideEvent = QtWidgets.QRadioButton(self.gbSample)
@@ -509,6 +509,13 @@ class Ui_EEGView(object):
         self.gblabelbtn1.setLayoutDirection(Qt.RightToLeft)
         self.gblabelbtn2.setLayoutDirection(Qt.RightToLeft)
         self.gblabelbtn3.setLayoutDirection(Qt.RightToLeft)
+        font = QtGui.QFont()
+        font.setPointSize(10)  # 设置字体大小
+        font.setFamily("Arial")  # 设置字体类型
+
+        self.gblabelbtn1.setFont(font)
+        self.gblabelbtn2.setFont(font)
+        self.gblabelbtn3.setFont(font)
 
         self.returnBtn = QtWidgets.QPushButton(self.groupBox2)
         self.returnBtn.setObjectName("returnBtn")

@@ -125,19 +125,19 @@ class Ui_Form(object):
         self.homePage.setObjectName("homePage")
         self.homePage.setFont(font)
 
-        self.homePage.setMaximumSize(QtCore.QSize(48, 26))
+        self.homePage.setMaximumSize(QtCore.QSize(56, 32))
         self.horizontalLayout_paging.addWidget(self.homePage)
 
         self.prePage = QtWidgets.QPushButton(Form)
         self.prePage.setObjectName("prePage")
         self.prePage.setFont(font)
-        self.prePage.setMaximumSize(QtCore.QSize(80, 26))
+        self.prePage.setMaximumSize(QtCore.QSize(90, 32))
         self.horizontalLayout_paging.addWidget(self.prePage)
 
         self.curPage = QLineEdit(Form)
         self.curPage.setObjectName("curPage")
         self.curPage.setFont(font)
-        self.curPage.setMaximumSize(QtCore.QSize(100, 26))
+        self.curPage.setMaximumSize(QtCore.QSize(100, 32))
         self.curPage.setReadOnly(True)
         self.curPage.setAlignment(Qt.AlignCenter)
         self.horizontalLayout_paging.addWidget(self.curPage)
@@ -145,13 +145,13 @@ class Ui_Form(object):
         self.nextPage = QtWidgets.QPushButton(Form)
         self.nextPage.setObjectName("nextPage")
         self.nextPage.setFont(font)
-        self.nextPage.setMaximumSize(QtCore.QSize(80, 26))
+        self.nextPage.setMaximumSize(QtCore.QSize(90, 32))
         self.horizontalLayout_paging.addWidget(self.nextPage)
 
         self.finalPage = QtWidgets.QPushButton(Form)
         self.finalPage.setObjectName("finalPage")
         self.finalPage.setFont(font)
-        self.finalPage.setMaximumSize(QtCore.QSize(48, 26))
+        self.finalPage.setMaximumSize(QtCore.QSize(56, 32))
         self.horizontalLayout_paging.addWidget(self.finalPage)
 
         self.totalPage = QLabel(Form)
@@ -169,7 +169,7 @@ class Ui_Form(object):
         self.skipPage = QLineEdit(Form)
         self.skipPage.setObjectName("skipPage")
         self.skipPage.setFont(font)
-        self.skipPage.setMaximumSize(QtCore.QSize(48, 26))
+        self.skipPage.setMaximumSize(QtCore.QSize(48, 32))
         self.skipPage.setAlignment(Qt.AlignCenter)
         self.horizontalLayout_paging.addWidget(self.skipPage)
 
@@ -182,7 +182,7 @@ class Ui_Form(object):
         self.confirmSkip = QtWidgets.QPushButton(Form)
         self.confirmSkip.setObjectName("confirmSkip")
         self.confirmSkip.setFont(font)
-        self.confirmSkip.setMaximumSize(QtCore.QSize(48, 26))
+        self.confirmSkip.setMaximumSize(QtCore.QSize(56, 32))
         self.horizontalLayout_paging.addWidget(self.confirmSkip)
 
         self.verticalLayout.addLayout(self.horizontalLayout_paging)

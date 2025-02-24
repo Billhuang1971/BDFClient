@@ -23,8 +23,8 @@ class clientApp(QWidget):
 if __name__ == '__main__':
     # # 设置高分辨率屏幕自适应
     # QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)  # 启用高 DPI 缩放
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+    # QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)  # 启用高 DPI 缩放
+    # QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
     app = QApplication(sys.argv)
     a = clientApp()
     sys.exit(app.exec_())
