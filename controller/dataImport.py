@@ -369,6 +369,12 @@ class dataImportController(QWidget):
     # 删除指定的wait_file,会连带着删除Pending中对应的记录
     def removeWaitFile(self,check_number):
         print("传入的check_number：", check_number)
+
+        # 判断check_number是否在wait_file中
+        if not any(task["check_number"] == check_number for task in self.wait_file):
+            print(f"当前检查单号不存在待上传任务，删除完成")
+            return  # 如果没有找到任务，说明当前检查单号还未创建上传任务，直接返回，不进行删除操作
+
         original_length = len(self.wait_file)
         print("未删除前的wait_file:", self.wait_file)
         self.wait_file = [task for task in self.wait_file if task["check_number"] != check_number]
