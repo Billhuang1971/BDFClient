@@ -8,6 +8,7 @@ import threading
 from datetime import datetime
 
 import mne
+import numpy as np
 from PyQt5.Qt import *
 from PyQt5.QtCore import pyqtSlot, Qt, pyqtSignal, QRect, QDateTime, QTimer
 from PyQt5.QtGui import QBrush, QFont
@@ -368,6 +369,12 @@ class dataImportController(QWidget):
     # 删除指定的wait_file,会连带着删除Pending中对应的记录
     def removeWaitFile(self,check_number):
         print("传入的check_number：", check_number)
+
+        # 判断check_number是否在wait_file中
+        if not any(task["check_number"] == check_number for task in self.wait_file):
+            print(f"当前检查单号不存在待上传任务，删除完成")
+            return  # 如果没有找到任务，说明当前检查单号还未创建上传任务，直接返回，不进行删除操作
+
         original_length = len(self.wait_file)
         print("未删除前的wait_file:", self.wait_file)
         self.wait_file = [task for task in self.wait_file if task["check_number"] != check_number]
@@ -395,6 +402,7 @@ class dataImportController(QWidget):
         except Exception as e:
             print(f"从pending.json中删除task有误: {e}")
 
+    # fixme:多个检查单号，无法点击第二个”完成“ 暂未复现
     def on_btnComplete_clicked(self,row):
         if self.row == -1:
             QMessageBox.information(self, ' ', '请先在病人诊断信息中选择一行')
@@ -442,7 +450,6 @@ class dataImportController(QWidget):
         except Exception as e:
             print('updateCheckInfoRes', e)
 
-
     def on_btnDelFile_clicked(self,row):
         file_to_delete = self.wait_file[row]
         print(f"删除文件: {file_to_delete['fileName']}")
@@ -450,6 +457,33 @@ class dataImportController(QWidget):
         # 从 wait_file 中移除
         del self.wait_file[row]
         print(f"当前wait_file:", self.wait_file)
+
+        # 从 pending.json 中删除相应的条目
+        try:
+            # 读取 pending.json 文件
+            with open(self.queue_file_path, 'r', encoding='utf-8') as file:
+                pending_data = json.load(file)
+
+            # 删除对应 check_number 和 fileName 的条目
+            new_task_list = [
+                task for task in pending_data["task"]
+                if not (task["check_number"] == file_to_delete["check_number"] and task["fileName"] == file_to_delete[
+                    "fileName"])
+            ]
+
+            # 更新 pending.json 中的数据
+            pending_data["task"] = new_task_list
+
+            # 写回更新后的数据到 pending.json
+            with open(self.queue_file_path, 'w', encoding='utf-8') as newfile:
+                json.dump(pending_data, newfile, ensure_ascii=False, indent=4)
+
+            print(f"从 pending.json 中删除了文件: {file_to_delete['fileName']}")
+
+        except FileNotFoundError:
+            print(f"文件 {self.queue_file_path} 未找到。")
+        except json.JSONDecodeError:
+            print(f"读取 {self.queue_file_path} 时发生错误。")
 
         # 更新表格
         # 最好是把这个更新表格的操作给抽出来，另外，在wait_file中删除可以先不动那个内存等待队列文件，到时点击启动上传有更新操作
@@ -2164,50 +2198,6 @@ class dataImportController(QWidget):
         except Exception as e:
             print('delPatientCheckInfo', e)
 
-
-    def repair_transducer_binary(self):
-        try:
-            with open(self.from_filepath, 'rb') as file:
-                data = bytearray(file.read())
-
-            # 获取通道数
-            num_channels = int(data[252:256].decode('ascii').strip())
-            print(f"总通道数: {num_channels}")
-
-            step_size = 80
-            transducer_offset_within_channel = 16  # 在每个通道头内的相对偏移量
-            header_size = 256 * 3
-
-            # 修复每个通道的 transducer 字段
-            for i in range(num_channels - 1):
-                start = header_size + i * step_size + transducer_offset_within_channel
-                end = start + 80  # `transducer` 字段的长度为 80 字节
-                transducer_field = data[start:end]
-                print(f"通道 {i + 1} 的原始 transducer 字段内容: {data[start:end].decode('ascii', errors='ignore')}")
-
-                # 检查并替换非 ASCII 字符
-                if any(b != 'Unknown' for b in transducer_field):
-                    print(f"修复通道 {i + 1} 的 transducer 字段")
-                    replacement = 'Unknown'.ljust(80).encode('ascii')
-                    data[start:end] = replacement
-                else:
-                    print(f"通道 {i + 1} 的 transducer 字段无须修复")
-
-            # 生成修复后的 EDF 文件名
-            directory, filename = os.path.split(self.from_filepath)
-            filename_without_extension = os.path.splitext(filename)[0]
-            new_filename = f"{filename_without_extension}_repaired.edf"
-            self.repair_filepath = os.path.join(directory, new_filename)
-
-            # 保存修复后的文件
-            with open(self.repair_filepath, 'wb') as file:
-                file.write(data)
-
-            print(f"Repaired EDF file saved at: {self.repair_filepath}")
-        except Exception as e:
-            print(f"Error during binary repair: {e}")
-            return None
-
     def convert_edf_to_bdf(self):
         try:
             # 生成转换后的 BDF 文件名
@@ -2218,95 +2208,93 @@ class dataImportController(QWidget):
 
             # 使用MNE读取EDF文件并提取注释
             raw = mne.io.read_raw_edf(self.from_filepath, preload=True)
-            annotations = raw.annotations  # 提取注释（事件信息）
-            print(f"Annotations: {annotations}")  # 打印注释信息
+            data = raw.get_data()  # 物理数据 (单位: V)
+            ch_names = raw.ch_names
+            sfreq = int(raw.info["sfreq"])  # 采样率
+            n_channels, n_samples = data.shape
 
-            # 通道筛选与重命名
-            # 选择所有以EEG开头的通道
-            include_channel = mne.pick_channels_regexp(raw.info['ch_names'], '^EEG')
-            # 获取筛选后的通道名称
-            channels = mne.pick_info(raw.info, include_channel)['ch_names']
+            # 根据通道物理范围调整单位
+            # 将所有数据按需调整为微伏（µV）或毫伏（mV）
+            scale_factors = []  # 存储每个通道的单位转换因子
+            for i in range(n_channels):
+                physical_min = np.min(data[i])  # 获取当前通道的最小值
+                physical_max = np.max(data[i])  # 获取当前通道的最大值
 
-            # 通道名映射，去除前缀（‘EEG F3-REF' -> 'F3-REF'）
-            dict_ch = {}
-            re_channels = []
-            for ch in channels:
-                temp = ch.split(' ')[-1]  # 去除前缀，只保留 'F3-REF' 等通道名
-                re_channels.append(temp)
-                dict_ch[ch] = temp
+                # 根据物理范围决定单位转换
+                if abs(physical_min) > 1 or abs(physical_max) > 1:  # 如果物理范围较大，使用 mV
+                    scale_factors.append(1e3)  # 转换为毫伏 (mV)
+                    data[i] /= 1e3  # 转换数据为毫伏
+                else:  # 否则，使用 µV
+                    scale_factors.append(1e6)  # 转换为微伏 (µV)
+                    data[i] *= 1e6  # 转换数据为微伏
 
-            # 重命名通道
-            raw.rename_channels(dict_ch)
-            raw.pick(picks=re_channels)  # 仅保留变换后的通道
+            # 修正物理范围，防止 EDF+ 限制 8 位字符
+            physical_min = np.min(data, axis=1)
+            physical_max = np.max(data, axis=1)
 
-            # 检查和修复 transducer 字段
-            self.repair_transducer_binary()
+            for i in range(n_channels):
+                min_str = "{:.6g}".format(physical_min[i])
+                max_str = "{:.6g}".format(physical_max[i])
+                physical_min[i] = float(min_str)
+                physical_max[i] = float(max_str)
 
-            # 使用pyedflib读取EDF文件
-            with pyedflib.EdfReader(self.repair_filepath) as edf_reader:
-                # 获取EDF文件的信号头信息
-                signal_headers = edf_reader.getSignalHeaders()
-                headers = edf_reader.getHeader()
+                if physical_min[i] == physical_max[i]:
+                    print(f"通道 {ch_names[i]} 物理范围相等，微调以避免错误 ...")
+                    physical_min[i] -= 1e-3
+                    physical_max[i] += 1e-3
 
-                # 过滤出以重新命名后的通道
-                index_channels = mne.pick_channels(raw.info['ch_names'], include=re_channels)
+            print("物理范围检查 (已调整格式)：")
+            for i in range(min(5, n_channels)):
+                print(f"通道 {ch_names[i]}: min={physical_min[i]}, max={physical_max[i]}")
 
-                # 仅处理EEG通道的信号头信息，用于BDF文件
-                filtered_signal_headers = []
-                for i in index_channels:
-                    filtered_signal_headers.append({
-                        'label': signal_headers[i]['label'],
-                        'digital_min': -8388608,  # BDF 24位数字最小值
-                        'digital_max': 8388607,  # BDF 24位数字最大值
-                        'physical_min': edf_reader.getPhysicalMinimum(i),  # 保留物理范围
-                        'physical_max': edf_reader.getPhysicalMaximum(i),  # 保留物理范围
-                        'prefilter': edf_reader.getPrefilter(i),  # 获取预处理信息
-                        'sample_frequency': edf_reader.getSampleFrequency(i)
-                    })
+            # 确保 `writePhysicalSamples()按帧写入
+            record_duration = 1  # 每个 BDF 记录的时长（秒）
+            n_records = n_samples // sfreq  # 计算 BDF 记录数
 
+            if n_records * sfreq != n_samples:
+                print(f"警告：数据长度 {n_samples} 不是 {sfreq} 的整数倍，将填充 0 以对齐。")
+                pad_length = (n_records + 1) * sfreq - n_samples
+                data = np.pad(data, ((0, 0), (0, pad_length)), 'constant')
+                n_samples = data.shape[1]
 
-                # 创建BDF头文件
-                bdf_header = pyedflib.highlevel.make_header(
-                    patientname=headers['patientname'],
-                    startdate=headers['startdate']
-                )
+            # 重构数据形状，使其符合 writePhysicalSamples()
+            data = data.reshape(n_channels, n_records, sfreq)
 
-                # 写入BDF+文件
-                with pyedflib.EdfWriter(self.convert_filepath, file_type=pyedflib.FILETYPE_BDFPLUS,
-                                        n_channels=len(filtered_signal_headers)) as bdf_writer:
-                    # 设置信号头文件
-                    bdf_writer.setSignalHeaders(filtered_signal_headers)
-                    bdf_writer.setHeader(bdf_header)
+            # 4. **写入 BDF**
+            print(f"正在写入 BDF: {self.convert_filepath} ...")
 
-                    # 读取EEG通道的数据并将其组织成列表
-                    all_channel_data = []
-                    for i in index_channels:
-                        signal_data = edf_reader.readSignal(i)
-                        signal_data_microvolts = signal_data * (pow(10, 6))  # 乘以10^6 转换为微伏特
-                        all_channel_data.append(signal_data_microvolts)  # 将转换后的信号数据加入列表
+            channel_info = [{
+                "label": ch,
+                "dimension": "uV",
+                "sample_rate": sfreq,
+                "physical_min": physical_min[i],
+                "physical_max": physical_max[i],
+                "digital_min": -32768,
+                "digital_max": 32767,
+                "transducer": "",
+                "prefilter": "",
+            } for i, ch in enumerate(ch_names)]
 
-                    # 检查数据是否与通道数匹配
-                    if len(all_channel_data) != len(filtered_signal_headers):
-                        raise pyedflib.WrongInputSize(
-                            f"Number of channels ({len(filtered_signal_headers)}) unequal to length of data ({len(all_channel_data)})")
+            with pyedflib.EdfWriter(self.convert_filepath, n_channels, file_type=pyedflib.FILETYPE_BDF) as f:
+                f.setSignalHeaders(channel_info)
 
-                    # 写入所有EEG通道的数据
-                    bdf_writer.writeSamples(all_channel_data)
+                # **修正：逐个通道写入数据**
+                for record_idx in range(n_records):
+                    for ch_idx in range(n_channels):
+                        f.writePhysicalSamples(data[ch_idx, record_idx, :])  # 只写入单个通道的 1D 数据
 
-                    # 将注释信息（事件信息）写入BDF文件，确保空描述也被写入
-                    for annotation in annotations:
-                        onset = annotation['onset']  # 注释的开始时间
-                        duration = annotation['duration']  # 注释的持续时间
-                        description = annotation['description']  # 注释的描述
+            print(f"成功将 EDF 转换为 BDF 文件: {self.convert_filepath}")
 
-                        # 如果description为空或全是空白字符，使用占位符
-                        if not description.strip():
-                            description = "empty"  # 使用占位符字符串
-
-                        # 写入注释
-                        bdf_writer.writeAnnotation(onset, duration, description)
-
-            print(f"EDF文件 {self.from_filepath} 已成功转换为BDF文件 {self.convert_filepath}")
+            # # 检查 BDF 结果
+            # raw_bdf = mne.io.read_raw_bdf(self.convert_filepath, preload=True)
+            # bdf_data = raw_bdf.get_data()
+            #
+            # print("BDF 文件 EEG Fp1-REF 通道的前10个数据点：")
+            # print(bdf_data[0, :10])
+            #
+            # # **检查文件时长**
+            # print(f"EDF 时长: {raw.times[-1]} 秒")
+            # print(f"BDF 时长: {raw_bdf.times[-1]} 秒")
 
         except Exception as e:
             print('Error during EDF to BDF conversion:', e)
