@@ -112,7 +112,7 @@ class modelTestController(QWidget):
                     scan_num = int(REPData[4])
                     total_scan_num = int(REPData[5])
                     print(scan_num, total_scan_num)
-                    self.progressBarView.updateProgressBar(100 * scan_num / total_scan_num)
+                    self.progressBarView.updateProgressBar(100 * scan_num // total_scan_num)
         except Exception as e:
             print('getResultRes', e)
 
