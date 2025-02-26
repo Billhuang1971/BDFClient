@@ -308,13 +308,21 @@ class EEGController(QWidget):
     # 隐藏波形
     def hideWave(self):
         self.view.changeShowWave()
+        if self.insertAllowed == False:
+            self.view.banAnnotate()
 
     # 隐藏状态
     def hideState(self):
         self.view.changeShowState()
+        if self.insertAllowed == False:
+            self.view.banAnnotate()
+
 
     def hideEvents(self):
         self.view.changeShowEvent()
+        if self.insertAllowed == False:
+            self.view.banAnnotate()
+
 
     # 点击秒线按钮
     def secondsLineClicked(self):
@@ -350,6 +358,9 @@ class EEGController(QWidget):
             if self.loading:
                 return
             if self.moving is False:
+                self.view.ui.hideWave.setDisabled(True)
+                self.view.ui.hideState.setDisabled(True)
+                self.view.ui.hideEvent.setDisabled(True)
                 self.view.ui.btnUp.setDisabled(True)
                 self.view.ui.btnDown.setDisabled(True)
                 self.view.ui.btnDowning.setDisabled(True)
@@ -360,6 +371,9 @@ class EEGController(QWidget):
                 self.timer.timeout.connect(self.doDowning)
                 self.timer.start()
             else:
+                self.view.ui.hideWave.setDisabled(False)
+                self.view.ui.hideState.setDisabled(False)
+                self.view.ui.hideEvent.setDisabled(False)
                 self.view.ui.btnUp.setDisabled(False)
                 self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnDowning.setDisabled(False)
@@ -409,6 +423,9 @@ class EEGController(QWidget):
             if self.loading:
                 return
             if self.moving is False:
+                self.view.ui.hideWave.setDisabled(True)
+                self.view.ui.hideState.setDisabled(True)
+                self.view.ui.hideEvent.setDisabled(True)
                 self.view.ui.btnUp.setDisabled(True)
                 self.view.ui.btnDown.setDisabled(True)
                 self.view.ui.btnUping.setDisabled(True)
@@ -419,6 +436,9 @@ class EEGController(QWidget):
                 self.timer.timeout.connect(self.doUping)
                 self.timer.start()
             else:
+                self.view.ui.hideWave.setDisabled(False)
+                self.view.ui.hideState.setDisabled(False)
+                self.view.ui.hideEvent.setDisabled(False)
                 self.view.ui.btnUp.setDisabled(False)
                 self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnUping.setDisabled(False)
