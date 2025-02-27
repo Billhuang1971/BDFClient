@@ -72,7 +72,7 @@ class Ui_ClassifierForm(object):
         font.setPointSize(14)
         self.btn_import.setFont(font)
         self.btn_import.setObjectName("btn_import")
-        self.btn_import.setMaximumSize(QtCore.QSize(100, 32))
+        self.btn_import.setMaximumSize(QtCore.QSize(130, 40))
         # self.btn_import.setFixedSize(100,35)
         self.horizontalLayout.addWidget(self.btn_import)
         #6
@@ -82,7 +82,7 @@ class Ui_ClassifierForm(object):
         font.setPointSize(14)
         self.btn_upload.setFont(font)
         self.btn_upload.setObjectName("btn_upload")
-        self.btn_upload.setMaximumSize(QtCore.QSize(100, 32))
+        self.btn_upload.setMaximumSize(QtCore.QSize(130, 40))
         self.horizontalLayout.addWidget(self.btn_upload)
         # self.btn_upload.setStyleSheet(style_sheet)
         #7
