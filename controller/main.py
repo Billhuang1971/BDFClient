@@ -212,7 +212,8 @@ class MainController(QWidget):
                 self.study_start_time = None
                 self.toEEGInfo = None
 
-            self.controller.exit()
+            if hasattr(self.controller, "exit"):
+                self.controller.exit()
             self.controller = None
             self.previous_controller = None
             self.switch_page("LoginController")

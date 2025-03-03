@@ -138,7 +138,11 @@ class TableWidget(QWidget):
             self.table.setHorizontalHeaderLabels(self.col_label)
             # self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)  # 自适应宽度
             self.editCheck = []
-            # 设置表格高度
+            # **强制设置列宽，保证列宽一致**
+            column_widths = [100, 150, 150, 200, 400, 200]  # 根据需要调整
+            for col in range(self.col_num):
+                self.table.setColumnWidth(col, column_widths[col % len(column_widths)])
+                # 设置表格高度
             for i in range(self.row):
                 self.table.setRowHeight(i, 55)
             self.table.horizontalHeader().setStretchLastSection(True)
