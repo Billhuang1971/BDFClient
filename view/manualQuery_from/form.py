@@ -27,8 +27,8 @@ class Ui_Form(object):
 
         self.comboBox = QtWidgets.QComboBox(Form)
         font = QtGui.QFont()
-        font.setPointSize(14)
         font.setFamily("Arial")
+        font.setPixelSize(16)
         self.comboBox.setFont(font)
         self.comboBox.setObjectName("comboBox")
         self.comboBox.addItem("")
@@ -42,27 +42,21 @@ class Ui_Form(object):
         self.lineEdit = QtWidgets.QLineEdit(Form)
         self.lineEdit.setEnabled(True)
         self.lineEdit.setObjectName("lineEdit")
-        font = QtGui.QFont()
-        font.setFamily("Arial")
-        font.setPointSize(14)
+
         self.lineEdit.setFont(font)
         self.lineEdit.setMaximumSize(QtCore.QSize(100, 26))
         self.horizontalLayout.addWidget(self.lineEdit)
 
         self.label2 = QtWidgets.QLabel(Form)
         self.label2.setObjectName("label2")
-        font = QtGui.QFont()
-        font.setFamily("Arial")
-        font.setPointSize(14)
+
         self.label2.setFont(font)
         self.horizontalLayout.addWidget(self.label2)
 
         self.lineEditDate1 = QtWidgets.QLineEdit(Form)
         self.lineEditDate1.setEnabled(True)
         self.lineEditDate1.setObjectName("lineEditDate1")
-        font = QtGui.QFont()
-        font.setFamily("Arial")
-        font.setPointSize(14)
+
         self.lineEditDate1.setFont(font)
         self.lineEditDate1.setMaximumSize(QtCore.QSize(120, 26))
         self.horizontalLayout.addWidget(self.lineEditDate1)
@@ -76,26 +70,19 @@ class Ui_Form(object):
         self.date_lineEdit.setMaximumSize(QtCore.QSize(18, 26))
         self.date_lineEdit.dateChanged.connect(partial(self.dateChanged, 1))
 
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        font.setFamily("Arial")
+
         self.date_lineEdit.setFont(font)
         self.horizontalLayout.addWidget(self.date_lineEdit)
 
         self.label3 = QtWidgets.QLabel(Form)
         self.label3.setObjectName("label2")
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        font.setFamily("Arial")
         self.label3.setFont(font)
         self.horizontalLayout.addWidget(self.label3)
 
         self.lineEditDate2 = QtWidgets.QLineEdit(Form)
         self.lineEditDate2.setEnabled(True)
         self.lineEditDate2.setObjectName("lineEditDate1")
-        font = QtGui.QFont()
-        font.setFamily("Arial")
-        font.setPointSize(14)
+
         self.lineEditDate2.setFont(font)
         self.lineEditDate2.setMaximumSize(QtCore.QSize(120, 26))
         self.horizontalLayout.addWidget(self.lineEditDate2)
@@ -109,16 +96,11 @@ class Ui_Form(object):
         self.date_lineEdit2.setMaximumSize(QtCore.QSize(18, 26))
         self.date_lineEdit2.dateChanged.connect(partial(self.dateChanged, 2))
 
-        font = QtGui.QFont()
-        font.setFamily("Arial")
-        font.setPointSize(14)
+
         self.date_lineEdit2.setFont(font)
         self.horizontalLayout.addWidget(self.date_lineEdit2)
 
         self.pushButton = QtWidgets.QPushButton(Form)
-        font = QtGui.QFont()
-        font.setFamily("Arial")
-        font.setPointSize(14)
         self.pushButton.setFont(font)
         #self.pushButton.setStyleSheet("background-color: rgb(192, 192, 192);color: rgb(0, 0, 255);")
         self.pushButton.setObjectName("pushButton")
@@ -155,7 +137,7 @@ class Ui_Form(object):
 
         font = QtGui.QFont()
         font.setFamily("Arial")
-        font.setPointSize(14)
+        font.setPixelSize(16)
 
         self.horizontalLayout_paging = QtWidgets.QHBoxLayout(Form)
         self.horizontalLayout_paging.setObjectName("horizontalLayout_paging")
@@ -166,7 +148,6 @@ class Ui_Form(object):
         self.homePage = QtWidgets.QPushButton(Form)
         self.homePage.setObjectName("homePage")
         self.homePage.setFont(font)
-
         self.homePage.setMaximumSize(QtCore.QSize(60, 45))
         self.horizontalLayout_paging.addWidget(self.homePage)
 
@@ -205,7 +186,7 @@ class Ui_Form(object):
         self.skipLable_0 = QLabel(Form)
         self.skipLable_0.setObjectName("totalPage")
         self.skipLable_0.setFont(font)
-        self.skipLable_0.setMaximumSize(QtCore.QSize(100, 26))
+        self.skipLable_0.setMaximumSize(QtCore.QSize(70, 26))
         self.horizontalLayout_paging.addWidget(self.skipLable_0)
 
         self.skipPage = QLineEdit(Form)

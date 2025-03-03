@@ -34,37 +34,38 @@ class taskSettingsView(QWidget):
     def init_view(self):
         font = QFont()
         font.setFamily("Arial Black")
-        font.setPointSize(14)
+        font.setPixelSize(16)
         font.setBold(True)
         font.setWeight(75)
         self.font1 = QFont()
-        self.font1.setPointSize(12)
+        self.font1.setPixelSize(18)
+
 
         self.filter_btn = QPushButton('搜索')
-        # self.filter_btn.setFont(QFont(font))
-        self.filter_btn.setFont(QFont('', 16))
+        self.filter_btn.setFont(QFont(self.font1))
+        # self.filter_btn.setFont(QFont('', 16))
 
         self.btnReSelect = QPushButton('重置')
-        # self.filter_btn.setFont(QFont(font))
-        self.btnReSelect.setFont(QFont('', 16))
+        self.btnReSelect.setFont(QFont(self.font1))
+        # self.btnReSelect.setFont(QFont('', 16))
         # self.filter_btn.setStyleSheet("background-color: rgb(255, 0, 0);\n"
         #                               "color: rgb(255, 255, 255);")
 
         self.add_btn = QPushButton('添加')
-        # self.add_btn.setFont(QFont(font))
-        self.add_btn.setFont(QFont('', 16))
+        self.add_btn.setFont(QFont(self.font1))
+        # self.add_btn.setFont(QFont('', 16))
         # self.add_btn.setStyleSheet("background-color: rgb(255, 0, 0);\n"
         #                               "color: rgb(255, 255, 255);")
 
         self.del_btn = QPushButton('删除')
-        # self.del_btn.setFont(QFont(font))
-        self.del_btn.setFont(QFont('', 16))
+        self.del_btn.setFont(QFont(self.font1))
+        # self.del_btn.setFont(QFont('', 16))
         # self.del_btn.setStyleSheet("background-color: rgb(255, 0, 0);\n"
         #                               "color: rgb(255, 255, 255);")
 
         self.update_btn = QPushButton('编辑')
-        # self.update_btn.setFont(QFont(font))
-        self.update_btn.setFont(QFont('', 16))
+        self.update_btn.setFont(QFont(self.font1))
+        # self.update_btn.setFont(QFont('', 16))
         # self.update_btn.setStyleSheet("background-color: rgb(255, 0, 0);\n"
         #                               "color: rgb(255, 255, 255);")
 
@@ -89,7 +90,7 @@ class taskSettingsView(QWidget):
         self.comboCond = QtWidgets.QComboBox()
         self.comboCond.setFixedWidth(int(4 * 16 * 1.67))
         font = QtGui.QFont()
-        font.setPointSize(16)
+        font.setPixelSize(18)
         self.comboCond.setFont(font)
         self.comboCond.setObjectName("comboCond")
         self.comboCond.addItems(['主题名', '创建用户', '主题状态'])
@@ -97,7 +98,7 @@ class taskSettingsView(QWidget):
         self.lineValue = QtWidgets.QLineEdit()
         self.lineValue.setFixedWidth(int(6 * 16 * 1.67))
         font = QtGui.QFont()
-        font.setPointSize(16)
+        font.setPixelSize(18)
         self.lineValue.setFont(font)
         self.lineValue.setObjectName("lineValue")
         self.comBoxLayout.addWidget(self.lineValue)
@@ -182,6 +183,8 @@ class TableWidget(QWidget):
 
         self.table = QTableWidget(self.tableRow, self.tableCol)
         self.table.setHorizontalHeaderLabels(self.col_label)
+        font = QtGui.QFont()
+        font.setPixelSize(18)
         # print(self.col_label)
         for row in range(0, self.tableRow):
             for col in range(0, self.tableCol-1):
@@ -190,7 +193,7 @@ class TableWidget(QWidget):
                 else:
                     self.text_item = QTableWidgetItem(self.sampleList[row][col+3])
                 self.text_item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.text_item.setFont(QFont('', 12))
+                self.text_item.setFont(font)
                 self.table.setItem(row, col, self.text_item)
             # 设置最后一列信息
             layout = QHBoxLayout()
@@ -199,7 +202,7 @@ class TableWidget(QWidget):
             lookthemeBtn = QPushButton('查看主题信息')
             lookthemeBtn.clicked.connect(partial(on_clicked_lookthemeBtn, row))
             lookthemeBtn.setStyleSheet('border: none;color:blue')
-            lookthemeBtn.setFont(QFont('', 12))
+            lookthemeBtn.setFont(font)
             lookthemeBtn.setCursor(Qt.PointingHandCursor)
             layout.addWidget(lookthemeBtn)
 
@@ -207,21 +210,21 @@ class TableWidget(QWidget):
             lookdetailBtn = QPushButton('查看任务信息')
             lookdetailBtn.clicked.connect(partial(on_clicked_lookdetailBtn, row))
             lookdetailBtn.setStyleSheet('border: none;color:blue')
-            lookdetailBtn.setFont(QFont('', 12))
+            lookdetailBtn.setFont(font)
             lookdetailBtn.setCursor(Qt.PointingHandCursor)
             layout.addWidget(lookdetailBtn)
 
             adddetailBtn = QPushButton('添加详细任务')
             adddetailBtn.clicked.connect(partial(on_clicked_adddetailBtn, row))
             adddetailBtn.setStyleSheet('border: none;color:blue')
-            adddetailBtn.setFont(QFont('', 12))
+            adddetailBtn.setFont(font)
             adddetailBtn.setCursor(Qt.PointingHandCursor)
             layout.addWidget(adddetailBtn)
 
             startThemeBtn = QPushButton('启动任务')
             startThemeBtn.clicked.connect(partial(on_clicked_startTheme, row))
             startThemeBtn.setStyleSheet('border: none;color:blue')
-            startThemeBtn.setFont(QFont('', 12))
+            startThemeBtn.setFont(font)
             startThemeBtn.setCursor(Qt.PointingHandCursor)
             layout.addWidget(startThemeBtn)
 
@@ -232,23 +235,23 @@ class TableWidget(QWidget):
                 # 当前用户不是创建该标注任务的人员
                 adddetailBtn.setDisabled(True)
                 adddetailBtn.setStyleSheet('border: none; color:grey')
-                adddetailBtn.setFont(QFont('', 12))
+                adddetailBtn.setFont(font)
                 # 启动任务状态按钮变灰
                 startThemeBtn.setDisabled(True)
                 startThemeBtn.setStyleSheet('border: none; color:grey')
-                startThemeBtn.setFont(QFont('', 12))
+                startThemeBtn.setFont(font)
             # 如果当前标注主题已经启动，就直接变为灰色
             if self.sampleList[row][6] != 'creating':
                 # 启动任务过后添加详细任务按钮也变灰
                 adddetailBtn.setDisabled(True)
                 adddetailBtn.setStyleSheet('border: none; color:grey')
-                adddetailBtn.setFont(QFont('', 12))
+                adddetailBtn.setFont(font)
 
 
                 # 启动任务状态按钮变灰
                 startThemeBtn.setDisabled(True)
                 startThemeBtn.setStyleSheet('border: none; color:grey')
-                startThemeBtn.setFont(QFont('', 12))
+                startThemeBtn.setFont(font)
 
             layout.setStretch(0, 1)
             layout.setStretch(1, 1)
@@ -319,6 +322,8 @@ class TableWidget(QWidget):
     def setPageController(self, page):
         """自定义页码控制器"""
         self.control_layout = QHBoxLayout()
+        font = QtGui.QFont()
+        font.setPixelSize(16)
         homePage = QPushButton("首页")
         prePage = QPushButton("<上一页")
         self.curPage = QLabel("{}".format(self.current_page))
@@ -333,6 +338,15 @@ class TableWidget(QWidget):
         self.skipPage.setText('1')
         skipLabel_1 = QLabel("页")
         confirmSkip = QPushButton("确定")
+        homePage.setFont(font)
+        prePage.setFont(font)
+        self.curPage.setFont(font)
+        nextPage.setFont(font)
+        finalPage.setFont(font)
+        self.totalPage.setFont(font)
+        skipLable_0.setFont(font)
+        skipLabel_1.setFont(font)
+        confirmSkip.setFont(font)
         homePage.clicked.connect(self.__home_page)
         prePage.clicked.connect(self.__pre_page)
         nextPage.clicked.connect(self.__next_page)
