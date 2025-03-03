@@ -833,11 +833,33 @@ class dataImportController(QWidget):
         low_pass = userConfig_info[2]
         high_pass = userConfig_info[3]
 
-        # 1020标准头皮电极通道列表
-        standard_1020_channels = [
-            'Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'T3', 'C3', 'Cz', 'C4', 'T4', 'T5', 'P3', 'Pz', 'P4', 'P6',
-            'O1', 'O2'
-        ]
+        standard_128_channels = ['C29-REF', 'F1-REF', 'C15-REF', 'A4-REF', 'T8-REF', 'C26-REF', 'T9-REF', 'C31-REF', 'F2-REF', 'D22-REF',
+         'EKG-REF', 'FC3-REF', 'F9-REF', 'T6-REF', 'D14-REF', 'A7-REF', 'A11-REF', 'B32-REF', 'TP10-REF', 'A16-REF',
+         'CMS-REF', 'D31-REF', 'B19-REF', 'A13-REF', 'FC1-REF', 'A24-REF', 'D20-REF', 'FT9-REF', 'C18-REF', 'PO10-REF',
+         'FC2-REF', 'A1-REF', 'CP4-REF', 'D21-REF', 'D4-REF', 'FCZ-REF', 'B29-REF', 'P3-REF', 'D8-REF', 'A27-REF',
+         'A23-REF', 'B28-REF', 'C30-REF', 'C23-REF', 'FACIAL-REF', 'F6-REF', 'B14-REF', 'CP5-REF', 'P8-REF', 'O1-REF',
+         'B1-REF', 'P6-REF', 'F10-REF', 'T5-REF', 'INION-REF', 'D17-REF', 'VEOG-REF', 'IZ-REF', 'PO7-REF',
+         'C22-REF', 'FPZ-REF', 'TP9-REF', 'AF7-REF', 'A17-REF', 'C28-REF', 'HEOG-REF', 'A29-REF', 'IBI-REF', 'D11-REF',
+         'D7-REF', 'FZ-REF', 'TP8-REF', 'C7-REF', 'B4-REF', 'B2-REF', 'C4-REF', 'B5-REF', 'D9-REF', 'D25-REF',
+         'D19-REF', 'D1-REF', 'B13-REF', 'CZ-REF', 'A21-REF', 'D13-REF', 'C25-REF', 'PO2-REF', 'T7-REF', 'B11-REF',
+         'B31-REF', 'POZ-REF', 'I2-REF', 'D28-REF', 'PO5-REF', 'C32-REF', 'C5-REF', 'D18-REF', 'B18-REF', 'A19-REF',
+         'F7-REF', 'AF5-REF', 'C11-REF', 'PO8-REF', 'FC4-REF', 'B9-REF', 'B23-REF', 'C12-REF', 'C16-REF', 'EOG-REF',
+         'FP1-REF', 'NZ-REF', 'B8-REF', 'D2-REF', 'D24-REF', 'D32-REF', 'F3-REF', 'M2-REF', 'F4-REF', 'HEART-REF',
+         'F8-REF', 'A20-REF', 'C1-REF', 'B10-REF', 'C8-REF', 'P7-REF', 'P5-REF', 'B25-REF', 'D23-REF', 'FC5-REF',
+         'F5-REF', 'A8-REF', 'AFZ-REF', 'EMG-REF', 'CPZ-REF', 'A10-REF', 'C19-REF', 'A3-REF', 'D29-REF', 'D12-REF',
+         'EYE-REF', 'C20-REF', 'A6-REF', 'PO1-REF', 'DRL-REF', 'D30-REF', 'D6-REF', 'P10-REF', 'MUSCLE-REF', 'CP3-REF',
+         'O2-REF', 'AFZ-REF', 'PZ-REF', 'A5-REF', 'A14-REF', 'B16-REF', 'OZ-REF', 'B17-REF', 'B20-REF', 'B27-REF',
+         'JAW-REF', 'A12-REF', 'P1-REF', 'I1-REF', 'A15-REF', 'B30-REF', 'B21-REF', 'A25-REF', 'B7-REF', 'AF8-REF',
+         'AF4-REF', 'AF6-REF', 'D5-REF', 'FT7-REF', 'A9-REF', 'A28-REF', 'A31-REF', 'B24-REF', 'D26-REF', 'P9-REF',
+         'C10-REF', 'A26-REF', 'C24-REF', 'PO9-REF', 'C17-REF', 'ECG-REF', 'BURST-REF', 'C6-REF', 'B22-REF', 'C27-REF',
+         'B12-REF', 'C14-REF', 'D15-REF', 'CP1-REF', 'FP2-REF', 'C9-REF', 'TP7-REF', 'A32-REF', 'SUPPR-REF', 'FT10-REF',
+         'FT8-REF', 'AF1-REF', 'PO3-REF', 'CP2-REF', 'D3-REF', 'FC6-REF', 'B26-REF', 'AF3-REF', 'D10-REF', 'T3-REF',
+         'P2-REF', 'T4-REF', 'AF2-REF', 'D27-REF', 'B15-REF', 'C13-REF', 'CARDIO-REF', 'C2-REF', 'PO4-REF', 'B3-REF',
+         'D16-REF', 'CP6-REF', 'M1-REF', 'A22-REF', 'C3-REF', 'T10-REF', 'A30-REF', 'P4-REF', 'A18-REF',
+         'A2-REF', 'PO6-REF', 'C21-REF', 'B6-REF', 'LDELT1-REF', 'LDELT2-REF', 'RDELT1-REF', 'RDELT2-REF','L_DELT1-REF', 'L_DELT2-REF', 'R_DELT1-REF', 'R_DELT2-REF',
+         'T1-REF', 'U1-REF', 'U2-REF', 'EMG3-REF', 'X7-REF', 'X5-REF', 'EMG2-REF', 'EMG1-REF','EMG4-REF', 'X6-REF'
+         ]
+        # 标准头皮电极通道列表
 
         is_ieeg = True  # 默认为颅内脑电
 
@@ -859,10 +881,20 @@ class dataImportController(QWidget):
 
                 # 判断是否为头皮脑电
                 channels = raw.info['ch_names']
-                for ch in channels:
-                    if any(ch.upper().startswith(eeg_ch.upper()) for eeg_ch in standard_1020_channels):
-                        is_ieeg = False
-                        break
+                # 检查是否有包含 'EEG' 前缀的通道
+                if any('EEG' in ch for ch in channels):
+                    # 筛选掉包含 'EEG' 前缀的通道
+                    non_eeg_channels = [ch for ch in channels if ch.startswith('EEG')]
+                    judge_channels = self.standardize_channels(non_eeg_channels)  # 调用标准化函数
+                # 不存在包含‘EEG’前缀的通道时不对通道做筛选处理
+                else:
+                    judge_channels = self.standardize_channels(channels)  # 调用标准化函数
+                # 检查 channels 中的每个通道是否都在 standard_128_channels 中
+                if set(judge_channels).issubset(set(standard_128_channels)):
+                    is_ieeg = False
+                else:
+                    is_ieeg = True
+                print('当前is_ieeg的值是：',is_ieeg)
 
                 # 从列表里把最大值和最小值拎出来
                 Physical_Min = min(physical_mins)
@@ -2156,6 +2188,8 @@ class dataImportController(QWidget):
                     account = self.client.tUser[1]
                     REQmsg = [account, check_id, self.row]
                     self.row = -1
+                    # fixme:如果当前有上传到一半的任务进行删除，upload/EEG中有文件残留
+                    # 这个残留如果要删除的话需要做判断，如果check_id相吻合，需要删除
                     self.client.delPatientCheckInfo(REQmsg)
                 else:
                     return
