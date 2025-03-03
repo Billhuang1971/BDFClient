@@ -356,6 +356,20 @@ class dataImportController(QWidget):
                     self.removeWaitFile(check_number)
 
                     self.row = -1
+
+                    # 如果当前有上传到一半的任务进行检查单号的删除，upload/EEG中有文件残留
+                    # 这个残留如果要删除的话需要做判断，如果check_id相吻合，需要删除
+                    if not self.cAppUtil.isNull(self.dir_path):
+                        bdfFileNameList = self.findFile(self.dir_path, '.bdf')
+                        bdfFileName = bdfFileNameList[0]
+                        # 匹配 _ 之前的数字，并去掉前导零
+                        match = re.match(r"0*(\d+)_", bdfFileName)
+                        if match:
+                            check_id1 = int(match.group(1))
+                            if check_id1 == check_id:
+                                # 同时删除当前未上传完成的脑电文件
+                                self.cAppUtil.empty(self.dir_path, filename=bdfFileName)
+
                     # 删除病人检查信息
                     self.client.delPatientCheckInfo(REQmsg)
                 else:
@@ -596,7 +610,7 @@ class dataImportController(QWidget):
                 message='系统正在处理未完成的上传任务，完成后才能启动新的上传任务！此消息将在5秒内自动关闭',
                 close_time=5000
             )
-            # findFile返回不带后缀的文件名
+            # findFile返回不带后缀的文件名列表
             bdfFileNameList = self.findFile(self.dir_path,'.bdf')
             bdfFileName = bdfFileNameList[0]
             self.filename = bdfFileName
@@ -1205,10 +1219,11 @@ class dataImportController(QWidget):
                 elif state == 'recover':
                     # self.check_id = repFilemsg[1]
                     # self.file_id = repFilemsg[2]
-                    fileName = self.findFile(self.dir_path, 'txt')
+                    fileNameList = self.findFile(self.dir_path, 'txt')
+                    fileName = fileNameList[0]
                     # 存在已损坏的uploading.txt文件，删除后重新创建， 否则直接创建
                     if fileName:
-                        self.cAppUtil.empty(self.dir_path, fullname = fileName[0] + str('.txt'))
+                        self.cAppUtil.empty(self.dir_path, fullname = fileName + str('.txt'))
                     # 这个地方虽然是需要存入原始路径，但由于数据库中没有这个字段并且这是recover，其实不传也没关系
                     self.makeText(original_filepath="")
                     REQmsg = self.packMsg('continue')
@@ -1281,8 +1296,9 @@ class dataImportController(QWidget):
                     close_time=5000
                 )
                 # 检查脑电文件是否完整
-                # findFile返回不带后缀的文件名
-                bdfFileName = self.findFile(self.dir_path, '.bdf')
+                # findFile返回不带后缀的文件名列表
+                bdfFileNameList = self.findFile(self.dir_path, '.bdf')
+                bdfFileName = bdfFileNameList[0]
                 self.file_path = os.path.join(self.dir_path, bdfFileName + str('.bdf'))
                 ret = self.testEEGFile(self.file_path)
                 # bdf文件完整
@@ -2188,8 +2204,6 @@ class dataImportController(QWidget):
                     account = self.client.tUser[1]
                     REQmsg = [account, check_id, self.row]
                     self.row = -1
-                    # fixme:如果当前有上传到一半的任务进行删除，upload/EEG中有文件残留
-                    # 这个残留如果要删除的话需要做判断，如果check_id相吻合，需要删除
                     self.client.delPatientCheckInfo(REQmsg)
                 else:
                     return
@@ -2355,7 +2369,7 @@ class dataImportController(QWidget):
         for file in fileslist:
             if file.endswith(suffix):  # 判断文件名是否以指定的文件名开头
                 fileName.append(file.split('.')[0])
-        return fileName  # 返回不带后缀的文件名
+        return fileName  # 返回不带后缀的文件名列表
 
     # 服务器端发生异常
     def upload_failedCall(self):
