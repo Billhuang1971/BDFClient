@@ -308,13 +308,21 @@ class EEGController(QWidget):
     # 隐藏波形
     def hideWave(self):
         self.view.changeShowWave()
+        if self.insertAllowed == False:
+            self.view.banAnnotate()
 
     # 隐藏状态
     def hideState(self):
         self.view.changeShowState()
+        if self.insertAllowed == False:
+            self.view.banAnnotate()
+
 
     def hideEvents(self):
         self.view.changeShowEvent()
+        if self.insertAllowed == False:
+            self.view.banAnnotate()
+
 
     # 点击秒线按钮
     def secondsLineClicked(self):
@@ -350,9 +358,8 @@ class EEGController(QWidget):
             if self.loading:
                 return
             if self.moving is False:
-                self.view.ui.btnUp.setDisabled(True)
-                self.view.ui.btnDown.setDisabled(True)
                 self.view.ui.btnDowning.setDisabled(True)
+                self.banAllButtons()
                 self.view.ui.btnUping.setText("■")
                 self.view.stopPaintLabel()
                 if self.timer.receivers(self.timer.timeout) > 0:
@@ -360,9 +367,8 @@ class EEGController(QWidget):
                 self.timer.timeout.connect(self.doDowning)
                 self.timer.start()
             else:
-                self.view.ui.btnUp.setDisabled(False)
-                self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnDowning.setDisabled(False)
+                self.enableAllButtons()
                 self.view.ui.btnUping.setText(">>")
                 self.timer.stop()
                 self.view.startPaintLabel()
@@ -377,9 +383,8 @@ class EEGController(QWidget):
                 return
             cmd, begin = self.view.onBtnDownClicked()
             if cmd is False:
-                self.view.ui.btnUp.setDisabled(False)
-                self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnDowning.setDisabled(False)
+                self.enableAllButtons()
                 self.view.ui.btnUping.setText(">>")
                 self.moving = False
                 self.timer.stop()
@@ -409,9 +414,8 @@ class EEGController(QWidget):
             if self.loading:
                 return
             if self.moving is False:
-                self.view.ui.btnUp.setDisabled(True)
-                self.view.ui.btnDown.setDisabled(True)
                 self.view.ui.btnUping.setDisabled(True)
+                self.banAllButtons()
                 self.view.ui.btnDowning.setText("■")
                 self.view.stopPaintLabel()
                 if self.timer.receivers(self.timer.timeout) > 0:
@@ -419,9 +423,8 @@ class EEGController(QWidget):
                 self.timer.timeout.connect(self.doUping)
                 self.timer.start()
             else:
-                self.view.ui.btnUp.setDisabled(False)
-                self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnUping.setDisabled(False)
+                self.enableAllButtons()
                 self.view.ui.btnDowning.setText("<<")
                 self.timer.stop()
                 self.view.startPaintLabel()
@@ -436,9 +439,8 @@ class EEGController(QWidget):
                 return
             cmd, begin = self.view.onBtnUpClicked()
             if cmd is False:
-                self.view.ui.btnUp.setDisabled(False)
-                self.view.ui.btnDown.setDisabled(False)
                 self.view.ui.btnUping.setDisabled(False)
+                self.enableAllButtons()
                 self.view.ui.btnDowning.setText("<<")
                 self.moving = False
                 self.timer.stop()
@@ -454,6 +456,47 @@ class EEGController(QWidget):
                 self.view.refreshWin(data, labels)
         except Exception as e:
             print("doUping", e)
+
+
+    #自动播放时禁用全部按钮
+    def banAllButtons(self):
+        self.view.ui.btnUp.setDisabled(True)
+        self.view.ui.btnDown.setDisabled(True)
+        self.view.ui.hideWave.setDisabled(True)
+        self.view.ui.hideState.setDisabled(True)
+        self.view.ui.hideEvent.setDisabled(True)
+        self.view.ui.moveLength.setDisabled(True)
+        self.view.ui.secondsSpan.setDisabled(True)
+        self.view.ui.sensitivity.setDisabled(True)
+        self.view.ui.subtractAverage.setDisabled(True)
+        self.view.ui.secondsLine.setDisabled(True)
+        self.view.ui.scenarioSelectionBtn.setDisabled(True)
+        self.view.ui.channelSelectionBtn.setDisabled(True)
+        self.view.ui.sampleSelectionBtn.setDisabled(True)
+        if self.insertAllowed:
+            self.view.ui.gblabelbtn1.setDisabled(True)
+            self.view.ui.gblabelbtn2.setDisabled(True)
+            self.view.ui.gblabelbtn3.setDisabled(True)
+
+     #自动播放时解禁所有按钮
+    def enableAllButtons(self):
+        self.view.ui.btnUp.setDisabled(False)
+        self.view.ui.btnDown.setDisabled(False)
+        self.view.ui.hideWave.setDisabled(False)
+        self.view.ui.hideState.setDisabled(False)
+        self.view.ui.hideEvent.setDisabled(False)
+        self.view.ui.moveLength.setDisabled(False)
+        self.view.ui.secondsSpan.setDisabled(False)
+        self.view.ui.sensitivity.setDisabled(False)
+        self.view.ui.subtractAverage.setDisabled(False)
+        self.view.ui.secondsLine.setDisabled(False)
+        self.view.ui.scenarioSelectionBtn.setDisabled(False)
+        self.view.ui.channelSelectionBtn.setDisabled(False)
+        self.view.ui.sampleSelectionBtn.setDisabled(False)
+        if self.insertAllowed:
+            self.view.ui.gblabelbtn1.setDisabled(False)
+            self.view.ui.gblabelbtn2.setDisabled(False)
+            self.view.ui.gblabelbtn3.setDisabled(False)
 
     # 响应选中对象事件
     def handlePickEvent(self, event):

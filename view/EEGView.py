@@ -227,7 +227,7 @@ class EEGView(QWidget):
 
     # 设置移动长度
     def setMoveLength(self, moveLength):
-        self.moveLength = moveLength
+        self.moveLength = int(moveLength)
         self.ui.moveLength.setCurrentText(str(moveLength))
 
     # 自动播放时停止绘制样本
@@ -252,6 +252,7 @@ class EEGView(QWidget):
 
     # 后退一屏
     def onBtnDownClicked(self):
+        self.ui.moveLength.editTextChanged.connect(self.setMoveLength)
         self.begin += self.moveLength
         self.end += self.moveLength
         cmd = True
