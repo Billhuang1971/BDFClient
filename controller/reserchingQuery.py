@@ -143,7 +143,8 @@ class reserchingQueryController(QWidget):
                 self.themeDict.setdefault(p[0], p[1])
 
         self.curPageIndex = REPData[4]
-        self.curPageMax = REPData[5]
+        if REPData[5]!=0:
+            self.curPageMax = REPData[5]
 
         self.view.show()
         self.view.init_table(self.diags_viewInfo, self.userNamesDict, self.paitentNamesDict, self.themeDict,
@@ -186,7 +187,8 @@ class reserchingQueryController(QWidget):
                 self.themeDict.setdefault(p[0], p[1])
 
         self.curPageIndex = REPData[6]
-        self.curPageMax = REPData[7]
+        if REPData[7]!=0:
+            self.curPageMax = REPData[7]
 
         self.check_id = None
         self.file_id = None

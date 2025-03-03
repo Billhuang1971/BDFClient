@@ -190,7 +190,8 @@ class reserchingController(QWidget):
         self.userNamesDict = {}
         self.userNamesDict.setdefault(self.client.tUser[0], self.client.tUser[2])
         self.curPageIndex = REPData[4]
-        self.curPageMax = REPData[5]
+        if REPData[5]!=0:
+            self.curPageMax = REPData[5]
 
         self.view.show()
         self.view.init_table(self.diags_viewInfo, self.userNamesDict, self.paitentNamesDict,
@@ -228,8 +229,8 @@ class reserchingController(QWidget):
         self.userNamesDict.setdefault(self.client.tUser[0],self.client.tUser[2])
 
         self.curPageIndex = REPData[4]
-        self.curPageMax = REPData[5]
-
+        if REPData[5]!=0:
+            self.curPageMax = REPData[5]
         self.check_id = None
         self.file_id = None
         self.measure_date = None
