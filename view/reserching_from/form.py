@@ -24,7 +24,7 @@ class Ui_Form(object):
 
         font = QtGui.QFont()
         font.setFamily("Arial")
-        font.setPointSize(14)
+        font.setPixelSize(16)
         self.label = QtWidgets.QLabel(Form)
         self.label.setObjectName("label")
         self.label.setFont(font)
@@ -74,7 +74,7 @@ class Ui_Form(object):
         self.pushButton = QtWidgets.QPushButton(Form)
         font = QtGui.QFont()
         font.setFamily("Arial")
-        font.setPointSize(14)
+        font.setPixelSize(16)
         self.pushButton.setFont(font)
         #self.pushButton.setStyleSheet("background-color: rgb(192, 192, 192);color: rgb(0, 0, 255);")
         self.pushButton.setObjectName("pushButton")
@@ -113,7 +113,7 @@ class Ui_Form(object):
 
         font = QtGui.QFont()
         font.setFamily("Arial")
-        font.setPointSize(14)
+        font.setPixelSize(18)
 
         self.horizontalLayout_paging = QtWidgets.QHBoxLayout(Form)
         self.horizontalLayout_paging.setObjectName("horizontalLayout_paging")
@@ -163,7 +163,7 @@ class Ui_Form(object):
         self.skipLable_0 = QLabel(Form)
         self.skipLable_0.setObjectName("totalPage")
         self.skipLable_0.setFont(font)
-        self.skipLable_0.setMaximumSize(QtCore.QSize(100, 30))
+        self.skipLable_0.setMaximumSize(QtCore.QSize(70, 30))
         self.horizontalLayout_paging.addWidget(self.skipLable_0)
 
         self.skipPage = QLineEdit(Form)
