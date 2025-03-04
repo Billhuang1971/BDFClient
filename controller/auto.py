@@ -873,8 +873,8 @@ class autoController(QWidget):
                 return
             else:
                 include_channels_in_file = REPData[2]
-                for i in range(len(include_channels_in_file)):
-                    include_channels_in_file[i] = include_channels_in_file[i] + '-REF'
+                # for i in range(len(include_channels_in_file)):
+                #     include_channels_in_file[i] = include_channels_in_file[i] + '-REF'
                 file_name = REPData[3]
                 selected_file_info = REPData[5]
                 self.view.set_selected_filename(file_name)
