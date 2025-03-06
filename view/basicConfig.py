@@ -92,6 +92,9 @@ class BasicConfigView(QWidget):
         try:
             tag = self.editCheck[editRow]
             if not tag:
+                if any(self.editCheck):
+                    QMessageBox.warning(self, "提示", "请先完成当前编辑！", QMessageBox.Yes)
+                    return
                 self.editCheck[editRow] = True
                 for n in range(1, 6):
                     self.ui.tableWidget.item(editRow, n).setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)

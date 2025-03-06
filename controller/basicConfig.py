@@ -151,6 +151,9 @@ class basicConfigController(QWidget):
 
     def delBasicConfig(self, i):
         try:
+            if any(self.view.editCheck):
+                QMessageBox.warning(self, "提示", "请先完成当前编辑！", QMessageBox.Yes)
+                return
             if len(self.configInfo) == 1:
                 QMessageBox.information(self, "提示", "至少保留一个基本配置信息", QMessageBox.Yes)
                 return
