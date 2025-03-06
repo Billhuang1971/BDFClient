@@ -7,6 +7,7 @@ from PyQt5 import QtWidgets, QtCore
 # from userManager_form.pwd_update_form.form import pwdUpdateView
 from view.userManager_form.form import Ui_Form
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QFont
 
 class UserManagerView(QWidget):
 
@@ -131,11 +132,16 @@ class TableWidget(QWidget):
             }
         """
         try:
+            font = QFont()
+            font.setFamily("Arial")
+            font.setPixelSize(16)
             self.row = len(user_info)
             self.table.clear()
             self.table.setRowCount(self.row)
             self.table.setColumnCount(self.col_num)
             self.table.setHorizontalHeaderLabels(self.col_label)
+            self.table.horizontalHeader().setFont(font)
+            self.table.verticalHeader().setFont(font)
             # self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)  # 自适应宽度
             self.editCheck = []
             # **强制设置列宽，保证列宽一致**
@@ -153,7 +159,7 @@ class TableWidget(QWidget):
                     self.table.item(row, i).setTextAlignment(Qt.AlignCenter)
                     self.table.item(row, i).setFlags(Qt.ItemIsEditable)
                     font = self.table.item(row, i).font()
-                    font.setPointSize(14)
+                    font.setPixelSize(16)
                 # 为每一行的尾部添加操作按钮
                 # 先新建一个widget用来存储layout,不然存不进表中
                 # 为用户身份列添加复选框
@@ -260,6 +266,9 @@ class TableWidget(QWidget):
 
     def setPageController(self, page):
         """自定义页码控制器"""
+        font = QFont()
+        font.setFamily("Arial")
+        font.setPixelSize(16)
         control_layout = QHBoxLayout()
         homePage = QPushButton("首页")
         prePage = QPushButton("<上一页")
@@ -276,6 +285,15 @@ class TableWidget(QWidget):
         nextPage.clicked.connect(self.__next_page)
         finalPage.clicked.connect(self.__final_page)
         confirmSkip.clicked.connect(self.__confirm_skip)
+        homePage.setFont(font)
+        prePage.setFont(font)
+        self.curPage.setFont(font)
+        nextPage.setFont(font)
+        finalPage.setFont(font)
+        self.totalPage.setFont(font)
+        skipLable_0.setFont(font)
+        skipLabel_1.setFont(font)
+        confirmSkip.setFont(font)
         control_layout.addStretch(1)
         control_layout.addWidget(homePage)
         control_layout.addWidget(prePage)

@@ -34,7 +34,7 @@ class Ui_Form(object):
             self.label_2 = QLabel('数据来源:')
 
             font = QFont()
-            font.setPointSize(14)
+            font.setPixelSize(18)
             self.label_1.setFont(font)
             self.label_2.setFont(font)
 
@@ -43,7 +43,7 @@ class Ui_Form(object):
             self.comboBox_2.addItems(['诊断标注', '科研标注'])
             self.comboBox_2.setCurrentIndex(-1)
             font1 = QFont()
-            font1.setPointSize(12)
+            font1.setPixelSize(18)
             self.comboBox_2.setFont(font1)
             self.comboBox_2.setFixedHeight(25)
             self.spaceItem_1 = QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -52,7 +52,7 @@ class Ui_Form(object):
             self.spaceItem_4 = QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
 
             font.setFamily("Arial Black")
-            font.setPointSize(14)
+            font.setPixelSize(18)
             # font.setBold(True)
             # font.setWeight(75)
             self.detail_btn = QPushButton('明细')

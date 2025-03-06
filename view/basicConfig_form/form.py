@@ -23,7 +23,7 @@ class Ui_Form(object):
         self.pushButton.setMaximumSize(QtCore.QSize(120, 16777215))
         font = QtGui.QFont()
         font.setFamily("Arial Black")
-        font.setPointSize(14)
+        font.setPixelSize(18)
         # font.setBold(True)
         # font.setWeight(75)
         self.pushButton.setFont(font)

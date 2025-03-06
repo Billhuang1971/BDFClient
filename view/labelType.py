@@ -3,7 +3,7 @@ from view.labelType_form.form import Ui_LabelTypeForm
 from PyQt5.QtWidgets import *
 from PyQt5.Qt import *
 from PyQt5.QtCore import pyqtSlot, Qt, pyqtSignal
-from PyQt5.QtGui import QBrush
+from PyQt5.QtGui import QBrush,QFont
 import sys
 
 class LabelTypeView(QWidget):
@@ -18,6 +18,8 @@ class LabelTypeView(QWidget):
         self.category = ['正常波形', '异常波形', '伪迹波形', '正常状态', '异常状态', '伪迹状态']
 
     def initTable(self, data):
+        font = QFont()
+        font.setPixelSize(18)
         col_num = len(self.header)
         row_num = len(data)
         self.ui.tableWidget.setColumnCount(col_num)
@@ -25,7 +27,7 @@ class LabelTypeView(QWidget):
         for i in range(col_num):
             header_item = QTableWidgetItem(self.header[i])
             font = header_item.font()
-            font.setPointSize(16)
+            font.setPixelSize(20)
             header_item.setFont(font)
             header_item.setForeground(QBrush(Qt.black))
             header_item.setData(Qt.UserRole, self.field[i])
@@ -36,12 +38,14 @@ class LabelTypeView(QWidget):
                 self.item = QTableWidgetItem(str(data[r][c + 1]))
                 self.item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 font = self.item.font()
-                font.setPointSize(10)
+                font.setPixelSize(14)
                 self.item.setFont(font)
                 self.ui.tableWidget.setItem(r, c, self.item)
         self.initCombocond()
         self.ui.tableWidget.horizontalHeader().setHighlightSections(False)
         self.ui.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.ui.tableWidget.horizontalHeader().setFont(font)
+        self.ui.tableWidget.verticalHeader().setFont(font)
         # 增加和查询的时候列数会改变，所以需要保存原来的列数
         self.col = self.ui.tableWidget.columnCount()
 

@@ -23,6 +23,8 @@ class Ui_MainWindow(object):
                             font-size: 14px;
                         }
                         """
+        # font = QtGui.QFont()
+        # font.setPixelSize(18)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         # self.centralwidget.setStyleSheet("background-color: white")
@@ -32,13 +34,14 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1171, 23))
-        self.menubar.setStyleSheet("""  
-            QMenuBar {  
-                font-size: 12pt;  
+        self.menubar.setStyleSheet("""
+            QMenuBar {
+                font-size: 20px;
             }
-            QMenu { font-size: 11pt; }
+            QMenu { font-size: 19px; }
         """)
         self.menubar.setObjectName("menubar")
+        # self.menubar.setFont(font)
         self.menu_1 = QtWidgets.QMenu(self.menubar)
         self.menu_1.setObjectName("menu_1")
         self.menu_2 = QtWidgets.QMenu(self.menubar)
