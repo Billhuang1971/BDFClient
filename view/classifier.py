@@ -69,14 +69,14 @@ class ClassifierView(QWidget):
             self.table.setInputMethodHints(Qt.ImhHiddenText)
             # 设置表格高度
             for i in range(row_num):
-                self.table.setRowHeight(i, 45)
+                self.table.setRowHeight(i, 50)
             # 设置除最后一列之外的列的宽度
             for i in range(0, col_num-1):
-                self.table.setColumnWidth(i, 150)
+                self.table.setColumnWidth(i, 170)
             for i in range(col_num):
                 header_item = QTableWidgetItem(self.header[i])
                 font = header_item.font()
-                font.setPixelSize(16)
+                font.setPixelSize(18)
                 header_item.setFont(font)
                 header_item.setForeground(QBrush(Qt.black))
                 header_item.setData(Qt.UserRole, self.field[i])
@@ -91,7 +91,7 @@ class ClassifierView(QWidget):
                         self.item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                         self.item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
                         font = self.item.font()
-                        font.setPixelSize(12)
+                        font.setPixelSize(16)
                         self.item.setFont(font)
                         self.table.setItem(r, c, self.item)
                     elif c ==col_num-1:
@@ -273,7 +273,7 @@ class clsimportView(QWidget):
         self.ui.setupUi(self)
         self.saved_EEG_names = []
         self.ui.pushButton_label_select.setEnabled(False)
-        self.ui.checkbox1.stateChanged.connect(self.handle_checkbox_state_change)
+        self.ui.checkbox2.stateChanged.connect(self.handle_checkbox_state_change)
         self.algorithm=None
         self.set=None
     def handle_checkbox_state_change(self, state):
