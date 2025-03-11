@@ -359,10 +359,10 @@ class classifierController(QWidget):
 
     def onClicked_pushButton_save(self):#保存模型
         model_name = self.import_view.ui.lineEdit_model_name.text()
-        epoch_len = int(self.import_view.ui.lineEdit_epoch_length_name.text())
+        epoch_len = self.import_view.ui.lineEdit_epoch_length_name.text()
         configID = self.configID
         channel_info = self.import_view.ui.lineEdit_channel_info.text()
-        classifernum = int(self.import_view.ui.lineEdit_clsnum.text())
+        classifernum = self.import_view.ui.lineEdit_clsnum.text()
         selected_unit = self.import_view.ui.Unit_comboCond.currentText()
         if not model_name:
             QMessageBox.information(self.import_view, '提示', '请输入模型名称', QMessageBox.Yes)
@@ -407,7 +407,7 @@ class classifierController(QWidget):
             else:
                 model_state='wave'
             self.client.upload_scheme([model_name, self.algorithm[0],self.set[0],
-                                                      epoch_len,configID,content_label,selected_unit,classifernum,model_state])
+                                                      int(epoch_len),configID,content_label,selected_unit,int(classifernum),model_state])
         except Exception as result:
             QMessageBox.information(self.import_view, '提示', "失败原因: %s" % result, QMessageBox.Yes)
             return
