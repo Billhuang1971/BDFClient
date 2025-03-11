@@ -218,11 +218,6 @@ class montageController(QWidget):
             measure_channel = self.add_channels_view.ui.lineEdit.text()
             conference_channel = self.add_channels_view.ui.lineEdit_2.text()
             if measure_channel != '' and conference_channel != '':
-                index = self.qlist.index(self.current_montage_name)
-                newChannel = '{}-{}'.format(measure_channel, conference_channel)
-                if newChannel in self.montageData[index]['channels']:
-                    QMessageBox.information(self, '提示', '当前通道已添加', QMessageBox.Ok)
-                    return
                 # 编辑导联
                 if self.is_edit:
                     current_row = self.view.ui.tableView.currentIndex().row()
@@ -263,6 +258,16 @@ class montageController(QWidget):
                     self.view.initTable(self.montageData, self.current_montage_name)
             elif REPData[0] == '0':
                 QMessageBox.information(self, '提示', '操作失败,打开导联配置文件无效', QMessageBox.Ok)
+                self.view.initTable(self.montageData, self.current_montage_name)
+            elif REPData[0] == '2':
+                channel = REPData[2][1]
+                for i in self.montageData:
+                    name = REPData[2][0]
+                    if name == i['name']:
+                        i['channels'] = channel
+                        break
+                QMessageBox.information(self, '提示', '操作失败,添加重复导联', QMessageBox.Ok)
+                self.add_channels_view.close()
                 self.view.initTable(self.montageData, self.current_montage_name)
         except Exception as e:
             print('saveMontageChannelRes', e)
