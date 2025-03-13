@@ -204,6 +204,7 @@ class TableWidget(QWidget):
             lookthemeBtn.setStyleSheet('border: none;color:blue')
             lookthemeBtn.setFont(font)
             lookthemeBtn.setCursor(Qt.PointingHandCursor)
+            lookthemeBtn.setToolTip('查看主题信息')  # 添加鼠标悬停提示
             layout.addWidget(lookthemeBtn)
 
 
@@ -212,6 +213,7 @@ class TableWidget(QWidget):
             lookdetailBtn.setStyleSheet('border: none;color:blue')
             lookdetailBtn.setFont(font)
             lookdetailBtn.setCursor(Qt.PointingHandCursor)
+            lookdetailBtn.setToolTip('查看任务信息')  # 添加鼠标悬停提示
             layout.addWidget(lookdetailBtn)
 
             adddetailBtn = QPushButton('添加详细任务')
@@ -219,6 +221,7 @@ class TableWidget(QWidget):
             adddetailBtn.setStyleSheet('border: none;color:blue')
             adddetailBtn.setFont(font)
             adddetailBtn.setCursor(Qt.PointingHandCursor)
+            adddetailBtn.setToolTip('添加详细任务')  # 添加鼠标悬停提示
             layout.addWidget(adddetailBtn)
 
             startThemeBtn = QPushButton('启动任务')
@@ -226,6 +229,7 @@ class TableWidget(QWidget):
             startThemeBtn.setStyleSheet('border: none;color:blue')
             startThemeBtn.setFont(font)
             startThemeBtn.setCursor(Qt.PointingHandCursor)
+            startThemeBtn.setToolTip('启动任务')  # 添加鼠标悬停提示
             layout.addWidget(startThemeBtn)
 
 
