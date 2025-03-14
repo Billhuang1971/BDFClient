@@ -1159,6 +1159,9 @@ class createLessonController(QWidget):
             if REPData[0] == '0':
                 QMessageBox.information(self, '提示', '创建课堂失败, 请重新尝试', QMessageBox.Ok)
                 return
+            elif REPData[0] == '2':
+                QMessageBox.information(self, '提示', '课堂名称重复', QMessageBox.Ok)
+                return
             else:
                 self.lesson_info = []
                 self.check_id = None

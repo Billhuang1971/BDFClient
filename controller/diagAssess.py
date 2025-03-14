@@ -381,6 +381,10 @@ class diagAssessController(QWidget):
     def on_btnDelStudent_clicked(self):
        st=[]
        stuid=[]
+       item = self.prentryView.ui.tableWidget.item(0, 0)
+       if item and item.text() == "[学习评估[无学员]]":
+           QMessageBox.information(self, '提示', '当前无要删除的学员', QMessageBox.No)
+           return
        for i in range(0,len(self.checkBox)):
            if self.checkBox[i].isChecked():
                st.append(self.pre_info[i][5])
