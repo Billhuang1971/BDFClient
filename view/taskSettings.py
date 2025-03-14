@@ -273,12 +273,12 @@ class TableWidget(QWidget):
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         # 某一列按照内容自适应宽度
-        # self.table.resizeColumnToContents(0)
+        self.table.resizeColumnToContents(0)
         self.table.resizeColumnToContents(1)
-        # self.table.resizeColumnToContents(2)
-        # self.table.resizeColumnToContents(3)
+        self.table.resizeColumnToContents(2)
+        self.table.resizeColumnToContents(3)
 
-        # self.table.resizeColumnToContents(4)
+        self.table.resizeColumnToContents(4)
         # self.table.setColumnWidth(3, 700)
 
 
