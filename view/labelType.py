@@ -15,7 +15,7 @@ class LabelTypeView(QWidget):
         # header表格头 field数据库表属性
         self.header = ['标注类型名称', '描述', '类别']
         self.field = ['type_name', 'description', 'category']
-        self.category = ['正常波形', '异常波形', '伪迹波形', '正常状态', '异常状态', '伪迹状态']
+        self.category = ['正常波形', '异常波形', '伪迹波形', '正常状态', '异常状态', '伪迹状态' , '正常事件' , '异常事件']
 
     def initTable(self, data):
         font = QFont()

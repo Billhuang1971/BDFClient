@@ -218,6 +218,11 @@ class montageController(QWidget):
             measure_channel = self.add_channels_view.ui.lineEdit.text()
             conference_channel = self.add_channels_view.ui.lineEdit_2.text()
             if measure_channel != '' and conference_channel != '':
+                index = self.qlist.index(self.current_montage_name)
+                newChannel = '{}-{}'.format(measure_channel, conference_channel)
+                if newChannel in self.montageData[index]['channels']:
+                    QMessageBox.information(self, '提示', '当前通道已添加', QMessageBox.Ok)
+                    return
                 # 编辑导联
                 if self.is_edit:
                     current_row = self.view.ui.tableView.currentIndex().row()
