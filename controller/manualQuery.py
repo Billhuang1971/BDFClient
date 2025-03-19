@@ -106,7 +106,7 @@ class manualQueryController(QWidget):
             self.curPageIndex = self.curPageMax
             self.view.ui.curPage.setText(str(self.curPageIndex))
         elif page_to[0] == "confirm":
-            pp = self.diagListView.ui.skipPage.text()
+            pp = self.view.ui.skipPage.text()
             if int(pp) > self.curPageMax or int(pp) <= 0:
                 QMessageBox.information(self, "查询", f'页数：1 至 {self.curPageMax}', QMessageBox.Yes)
                 self.view.ui.skipPage.setText(str(self.curPageMax))
