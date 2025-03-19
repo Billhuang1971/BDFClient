@@ -41,7 +41,7 @@ class EEGController(QWidget):
         self.timer.setInterval(self.speed[self.speedText])
         self.loading = True
         self.types_actions = {}
-
+        self.view.ui.returnBtn.clicked.connect(self.on_return_clicked)
     # 计算绘图区域物理长度
     def startEEG(self):
         try:
@@ -198,7 +198,6 @@ class EEGController(QWidget):
         self.view.ui.secondsSpan.lineEdit().editingFinished.connect(self.secondsSpanChange)
         self.view.ui.moveLength.lineEdit().editingFinished.connect(self.moveLengthChange)
         self.view.ui.sensitivity.lineEdit().editingFinished.connect(self.sensitivityChange)
-        self.view.ui.returnBtn.clicked.connect(self.on_return_clicked)
         self.view.ui.gblabelbtngroup.buttonClicked.connect(self.sampleselect_btn)
 
         # 导联选择绑定

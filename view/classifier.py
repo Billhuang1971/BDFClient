@@ -273,7 +273,7 @@ class clsimportView(QWidget):
         self.ui.setupUi(self)
         self.saved_EEG_names = []
         self.ui.pushButton_label_select.setEnabled(False)
-        self.ui.checkbox2.stateChanged.connect(self.handle_checkbox_state_change)
+        self.ui.checkbox1.stateChanged.connect(self.handle_checkbox_state_change)
         self.algorithm=None
         self.set=None
     def handle_checkbox_state_change(self, state):
