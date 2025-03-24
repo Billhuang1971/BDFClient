@@ -40,8 +40,8 @@ class dataImportController(QWidget):
         self.view = DataImportView()
         self.mainMenubar = mainMenubar
         self.root_path = os.path.dirname(os.path.dirname(__file__))+'\\'
-        # 存放处理过后的脑电文件目录
-        self.dir_path = os.path.join(self.root_path, 'upload', 'EEG')
+        # 存放处理过后的脑电文件上级目录
+        self.EEG_path = os.path.join(self.root_path, 'upload', 'EEG')
 
         # 内存中等待队列文件
         self.queue_file_path = os.path.join(self.root_path,'upload','EEGQueue','pending.json')
@@ -116,7 +116,8 @@ class dataImportController(QWidget):
         self.wait_file = []
         # 每页的样本最大数量
         self.perPageNum = 13
-
+        # 初始进入时即对文件夹进行操作
+        self.addUserFolder()
         # 获取表格的信息
         self.getPatientCheckInfo()
 
@@ -172,10 +173,28 @@ class dataImportController(QWidget):
         self.userConfig_info = []
 
     def on_btnExitUpload_clicked(self):
+        # 返回前检查UserFolder
+        self.delUserFolder()
         # 发射切换信号，切换到 MainController
         self.switch_signal.emit("MainController")
         # 打开主菜单
         self.mainMenubar.setEnabled(True)
+
+    def delUserFolder(self):
+        # 对self.dir_path判空，为空说明无待续传文件，删除该空文件夹；否则不做处理直接退出
+        if self.cAppUtil.isNull(self.dir_path):
+            # 确保路径存在
+            if os.path.exists(self.dir_path):
+                os.rmdir(self.dir_path)  # 删除空文件夹
+
+    def addUserFolder(self):
+        account = self.client.tUser[1] # 获取用户账户名称
+        self.dir_path = os.path.join(self.EEG_path, account)  # 拼接完整的用户文件夹路径
+        # 1.对upload/EEG下的文件夹进行遍历，查找是否存在以当前account命名的文件夹
+        # 2.若存在，直接退出，否则创建该文件夹后退出
+        # 检查目录是否存在，如果不存在则创建
+        if not os.path.exists(self.dir_path):
+            os.makedirs(self.dir_path)
 
     def showMessageBoxwithTimer(self, title, message, close_time=5000, buttons=QMessageBox.Ok):
         """
