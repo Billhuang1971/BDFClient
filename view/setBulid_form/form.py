@@ -103,9 +103,9 @@ class Ui_Form(object):
         self.horizontalLayout_13.addWidget(self.label_32)
         self.label_32.setFont(font)
         self.buttonGroup2 = QButtonGroup(Form)
-        self.radioButton3 = QRadioButton("波形类型", Form)
+        self.radioButton3 = QRadioButton("波形类型", Form) #数据类型下的按钮
         self.radioButton3.setObjectName("radioButton3")
-        self.radioButton4 = QRadioButton("状态类型", Form)
+        self.radioButton4 = QRadioButton("状态类型", Form) #数据类型下的按钮
         self.radioButton4.setObjectName("radioButton4")
         self.radioButton3.setFont(font)
         self.radioButton4.setFont(font)
@@ -134,20 +134,32 @@ class Ui_Form(object):
 
         self.refChannel = CheckableComboBox()
         self.refChannel.addItems(
-            ['Default', 'Fp1', 'Fpz', 'Fp2', 'AF7', 'AF3', 'AFz', 'AF4', 'AF8', 'F9', 'F7', 'F5', 'F3', 'F1', 'Fz', 'F2', 'F4',
-             'F6', 'F8', 'F10', 'FT9', 'FT7', 'FC5', 'FC3', 'FC1', 'FCz', 'FC2', 'FC4', 'FC6', 'FT8', 'FT10', 'LPA/M1',
-             'RPA/M2', 'T7', 'C5', 'C3', 'C1', 'Cz', 'C2', 'C4', 'C6', 'T8', 'TP9', 'TP7', 'CP5', 'Cp3', 'CP1', 'CPz',
-             'CP2', 'CP4', 'CP6', 'TP8', 'TP10', 'P9', 'P7', 'P5', 'P3', 'P1', 'Pz', 'P2', 'P4', 'P6', 'P8', 'P10',
-             'PO7', 'PO3', 'POz', 'PO4', 'PO8', 'O1', 'Oz', 'O2', 'CB1', 'CB2'])
+             ['Default', 'Fp1', 'Fpz', 'Fp2', 'AF7', 'AF3', 'AFz', 'AF4', 'AF8', 'F9', 'F7', 'F5', 'F3', 'F1', 'Fz', 'F2', 'F4',
+              'F6', 'F8', 'F10', 'FT9', 'FT7', 'FC5', 'FC3', 'FC1', 'FCz', 'FC2', 'FC4', 'FC6', 'FT8', 'FT10', 'LPA/M1',
+              'RPA/M2', 'T7', 'C5', 'C3', 'C1', 'Cz', 'C2', 'C4', 'C6', 'T8', 'TP9', 'TP7', 'CP5', 'Cp3', 'CP1', 'CPz',
+              'CP2', 'CP4', 'CP6', 'TP8', 'TP10', 'P9', 'P7', 'P5', 'P3', 'P1', 'Pz', 'P2', 'P4', 'P6', 'P8', 'P10',
+              'PO7', 'PO3', 'POz', 'PO4', 'PO8', 'O1', 'Oz', 'O2', 'CB1', 'CB2'])
         self.label_30 = QtWidgets.QLabel(self.groupBox_3)
         self.label_30.setObjectName("label_30")
         self.label_30.setVisible(False)
         self.refChannel.setVisible(False)
         self.horizontalLayout_13.addWidget(self.label_30)
         self.horizontalLayout_13.addWidget(self.refChannel)
+        self.label_ECIC_30 = QtWidgets.QLabel(self.groupBox_3) #颅内
+        self.label_ECIC_30.setObjectName("label_ECIC_30")
+        self.label_ECIC_30.setVisible(False)
+        self.horizontalLayout_13.addWidget(self.label_ECIC_30)
+        self.ECIC_comboBox = CheckableComboBox()
+        self.ECIC_comboBox.addItems(['全部取消'])
+        self.ECIC_comboBox.setEditable(True)
+        self.ECIC_comboBox.setVisible(False)
+        self.ECIC_comboBox.lineEdit().setReadOnly(False)
+        self.horizontalLayout_13.addWidget(self.ECIC_comboBox)
+
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_13.addItem(spacerItem1)
         self.verticalLayout_3.addLayout(self.horizontalLayout_13)
+
         self.line_6 = QtWidgets.QFrame(self.groupBox_3)
         self.line_6.setFrameShape(QtWidgets.QFrame.HLine)
         self.line_6.setFrameShadow(QtWidgets.QFrame.Sunken)
@@ -596,6 +608,7 @@ class Ui_Form(object):
         self.label_20.setText(_translate("Form", " 反例选择方案："))
         self.label_21.setText(_translate("Form", "（单位：秒）"))
         self.label_30.setText(_translate("Form", "导联选取："))
+        self.label_ECIC_30.setText(_translate("Form", "导联输入："))
         self.label_31.setText(_translate("Form", "主题："))
         self.label_32.setText(_translate("Form", "数据类型："))
 
@@ -623,20 +636,37 @@ class Ui_Form(object):
         self.skipLabel_1.setText(_translate("Form", "页"))
         self.confirmSkip.setText(_translate("Form", "确定"))
 
-
 class CheckableComboBox(QComboBox):
     def __init__(self, parent=None):
         super(CheckableComboBox, self).__init__(parent)
         self.setModel(QStandardItemModel(self))
         self.setView(QListView(self))
         self.setMaxVisibleItems(10)
-        self.view().pressed.connect(self.handleItemPressed)
+        # self.view().pressed.connect(self.handleItemPressed)
+        self.view().clicked.connect(self.handleItemPressed)
         self.view().viewport().installEventFilter(self)
         self.setMinimumWidth(200)
         self.setEditable(True)  # Make the combo box editable
         self.lineEdit().setReadOnly(True)  # Make the line edit read-only
+        # self.lineEdit().returnPressed.connect(self.on_enter_pressed)
+        self.lineEdit().installEventFilter(self)
 
-
+    def keyPressEvent(self, event):
+        """重写键盘事件处理，捕获回车键"""
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            # 手动触发回车处理逻辑
+            self.on_enter_pressed()
+            event.accept()  # 阻止默认行为，避免重复触发
+        else:
+            super(CheckableComboBox, self).keyPressEvent(event)
+    def on_enter_pressed(self):
+        """处理回车键按下事件"""
+        text = self.lineEdit().text().strip()
+        if text:
+            # 添加新项并自动选中
+            self.addItem(text, checked=False)
+            self.setCurrentIndex(self.model().rowCount() - 1)  # 切换到新项
+            self.lineEdit().clear()  # 清空输入框
     def eventFilter(self, source, event):
         # if event.type() == event.MouseButtonRelease:
         #     index = self.view().indexAt(event.pos())
@@ -675,16 +705,20 @@ class CheckableComboBox(QComboBox):
         else:
             self.model().item(0).setCheckState(Qt.Unchecked)
         self.updateDisplayText()
-
     def updateDisplayText(self):
         print(f'updateDisplayText')
         checked_items = [self.model().item(i).text() for i in range(self.model().rowCount()) if
                          self.model().item(i).checkState() == Qt.Checked]
         print(f'checked_items: {checked_items}')
+        if self.model().item(0).text()=='全部取消':
+            self.model().item(0).setCheckState(Qt.Unchecked)
         if len(checked_items) == 0:
             self.setEditText("")
         elif len(checked_items) == 1:
-            self.setEditText(checked_items[0])
+            if checked_items[0]!='全部取消':
+                self.setEditText(checked_items[0])
+            else:
+                self.setEditText("")
         elif len(checked_items) <= 2:
             self.setEditText(" / ".join(checked_items))
         else:
