@@ -23,6 +23,12 @@ class setBuildController(QWidget):
             self.client = client
             self.cAppUtil = cAppUtil
             self.view = setBulidView()
+            reply = QMessageBox.information(self, '构建设置', '是否为头皮脑电构建数据集？', QMessageBox.Yes | QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                # 进入时标记是处理颅内还是头皮
+                self.set_signal = 1  # 0=颅内，1=头皮
+            else:
+                self.set_signal =0
             # 进度条加载界面
             self.progressBarView = None
             # 当前添加的标注类型
@@ -149,13 +155,18 @@ class setBuildController(QWidget):
 
         if isChecked:
             if self.sender() == self.view.ui.radioButton3:
-                self.view.ui.label_13.setVisible(True)
-                self.view.ui.comboBox_5.setVisible(True)
-                self.view.ui.comboBox_2.setEnabled(True)
+                self.view.ui.label_13.setVisible(True) #参考方案
+                self.view.ui.comboBox_5.setVisible(True) #参考方案后的combox
+                self.view.ui.comboBox_2.setEnabled(True) #波形类型的选择
             elif self.sender() == self.view.ui.radioButton4:
-                self.view.ui.label_30.setVisible(True)
-                self.view.ui.refChannel.setVisible(True)
-                self.view.ui.comboBox_3.setEnabled(True)
+                if self.set_signal==1:
+                    self.view.ui.label_30.setVisible(True)#导联选取
+                    self.view.ui.refChannel.setVisible(True) #导联选取后的combox
+                    self.view.ui.comboBox_3.setEnabled(True) #状态类型的选择
+                else:
+                    self.view.ui.label_ECIC_30.setVisible(True)
+                    self.view.ui.ECIC_comboBox.setVisible(True)
+                    self.view.ui.comboBox_3.setEnabled(True)
             self.reset()
 
     def rg_paging(self, page_to):
