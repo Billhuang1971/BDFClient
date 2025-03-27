@@ -23,7 +23,7 @@ class setBuildController(QWidget):
             self.client = client
             self.cAppUtil = cAppUtil
             self.view = setBulidView()
-            reply = QMessageBox.information(self, '构建设置', '是否为头皮脑电构建数据集？', QMessageBox.Yes | QMessageBox.No)
+            reply = QMessageBox.information(self, '构建设置', '是否为头皮脑电构建数据集？点击yes进入头皮数据集构建，点击no进入颅内数据集构建', QMessageBox.Yes | QMessageBox.No)
             if reply == QMessageBox.Yes:
                 # 进入时标记是处理颅内还是头皮
                 self.set_signal = 1  # 0=颅内，1=头皮
