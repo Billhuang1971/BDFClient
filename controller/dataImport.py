@@ -42,6 +42,8 @@ class dataImportController(QWidget):
         self.root_path = os.path.dirname(os.path.dirname(__file__))+'\\'
         # 存放处理过后的脑电文件上级目录
         self.EEG_path = os.path.join(self.root_path, 'upload', 'EEG')
+        # 存放处理过后的脑电文件目录,在addUserFolder中得到拼接
+        self.dir_path = None
 
         # 内存中等待队列文件
         self.queue_file_path = os.path.join(self.root_path,'upload','EEGQueue','pending.json')
