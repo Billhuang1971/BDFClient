@@ -9,6 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.Qt import *
 
 
 class Ui_AutoForm(object):
@@ -196,7 +197,13 @@ class Ui_AutoForm(object):
         self.verticalLayout_4.addLayout(self.horizontalLayout_9)
         self.horizontalLayout_7.addLayout(self.verticalLayout_4)
         self.verticalLayout_6.addLayout(self.horizontalLayout_7)
-        self.horizontalLayout.addLayout(self.verticalLayout_6)
+        # self.horizontalLayout.addLayout(self.verticalLayout_6)
+        self.container = QWidget()
+        self.container.setLayout(self.verticalLayout_6)  # 将布局设置到容器
+        self.container.setEnabled(False)  # 禁用容器（会自动禁用所有子控件）
+        # self.container.setStyleSheet("background-color: #f0f0f0;")  # 可选：灰色背景
+
+        self.horizontalLayout.addWidget(self.container)
         self.verticalLayout_7 = QtWidgets.QVBoxLayout()
         self.verticalLayout_7.setObjectName("verticalLayout_7")
         self.horizontalLayout.addLayout(self.verticalLayout_7)

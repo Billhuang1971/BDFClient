@@ -818,6 +818,8 @@ class autoController(QWidget):
     def itemSelectionChanged_tableWidgetClassifierScan(self, item=None):
         try:
             row = self.view.ui.tableWidgetClassifierScan.currentRow()
+            self.status = self.classifier_info[row][14]
+            self.view.ui.container.setEnabled(self.status == "waveform")
             if not self.is_alg_search:
                 self.classifier_name = self.classifier_info[row][1]
                 self.classifier_file_name = self.classifier_info[row][4]
@@ -973,7 +975,7 @@ class autoController(QWidget):
                 QMessageBox.critical(self, 'Alert', '未选择分类器')
                 self.view.ui.pushButton.setEnabled(True)
                 return
-            if not self.if_leagel_file_info_list():
+            if self.status == "waveform" and not self.if_leagel_file_info_list():
                 self.view.ui.pushButton.setEnabled(True)
                 return
             row = self.view.ui.tableWidgetClassifierScan.currentRow()
