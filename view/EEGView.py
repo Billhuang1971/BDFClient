@@ -126,7 +126,7 @@ class EEGView(QWidget):
             self.allChannel = {key: True for key in channels}
             self.sampleFilter = sampleFilter
             #平均参考时计算平均时需要排除的通道
-            self.exclude_av = ['Ldelt1', 'Ldelt2', 'Rdelt1', 'Rdelt2', 'A1', 'A2', 'M1', 'M2', 'LOC', 'ROC',
+            self.exclude_av = ['LDELT1', 'LDELT2', 'RDELT1', 'RDELT2', 'A1', 'A2', 'M1', 'M2', 'LOC', 'ROC',
                                'CHIN1', 'CHIN2', 'ECGL', 'ECGR', 'LAT1', 'LAT2', 'RAT1', 'RAT2',
                                'CHEST', 'ABD', 'FLOW', 'SNORE', 'DIF5', 'DIF6']
             self.type_info = type_info #原数据库中所有类型
