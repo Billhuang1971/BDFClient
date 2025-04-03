@@ -152,6 +152,8 @@ class setBuildController(QWidget):
         self.view.ui.refChannel.setVisible(False)
         self.view.ui.comboBox_2.setEnabled(False)
         self.view.ui.comboBox_3.setEnabled(False)
+        self.view.ui.label_ECIC_30.setVisible(False)
+        self.view.ui.ECIC_comboBox.setVisible(False)
 
         if isChecked:
             if self.sender() == self.view.ui.radioButton3:
@@ -591,8 +593,12 @@ class setBuildController(QWidget):
             else:
                 channels = self.montage[self.view.ui.comboBox_5.currentIndex() - 1]['channels']
         else:
-            channels = self.view.ui.refChannel.selectedItems()
-            nChannel = len(channels)
+            if self.set_signal == 1:
+                channels = self.view.ui.refChannel.selectedItems()
+                nChannel = len(channels)
+            else:
+                channels=self.view.ui.ECIC_comboBox.selectedItems()
+                nChannel = len(channels)
         print(f'nChannel: {nChannel}, channels: {channels}, {self.view.ui.refChannel.selectedItems()}')
 
         # 重新生成content
