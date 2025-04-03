@@ -102,7 +102,7 @@ class EEGController(QWidget):
             print("openEEGFileRes", e)
 
     def processIeegMontage(self, typeEEG):
-        self.montage['default'] = self.channels
+        self.montage['DEFAULT'] = self.channels
         list1 = []
         list2 = []
         if typeEEG == True:
@@ -196,6 +196,7 @@ class EEGController(QWidget):
         self.view.ui.hideEvent.clicked.connect(self.hideEvents)
         self.view.ui.subtractAverage.clicked.connect(self.subtractAverageClicked)
         self.view.ui.secondsSpan.lineEdit().editingFinished.connect(self.secondsSpanChange)
+        self.view.ui.secondsSpan.currentIndexChanged.connect(self.secondsSpanChange)
         self.view.ui.moveLength.lineEdit().editingFinished.connect(self.moveLengthChange)
         self.view.ui.sensitivity.lineEdit().editingFinished.connect(self.sensitivityChange)
         self.view.ui.gblabelbtngroup.buttonClicked.connect(self.sampleselect_btn)
@@ -628,6 +629,10 @@ class EEGController(QWidget):
             self.onBtnDownClicked()
 
     def on_return_clicked(self):
+        if self.return_from[0] == 'diagTestController':
+            ask =  QMessageBox.question(None, "确认", "确认提交本课堂所有测试结果吗？",
+                                QMessageBox.Yes | QMessageBox.No) == QMessageBox.Yes
+            self.return_from.append(ask)
         self.view.close()
         self.switchFromEEG.emit(self.return_from)
 

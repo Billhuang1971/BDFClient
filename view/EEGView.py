@@ -121,7 +121,7 @@ class EEGView(QWidget):
             self.typeEEG = typeEEG  # True:颅内脑电 False：头皮脑电
             #refList：参考方案列表，即montage
             self.refList = dict(montage)
-            self.curRef = 'default'
+            self.curRef = 'DEFAULT'
 
             self.allChannel = {key: True for key in channels}
             self.sampleFilter = sampleFilter
@@ -1348,7 +1348,7 @@ class EEGView(QWidget):
         return self.refList[self.curRef]
 
     def checkType(self):
-        dgroup = {self.curRef: self.refList[self.curRef]} if self.typeEEG is False else self.bdfMontage(self.refList['default'])
+        dgroup = {self.curRef: self.refList[self.curRef]} if self.typeEEG is False else self.bdfMontage(self.refList['DEFAULT'])
         return self.curRef, dgroup, self.channels_name
 
     def getShownChannel(self):
