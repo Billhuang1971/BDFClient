@@ -111,7 +111,11 @@ class patientManagerController(QWidget):
                 self.clear_layout(self.view.ui.verticalLayout_2)
                 self.tableWidget = TableWidget(self.searchInfo, self.curPageIndex)
                 self.view.ui.verticalLayout_2.addWidget(self.tableWidget)
-                self.tableWidget.setPageController(REPData[2][0])  # 表格设置页码控制
+                if REPData[2][0]==0: #搜索时没有数据
+                    self.tableWidget.setPageController(1)
+                    self.curPageMax=1
+                else:
+                    self.tableWidget.setPageController(REPData[2][0])  # 表格设置页码控制
                 self.tableWidget.control_signal.connect(self.page_controller)
                 self.tableWidget.table.itemClicked.connect(self.set_selectRow)
             else:
