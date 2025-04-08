@@ -133,13 +133,13 @@ class setBuildController(QWidget):
         msg_box.exec_()
 
     def handle_scalp_dataset(self):
-        self.set_signal = 1
+        self.set_signal = 1 #头皮
         # 数据初始化
         self.init_data()
         # 表格初始化,界面初始化默认先显示数据集的信息
         self.view.init_setTable(self.set_info)
     def handle_intracranial_dataset(self):
-        self.set_signal = 0
+        self.set_signal = 0 #颅内
         # 数据初始化
         self.init_data()
         # 表格初始化,界面初始化默认先显示数据集的信息
