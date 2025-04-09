@@ -1141,9 +1141,9 @@ class EEGView(QWidget):
             idx += 1
         self.labels.insert(idx, state)
         self.paintAState(state, "blue")
-        lBit = (self.state_left // self.sample_rate) * self.nDotWin // self.lenTime
-        rBit = (self.state_right // self.sample_rate) * self.nDotWin // self.lenTime
-        self.labelBit[lBit: rBit] = True
+        lBit = self.state_left * self.nDotWin // (self.lenTime * self.sample_rate)
+        rBit = self.state_right * self.nDotWin // (self.lenTime * self.sample_rate)
+        self.labelBit[lBit: rBit + 1] = True
         self.resetPickLabels()
         self.focusLines()
         self.paintLabelBit()

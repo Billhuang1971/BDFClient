@@ -42,6 +42,7 @@ class EEGController(QWidget):
         self.loading = True
         self.types_actions = {}
         self.view.ui.returnBtn.clicked.connect(self.on_return_clicked)
+
     # 计算绘图区域物理长度
     def startEEG(self):
         try:
