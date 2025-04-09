@@ -121,12 +121,12 @@ class EEGView(QWidget):
             self.typeEEG = typeEEG  # True:颅内脑电 False：头皮脑电
             #refList：参考方案列表，即montage
             self.refList = dict(montage)
-            self.curRef = 'default'
+            self.curRef = 'DEFAULT'
 
             self.allChannel = {key: True for key in channels}
             self.sampleFilter = sampleFilter
             #平均参考时计算平均时需要排除的通道
-            self.exclude_av = ['Ldelt1', 'Ldelt2', 'Rdelt1', 'Rdelt2', 'A1', 'A2', 'M1', 'M2', 'LOC', 'ROC',
+            self.exclude_av = ['LDELT1', 'LDELT2', 'RDELT1', 'RDELT2', 'A1', 'A2', 'M1', 'M2', 'LOC', 'ROC',
                                'CHIN1', 'CHIN2', 'ECGL', 'ECGR', 'LAT1', 'LAT2', 'RAT1', 'RAT2',
                                'CHEST', 'ABD', 'FLOW', 'SNORE', 'DIF5', 'DIF6']
             self.type_info = type_info #原数据库中所有类型
@@ -1141,9 +1141,9 @@ class EEGView(QWidget):
             idx += 1
         self.labels.insert(idx, state)
         self.paintAState(state, "blue")
-        lBit = (self.state_left // self.sample_rate) * self.nDotWin // self.lenTime
-        rBit = (self.state_right // self.sample_rate) * self.nDotWin // self.lenTime
-        self.labelBit[lBit: rBit] = True
+        lBit = self.state_left * self.nDotWin // (self.lenTime * self.sample_rate)
+        rBit = self.state_right * self.nDotWin // (self.lenTime * self.sample_rate)
+        self.labelBit[lBit: rBit + 1] = True
         self.resetPickLabels()
         self.focusLines()
         self.paintLabelBit()
@@ -1348,7 +1348,7 @@ class EEGView(QWidget):
         return self.refList[self.curRef]
 
     def checkType(self):
-        dgroup = {self.curRef: self.refList[self.curRef]} if self.typeEEG is False else self.bdfMontage(self.refList['default'])
+        dgroup = {self.curRef: self.refList[self.curRef]} if self.typeEEG is False else self.bdfMontage(self.refList['DEFAULT'])
         return self.curRef, dgroup, self.channels_name
 
     def getShownChannel(self):

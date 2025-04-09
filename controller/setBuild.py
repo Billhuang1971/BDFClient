@@ -23,12 +23,6 @@ class setBuildController(QWidget):
             self.client = client
             self.cAppUtil = cAppUtil
             self.view = setBulidView()
-            reply = QMessageBox.information(self, '构建设置', '是否为头皮脑电构建数据集？点击yes进入头皮数据集构建，点击no进入颅内数据集构建', QMessageBox.Yes | QMessageBox.No)
-            if reply == QMessageBox.Yes:
-                # 进入时标记是处理颅内还是头皮
-                self.set_signal = 1  # 0=颅内，1=头皮
-            else:
-                self.set_signal =0
             # 进度条加载界面
             self.progressBarView = None
             # 当前添加的标注类型
@@ -89,19 +83,67 @@ class setBuildController(QWidget):
             self.view.set_page_control_signal.connect(self.rg_paging)
             self.client.getSetExportDataResSig.connect(self.getSetExportDataRes)
             self.view.ui.re_scheme.currentTextChanged.connect(self.on_reverse_scheme_changed)
-            # 数据初始化
-            self.init_data()
-            # 表格初始化,界面初始化默认先显示数据集的信息
-            self.view.init_setTable(self.set_info)
 
             # TODO 为了方便先暂时这样
             self.view.ui.refChannel.model().item(0).setCheckState(Qt.Checked)
             # self.view.ui.lineEdit_3.setText('1')
             # self.view.ui.lineEdit_4.setText('0')
             # self.view.ui.lineEdit.setText('80')
+            self.show_select()
         except Exception as e:
             print('__init__', e)
 
+    def show_select(self):
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Information)
+        msg_box.setWindowTitle("构建设置")
+        msg_box.setText("请选择构建哪种脑电数据集")
+        msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        # 修改标准按钮文本
+        yes_btn = msg_box.button(QMessageBox.Yes)
+        no_btn = msg_box.button(QMessageBox.No)
+
+        msg_box.setWindowFlags(
+            Qt.Dialog |  # 基础对话框类型
+            Qt.WindowTitleHint |  # 保留标题栏
+            Qt.CustomizeWindowHint  # 允许自定义窗口属性
+        )
+        msg_box.setEscapeButton(None)  # 禁用ESC键
+        msg_box.setFixedSize(600, 300)
+        msg_box.setStyleSheet("""
+                /* 调整按钮样式 */
+                QPushButton {
+                    font-size: 16px;          /* 字体大小 */
+                    min-width: 100px;         /* 按钮最小宽度 */
+                    min-height: 30px;         /* 按钮最小高度 */
+                }
+
+                /* 调整文本标签 */
+                QLabel {
+                    font-size: 16px;
+                    margin-bottom: 20px;
+                }
+            """)
+        if yes_btn:
+            yes_btn.setText("头皮数据集")
+        if no_btn:
+            no_btn.setText("颅内数据集")
+        yes_btn.clicked.connect(lambda: self.handle_scalp_dataset())
+        no_btn.clicked.connect(lambda: self.handle_intracranial_dataset())
+        msg_box.exec_()
+
+    def handle_scalp_dataset(self):
+        self.set_signal = 1 #头皮
+        # 数据初始化
+        self.init_data()
+        # 表格初始化,界面初始化默认先显示数据集的信息
+        self.view.init_setTable(self.set_info)
+    def handle_intracranial_dataset(self):
+        self.set_signal = 0 #颅内
+        # 数据初始化
+        self.init_data()
+        # 表格初始化,界面初始化默认先显示数据集的信息
+        self.view.init_setTable(self.set_info)
     def exit(self):
         self.client.getSetInitDataResSig.disconnect()
         self.client.delSetResSig.disconnect()
@@ -152,6 +194,8 @@ class setBuildController(QWidget):
         self.view.ui.refChannel.setVisible(False)
         self.view.ui.comboBox_2.setEnabled(False)
         self.view.ui.comboBox_3.setEnabled(False)
+        self.view.ui.label_ECIC_30.setVisible(False)
+        self.view.ui.ECIC_comboBox.setVisible(False)
 
         if isChecked:
             if self.sender() == self.view.ui.radioButton3:
@@ -241,7 +285,7 @@ class setBuildController(QWidget):
             list_view_model.appendRow(item)
 
 
-            revealMontage = ['Default'] + [item['name'] for item in self.montage]
+            revealMontage = ['Default'] + [item['name'] for item in self.montage]#参考方案
             # 初始化试图
             self.view.init_view(self.type_info, self.state_info, revealMontage, self.set_data, self.themeInfo)
             self.view.ui.comboBox_3.currentTextChanged.connect(
@@ -591,8 +635,12 @@ class setBuildController(QWidget):
             else:
                 channels = self.montage[self.view.ui.comboBox_5.currentIndex() - 1]['channels']
         else:
-            channels = self.view.ui.refChannel.selectedItems()
-            nChannel = len(channels)
+            if self.set_signal == 1:
+                channels = self.view.ui.refChannel.selectedItems()
+                nChannel = len(channels)
+            else:
+                channels=self.view.ui.ECIC_comboBox.selectedItems()
+                nChannel = len(channels)
         print(f'nChannel: {nChannel}, channels: {channels}, {self.view.ui.refChannel.selectedItems()}')
 
         # 重新生成content

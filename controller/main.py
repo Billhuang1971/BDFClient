@@ -408,7 +408,7 @@ class MainController(QWidget):
             self.toEEGInfo = msg[5][2]
             self.study_start_time = datetime.now().strftime("%Y-%m-%d :%H:%M:%S")
         elif msg[5][0] == 'diagTestController':
-            self.toEEGInfo = msg[5][2]
+            self.toEEGInfo = [msg[5][2][0]]
         self.controller.switchFromEEG.connect(self.switchFromEEGPage)
         self.sub_view = self.controller.view
         self.view.updateForEEG(self.sub_view)
@@ -438,7 +438,7 @@ class MainController(QWidget):
                 self.toEEGInfo = None
             self.controller = diagTrainingController(appUtil=self.cAppUtil, client=self.client)
         elif controller_name == "diagTestController":
-            if self.toEEGInfo is not None:
+            if self.toEEGInfo is not None and msg[-1]:
                 self.toEEGInfo.append(self.client.tUser[0])
                 self.client.testOver(self.toEEGInfo)
                 self.toEEGInfo = None

@@ -76,6 +76,9 @@ class montageController(QWidget):
                 if name == scheme:
                     QMessageBox.critical(self, '提示', '方案名称重复', QMessageBox.Ok)
                     return
+            if not name.isupper():
+                QMessageBox.critical(self, '提示', '方案名称需大写', QMessageBox.Ok)
+                return
             # 用户输入名称，且点击确定
             if reply[1] == True:
                 REQmsg = [name]
@@ -109,6 +112,9 @@ class montageController(QWidget):
                 if name == scheme:
                     QMessageBox.critical(self, '提示', '方案名称重复', QMessageBox.Ok)
                     return
+            if not name.isupper():
+                QMessageBox.critical(self, '提示', '方案名称需大写', QMessageBox.Ok)
+                return
             # 用户输入名称，且点击确定
             if reply[1] == True:
                 REQmsg = [self.current_montage_name, name]
@@ -218,6 +224,9 @@ class montageController(QWidget):
             measure_channel = self.add_channels_view.ui.lineEdit.text()
             conference_channel = self.add_channels_view.ui.lineEdit_2.text()
             if measure_channel != '' and conference_channel != '':
+                if not (measure_channel.isupper() and conference_channel.isupper()):
+                    QMessageBox.information(self, '提示', '通道名需大写', QMessageBox.Ok)
+                    return
                 index = self.qlist.index(self.current_montage_name)
                 newChannel = '{}-{}'.format(measure_channel, conference_channel)
                 if newChannel in self.montageData[index]['channels']:

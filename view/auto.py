@@ -21,8 +21,8 @@ class AutoView(QWidget):
         self.montage_list = None
         self.file_header = ['配置方案', '脑电数据名称']
         self.file_field = ['if_select_finished', 'file_name']
-        self.classifier_header = ['分类器名称']
-        self.classifier_field = ['classifier_name']
+        self.classifier_header = ['分类器名称', '算法类型']
+        self.classifier_field = ['classifier_name', 'alg_type']
         # self.file_included_channels = ['O1-REF','O2-REF'....]
         self.file_included_channels = None
         #self.file_included_channel_list = set('O1', 'O2', 'REF', 'AV'.....)
@@ -103,16 +103,22 @@ class AutoView(QWidget):
             header_item.setData(Qt.UserRole, self.classifier_field[i])
             self.ui.tableWidgetClassifierScan.setHorizontalHeaderItem(i, header_item)
             # 拉伸表格列项，使其铺满
-            self.ui.tableWidgetClassifierScan.horizontalHeader().setStretchLastSection(True)
+        self.ui.tableWidgetClassifierScan.horizontalHeader().setStretchLastSection(True)
 
         for r in range(row_num):
-            for c in range(col_num):
+            for c in range(col_num - 1):
                 self.item = QTableWidgetItem(str(data[r][c]))
                 self.item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 font = self.item.font()
                 font.setPointSize(10)
                 self.item.setFont(font)
                 self.ui.tableWidgetClassifierScan.setItem(r, c, self.item)
+            self.item = QTableWidgetItem(str(data[r][10]))
+            self.item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            font = self.item.font()
+            font.setPointSize(10)
+            self.item.setFont(font)
+            self.ui.tableWidgetClassifierScan.setItem(r, col_num - 1, self.item)
         # self.init_comboCond()
         self.ui.tableWidgetClassifierScan.horizontalHeader().setHighlightSections(False)
         #   按字段长度进行填充

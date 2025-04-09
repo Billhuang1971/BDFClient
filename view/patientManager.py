@@ -1,7 +1,7 @@
 import sys
 
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont,QIntValidator
 from PyQt5 import QtCore
 from functools import partial
 from view.patientManager_form.form import Ui_Form
@@ -158,6 +158,7 @@ class TableWidget(QWidget):
         skipLable_0 = QLabel("跳到")
         skipLable_0.setFont(font)
         self.skipPage = QLineEdit()
+        self.skipPage.setValidator(QIntValidator(1, 999999))
         skipLabel_1 = QLabel("页")
         skipLabel_1.setFont(font)
         confirmSkip = QPushButton("确定")
