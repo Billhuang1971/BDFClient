@@ -14,282 +14,190 @@ from PyQt5.QtCore import Qt
 
 class Ui_diag_MainWindow(object):
     def setupUi(self, diag_MainWindow):
-        screen = QtWidgets.QApplication.primaryScreen()
-        dpi_scale = screen.logicalDotsPerInch() / 96.0  # 96 DPI 是标准值
+        try:
+            screen = QtWidgets.QApplication.primaryScreen()
+            self.dpi_scale = screen.logicalDotsPerInch() / 96.0  # 96 DPI 是标准值
 
-        diag_MainWindow.setObjectName("diag_MainWindow")
-        diag_MainWindow.resize(int(1080*dpi_scale), int(651*dpi_scale))
+            diag_MainWindow.setObjectName("diag_MainWindow")
+            diag_MainWindow.resize(int(1080*self.dpi_scale), int(651*self.dpi_scale))
 
+            #主容器与布局
+            font = QtGui.QFont()
+            font.setFamily("Arial")
+            font.setPointSize(int(14*self.dpi_scale))
+
+            self.centralwidget = QtWidgets.QWidget(diag_MainWindow)
+            self.centralwidget.setObjectName("centralwidget")
+            self.main_layout = QtWidgets.QVBoxLayout(self.centralwidget)
+            self.main_layout.setContentsMargins(
+                int(20 * self.dpi_scale), int(15 * self.dpi_scale),
+                int(20 * self.dpi_scale), int(15 * self.dpi_scale)
+            )
+            self.main_layout.setSpacing(int(15 * self.dpi_scale))
+
+            # ===== 顶部信息栏 =====
+            top_layout = QtWidgets.QGridLayout()
+            top_layout.setHorizontalSpacing(int(20 * self.dpi_scale))
+            top_layout.setVerticalSpacing(int(10 * self.dpi_scale))
+
+            # 第一行：病人信息
+            self.label = self._create_label("label")
+            self.patient_lineEdit = self._create_lineedit("patient_lineEdit",True)
+            top_layout.addWidget(self.label, 0, 0)
+            top_layout.addWidget(self.patient_lineEdit, 0, 1)
+
+            # 第二行：测量日期
+            self.label_2 = self._create_label("label_2")
+            self.measure_date_lineEdit = self._create_lineedit("measure_date_lineEdit",True)
+            top_layout.addWidget(self.label_2, 0, 2)
+            top_layout.addWidget(self.measure_date_lineEdit, 0, 3)
+
+            # 第三行：诊断医生
+            self.label_3 = self._create_label("label_3")
+            self.d_user_lineEdit_3 = self._create_lineedit("d_user_lineEdit_3",True)
+            top_layout.addWidget(self.label_3, 0, 4)
+            top_layout.addWidget(self.d_user_lineEdit_3, 0, 5)
+
+
+            #有个self.label_state没有用，给删了
+
+            # 诊断日期
+            self.label_4 = self._create_label("label_4")
+            self.label_4.setLayoutDirection(Qt.LeftToRight)
+            self.sign_dateTimeEdit = QtWidgets.QDateTimeEdit()
+            self.sign_dateTimeEdit.setFont(self._get_font())
+            top_layout.addWidget(self.label_4, 0, 6)
+            top_layout.addWidget(self.sign_dateTimeEdit, 0, 7)
+
+            self.label_state = self._create_label("label_state")
+            self.state_lineEdit_3 = self._create_lineedit("state_lineEdit_3",True)
+
+            # 设置列拉伸比例
+            for col in [1, 3, 5, 7]:
+                top_layout.setColumnStretch(col, 1)
+
+            # ===== 诊断信息输入区域 =====
+            form_layout = QtWidgets.QGridLayout()
+            form_layout.setHorizontalSpacing(int(15 * self.dpi_scale))
+            form_layout.setVerticalSpacing(int(10 * self.dpi_scale))
+
+            # 生成输入行
+            fields = [
+                ("α波活动", "alpha_lineEdit"),
+                ("慢波活动", "slow_lineEdit"),
+                ("快波活动", "fast_lineEdit"),
+                ("波幅特点", "amplitude_lineEdit"),
+                ("睁闭眼", "eyes_lineEdit"),
+                ("过度换气", "hyperventilation_lineEdit"),
+                ("睡眠", "sleep_lineEdit"),
+                ("异常脑波", "abnormal_wave_lineEdit"),
+                ("发作期", "attack_stage_lineEdit"),
+                ("诊断总结", "summary_textEdit")
+            ]
+
+            for row, (label_text, editText) in enumerate(fields):
+                # 动态生成标签后缀
+                label_suffix = row + 5  # 例如从5开始
+                label_name = f"label_{label_suffix}"
+                # 使用 setattr 动态创建属性
+                setattr(self, label_name, self._create_label(label_name))
+                # 获取动态创建的标签并添加到布局
+                label = getattr(self, label_name)  # 获取动态生成的标签
+                if editText != "summary_textEdit":
+                    line_edit = self._create_lineedit(editText)
+                    setattr(self, editText, line_edit)
+                else:
+                    text_edit = self._create_textedit(editText)
+                    setattr(self, editText, text_edit)
+                widget = getattr(self, editText)
+                form_layout.addWidget(label, row, 0)
+                form_layout.addWidget(widget, row, 1)
+
+
+            # 设置输入区域拉伸比例
+            form_layout.setColumnStretch(1, 3)
+
+            # ===== 底部按钮区域 =====
+            button_layout = QtWidgets.QHBoxLayout()
+            button_layout.addStretch()
+
+            self.save_pushButton = self._create_button("保   存")
+            self.commit_pushButton = self._create_button("完   成")
+            self.close_pushButton = self._create_button("关   闭")
+
+            button_layout.addWidget(self.save_pushButton)
+            button_layout.addWidget(self.commit_pushButton)
+            button_layout.addWidget(self.close_pushButton)
+
+            # ===== 整合所有布局 =====
+            self.main_layout.addLayout(top_layout)
+            self.main_layout.addLayout(form_layout)
+            self.main_layout.addStretch(1)
+            self.main_layout.addLayout(button_layout)
+
+            diag_MainWindow.setCentralWidget(self.centralwidget)
+            self.retranslateUi(diag_MainWindow)
+            QtCore.QMetaObject.connectSlotsByName(diag_MainWindow)
+
+
+            diag_MainWindow.setCentralWidget(self.centralwidget)
+            self.menubar = QtWidgets.QMenuBar(diag_MainWindow)
+            self.menubar.setGeometry(QtCore.QRect(0, 0, 1080, 23))
+            self.menubar.setObjectName("menubar")
+            diag_MainWindow.setMenuBar(self.menubar)
+            self.statusbar = QtWidgets.QStatusBar(diag_MainWindow)
+            self.statusbar.setObjectName("statusbar")
+            diag_MainWindow.setStatusBar(self.statusbar)
+
+
+
+
+            self.retranslateUi(diag_MainWindow)
+            QtCore.QMetaObject.connectSlotsByName(diag_MainWindow)
+        except Exception as e:
+            print(f'Error in {func.__name__}: {e}')
+
+    def _get_font(self):
+        """获取缩放后的字体"""
         font = QtGui.QFont()
         font.setFamily("Arial")
-        font.setPointSize(int(14*dpi_scale))
+        font.setPointSizeF(12 * self.dpi_scale)
+        return font
 
-        self.centralwidget = QtWidgets.QWidget(diag_MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
+    def _create_label(self, ObjectName):
+        """创建标签"""
+        label = QtWidgets.QLabel()
+        label.setFont(self._get_font())
+        label.setMinimumWidth(int(120 * self.dpi_scale))
+        label.setObjectName(ObjectName)
+        return label
 
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setGeometry(
-            QtCore.QRect(int(90 * dpi_scale), int(20 * dpi_scale), int(51 * dpi_scale), int(21 * dpi_scale)))
-        self.label.setFont(font)
-        self.label.setObjectName("label")
+    def _create_lineedit(self, ObjectName, readonly=False):
+        """创建输入框"""
+        lineedit = QtWidgets.QLineEdit()
+        lineedit.setFont(self._get_font())
+        lineedit.setMinimumHeight(int(35 * self.dpi_scale))
+        lineedit.setReadOnly(readonly)
+        lineedit.setObjectName(ObjectName)
+        return lineedit
 
-        self.label_2 = QtWidgets.QLabel(self.centralwidget)
-        self.label_2.setGeometry(
-            QtCore.QRect(int(320 * dpi_scale), int(15 * dpi_scale), int(91 * dpi_scale), int(31 * dpi_scale)))
-        self.label_2.setFont(font)
-        self.label_2.setLayoutDirection(Qt.LeftToRight)
-        self.label_2.setObjectName("label_2")
+    def _create_textedit(self, ObjectName):
+        """创建文本编辑框"""
+        textedit = QtWidgets.QTextEdit()
+        textedit.setFont(self._get_font())
+        textedit.setMinimumHeight(int(100 * self.dpi_scale))
+        return textedit
 
-        self.label_3 = QtWidgets.QLabel(self.centralwidget)
-        self.label_3.setGeometry(
-            QtCore.QRect(int(560 * dpi_scale), int(15 * dpi_scale), int(91 * dpi_scale), int(21 * dpi_scale)))
-        self.label_3.setFont(font)
-        self.label_3.setObjectName("label_3")
-
-        self.patient_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.patient_lineEdit.setEnabled(True)
-        self.patient_lineEdit.setGeometry(
-            QtCore.QRect(int(150 * dpi_scale), int(11 * dpi_scale), int(151 * dpi_scale), int(31 * dpi_scale)))
-        self.patient_lineEdit.setFont(font)
-        self.patient_lineEdit.setReadOnly(True)
-        self.patient_lineEdit.setObjectName("patient_lineEdit")
-
-        self.measure_date_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.measure_date_lineEdit.setGeometry(
-            QtCore.QRect(int(410 * dpi_scale), int(10 * dpi_scale), int(121 * dpi_scale), int(31 * dpi_scale)))
-        self.measure_date_lineEdit.setFont(font)
-        self.measure_date_lineEdit.setReadOnly(True)
-        self.measure_date_lineEdit.setObjectName("measure_date_lineEdit")
-
-        self.d_user_lineEdit_3 = QtWidgets.QLineEdit(self.centralwidget)
-        self.d_user_lineEdit_3.setGeometry(
-            QtCore.QRect(int(660 * dpi_scale), int(10 * dpi_scale), int(101 * dpi_scale), int(31 * dpi_scale)))
-        self.d_user_lineEdit_3.setFont(font)
-        self.d_user_lineEdit_3.setReadOnly(True)
-        self.d_user_lineEdit_3.setObjectName("d_user_lineEdit_3")
-
-        self.label_state = QtWidgets.QLabel(self.centralwidget)
-        self.label_state.setGeometry(
-            QtCore.QRect(int(500 * dpi_scale), int(10 * dpi_scale), int(61 * dpi_scale), int(21 * dpi_scale)))
-        self.label_state.setObjectName("label_state")
-
-        self.state_lineEdit_3 = QtWidgets.QLineEdit(self.centralwidget)
-        self.state_lineEdit_3.setGeometry(
-            QtCore.QRect(int(530 * dpi_scale), int(10 * dpi_scale), int(81 * dpi_scale), int(20 * dpi_scale)))
-        self.state_lineEdit_3.setObjectName("state_lineEdit_3")
-        self.state_lineEdit_3.setReadOnly(True)
-
-        self.label_4 = QtWidgets.QLabel(self.centralwidget)
-        self.label_4.setGeometry(
-            QtCore.QRect(int(780 * dpi_scale), int(15 * dpi_scale), int(91 * dpi_scale), int(21 * dpi_scale)))
-        self.label_4.setFont(font)
-        self.label_4.setLayoutDirection(Qt.LeftToRight)
-        self.label_4.setObjectName("label_4")
-        self.label_5 = QtWidgets.QLabel(self.centralwidget)
-        self.label_5.setGeometry(
-            QtCore.QRect(int(50 * dpi_scale), int(60 * dpi_scale), int(111 * dpi_scale), int(21 * dpi_scale)))
-        self.label_5.setFont(font)
-        self.label_5.setLayoutDirection(Qt.LeftToRight)
-        self.label_5.setObjectName("label_5")
-
-        self.alpha_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.alpha_lineEdit.setGeometry(
-            QtCore.QRect(int(150 * dpi_scale), int(60 * dpi_scale), int(881 * dpi_scale), int(31 * dpi_scale)))
-        self.alpha_lineEdit.setFont(font)
-        self.alpha_lineEdit.setObjectName("alpha_lineEdit")
-
-        self.slow_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.slow_lineEdit.setGeometry(
-            QtCore.QRect(int(150 * dpi_scale), int(100 * dpi_scale), int(881 * dpi_scale), int(31 * dpi_scale)))
-        self.slow_lineEdit.setFont(font)
-        self.slow_lineEdit.setObjectName("slow_lineEdit")
-
-        self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(
-            QtCore.QRect(int(45 * dpi_scale), int(100 * dpi_scale), int(91 * dpi_scale), int(21 * dpi_scale)))
-        self.label_6.setFont(font)
-        self.label_6.setLayoutDirection(Qt.LeftToRight)
-        self.label_6.setObjectName("label_6")
-
-        self.label_7 = QtWidgets.QLabel(self.centralwidget)
-        self.label_7.setGeometry(
-            QtCore.QRect(int(45 * dpi_scale), int(140 * dpi_scale), int(91 * dpi_scale), int(21 * dpi_scale)))
-        self.label_7.setFont(font)
-        self.label_7.setLayoutDirection(Qt.LeftToRight)
-        self.label_7.setObjectName("label_7")
-
-        self.fast_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.fast_lineEdit.setGeometry(
-            QtCore.QRect(int(150 * dpi_scale), int(140 * dpi_scale), int(881 * dpi_scale), int(31 * dpi_scale)))
-        self.fast_lineEdit.setFont(font)
-        self.fast_lineEdit.setObjectName("fast_lineEdit")
-        self.label_8 = QtWidgets.QLabel(self.centralwidget)
-        self.label_8.setGeometry(
-            QtCore.QRect(int(45 * dpi_scale), int(180 * dpi_scale), int(91 * dpi_scale), int(21 * dpi_scale)))
-        self.label_8.setFont(font)
-        self.label_8.setLayoutDirection(Qt.LeftToRight)
-        self.label_8.setObjectName("label_8")
-
-        self.amplitude_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.amplitude_lineEdit.setGeometry(
-            QtCore.QRect(int(150 * dpi_scale), int(180 * dpi_scale), int(881 * dpi_scale), int(31 * dpi_scale)))
-        self.amplitude_lineEdit.setFont(font)
-        self.amplitude_lineEdit.setObjectName("amplitude_lineEdit")
-
-        self.label_9 = QtWidgets.QLabel(self.centralwidget)
-        self.label_9.setGeometry(
-            QtCore.QRect(int(70 * dpi_scale), int(220 * dpi_scale), int(71 * dpi_scale), int(21 * dpi_scale)))
-        self.label_9.setFont(font)
-        self.label_9.setLayoutDirection(Qt.LeftToRight)
-        self.label_9.setObjectName("label_9")
-
-        self.eyes_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.eyes_lineEdit.setGeometry(
-            QtCore.QRect(int(150 * dpi_scale), int(220 * dpi_scale), int(881 * dpi_scale), int(31 * dpi_scale)))
-        self.eyes_lineEdit.setFont(font)
-        self.eyes_lineEdit.setObjectName("eyes_lineEdit")
-
-        self.label_10 = QtWidgets.QLabel(self.centralwidget)
-        self.label_10.setGeometry(
-            QtCore.QRect(int(50 * dpi_scale), int(260 * dpi_scale), int(101 * dpi_scale), int(21 * dpi_scale)))
-        self.label_10.setFont(font)
-        self.label_10.setLayoutDirection(Qt.LeftToRight)
-        self.label_10.setObjectName("label_10")
-
-        self.hyperventilation_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.hyperventilation_lineEdit.setGeometry(
-            QtCore.QRect(int(150 * dpi_scale), int(260 * dpi_scale), int(881 * dpi_scale), int(31 * dpi_scale)))
-        self.hyperventilation_lineEdit.setFont(font)
-        self.hyperventilation_lineEdit.setObjectName("hyperventilation_lineEdit")
-
-        self.label_11 = QtWidgets.QLabel(self.centralwidget)
-        self.label_11.setGeometry(
-            QtCore.QRect(int(90 * dpi_scale), int(300 * dpi_scale), int(51 * dpi_scale), int(21 * dpi_scale)))
-        self.label_11.setFont(font)
-        self.label_11.setLayoutDirection(Qt.LeftToRight)
-        self.label_11.setObjectName("label_11")
-
-        self.sleep_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.sleep_lineEdit.setGeometry(
-            QtCore.QRect(int(150 * dpi_scale), int(300 * dpi_scale), int(881 * dpi_scale), int(31 * dpi_scale)))
-        self.sleep_lineEdit.setFont(font)
-        self.sleep_lineEdit.setObjectName("sleep_lineEdit")
-
-        self.label_12 = QtWidgets.QLabel(self.centralwidget)
-        self.label_12.setGeometry(
-            QtCore.QRect(int(45 * dpi_scale), int(340 * dpi_scale), int(91 * dpi_scale), int(21 * dpi_scale)))
-        self.label_12.setFont(font)
-        self.label_12.setLayoutDirection(Qt.LeftToRight)
-        self.label_12.setObjectName("label_12")
-
-        self.abnormal_wave_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.abnormal_wave_lineEdit.setGeometry(
-            QtCore.QRect(int(150 * dpi_scale), int(340 * dpi_scale), int(881 * dpi_scale), int(31 * dpi_scale)))
-        self.abnormal_wave_lineEdit.setFont(font)
-        self.abnormal_wave_lineEdit.setObjectName("abnormal_wave_lineEdit")
-
-        self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(
-            QtCore.QRect(int(70 * dpi_scale), int(380 * dpi_scale), int(71 * dpi_scale), int(21 * dpi_scale)))
-        self.label_13.setFont(font)
-        self.label_13.setLayoutDirection(Qt.LeftToRight)
-        self.label_13.setObjectName("label_13")
-
-        self.attack_stage_lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.attack_stage_lineEdit.setGeometry(
-            QtCore.QRect(int(150 * dpi_scale), int(380 * dpi_scale), int(881 * dpi_scale), int(31 * dpi_scale)))
-        self.attack_stage_lineEdit.setFont(font)
-        self.attack_stage_lineEdit.setObjectName("attack_stage_lineEdit")
-
-        self.label_14 = QtWidgets.QLabel(self.centralwidget)
-        self.label_14.setGeometry(
-            QtCore.QRect(int(45 * dpi_scale), int(420 * dpi_scale), int(91 * dpi_scale), int(21 * dpi_scale)))
-        self.label_14.setFont(font)
-        self.label_14.setLayoutDirection(Qt.LeftToRight)
-        self.label_14.setObjectName("label_14")
-
-        self.summary_textEdit = QtWidgets.QTextEdit(self.centralwidget)
-        self.summary_textEdit.setGeometry(
-            QtCore.QRect(int(150 * dpi_scale), int(420 * dpi_scale), int(881 * dpi_scale), int(111 * dpi_scale)))
-        self.summary_textEdit.setFont(font)
-        self.summary_textEdit.setObjectName("summary_textEdit")
-
-        self.save_pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.save_pushButton.setGeometry(
-            QtCore.QRect(int(480 * dpi_scale), int(550 * dpi_scale), int(81 * dpi_scale), int(31 * dpi_scale)))
-        self.save_pushButton.setFont(font)
-        self.save_pushButton.setObjectName("save_pushButton")
-
-        self.close_pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.close_pushButton.setGeometry(
-            QtCore.QRect(int(780 * dpi_scale), int(550 * dpi_scale), int(81 * dpi_scale), int(31 * dpi_scale)))
-        self.close_pushButton.setFont(font)
-        self.close_pushButton.setObjectName("close_pushButton")
-
-        self.commit_pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.commit_pushButton.setGeometry(
-            QtCore.QRect(int(630 * dpi_scale), int(550 * dpi_scale), int(81 * dpi_scale), int(31 * dpi_scale)))
-        self.commit_pushButton.setFont(font)
-        self.commit_pushButton.setObjectName("del_pushButton")
-
-        self.sign_dateTimeEdit = QtWidgets.QDateTimeEdit(self.centralwidget)
-        self.sign_dateTimeEdit.setGeometry(
-            QtCore.QRect(int(870 * dpi_scale), int(10 * dpi_scale), int(161 * dpi_scale), int(31 * dpi_scale)))
-        self.sign_dateTimeEdit.setFont(font)
-        self.sign_dateTimeEdit.setObjectName("sign_dateTimeEdit")
-
-
-        diag_MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(diag_MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1080, 23))
-        self.menubar.setObjectName("menubar")
-        diag_MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(diag_MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        diag_MainWindow.setStatusBar(self.statusbar)
-
-        # self.layout.addWidget(self.label)
-        # self.layout.addWidget(self.label_2)
-        # self.layout.addWidget(self.label_3)
-        # self.layout.addWidget(self.patient_lineEdit)
-        # self.layout.addWidget(self.measure_date_lineEdit)
-        # self.layout.addWidget(self.d_user_lineEdit_3)
-        # self.layout.addWidget(self.label_state)
-        # self.layout.addWidget(self.state_lineEdit_3)
-        # self.layout.addWidget(self.label_4)
-        # self.layout.addWidget(self.label_5)
-        # self.layout.addWidget(self.alpha_lineEdit)
-        # self.layout.addWidget(self.slow_lineEdit)
-        # self.layout.addWidget(self.label_6)
-        # self.layout.addWidget(self.label_7)
-        # self.layout.addWidget(self.fast_lineEdit)
-        # self.layout.addWidget(self.label_8)
-        # self.layout.addWidget(self.amplitude_lineEdit)
-        # self.layout.addWidget(self.label_9)
-        # self.layout.addWidget(self.eyes_lineEdit)
-        # self.layout.addWidget(self.label_10)
-        # self.layout.addWidget(self.hyperventilation_lineEdit)
-        # self.layout.addWidget(self.label_11)
-        # self.layout.addWidget(self.sleep_lineEdit)
-        # self.layout.addWidget(self.label_12)
-        # self.layout.addWidget(self.abnormal_wave_lineEdit)
-        # self.layout.addWidget(self.label_13)
-        # self.layout.addWidget(self.attack_stage_lineEdit)
-        # self.layout.addWidget(self.label_14)
-        # self.layout.addWidget(self.summary_textEdit)
-        # self.layout.addWidget(self.save_pushButton)
-        # self.layout.addWidget(self.close_pushButton)
-        # self.layout.addWidget(self.commit_pushButton)
-        # self.layout.addWidget(self.sign_dateTimeEdit)
-        # self.layout.addWidget(self.menubar)
-        # self.layout.addWidget(self.statusbar)
-
-
-
-
-
-        self.retranslateUi(diag_MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(diag_MainWindow)
+    def _create_button(self, text):
+        """创建按钮"""
+        button = QtWidgets.QPushButton()
+        button.setFont(self._get_font())
+        button.setMinimumSize(
+            int(90 * self.dpi_scale),
+            int(35 * self.dpi_scale)
+        )
+        button.setObjectName(text)
+        return button
 
     def retranslateUi(self, diag_MainWindow):
         _translate = QtCore.QCoreApplication.translate
