@@ -818,6 +818,8 @@ class autoController(QWidget):
     def itemSelectionChanged_tableWidgetClassifierScan(self, item=None):
         try:
             row = self.view.ui.tableWidgetClassifierScan.currentRow()
+            self.status = self.classifier_info[row][14]
+            self.view.ui.container.setEnabled(self.status == "waveform")
             if not self.is_alg_search:
                 self.classifier_name = self.classifier_info[row][1]
                 self.classifier_file_name = self.classifier_info[row][4]
@@ -873,17 +875,50 @@ class autoController(QWidget):
                 return
             else:
                 include_channels_in_file = REPData[2]
-                # for i in range(len(include_channels_in_file)):
-                #     include_channels_in_file[i] = include_channels_in_file[i] + '-REF'
                 file_name = REPData[3]
                 selected_file_info = REPData[5]
+                EEG = REPData[6]
                 self.view.set_selected_filename(file_name)
-                self.view.init_file_montage_setting_view(self.montage_name_list, self.montage_list,
+                if EEG == "EEG":
+                    self.view.init_file_montage_setting_view(self.montage_name_list, self.montage_list,
                                                          include_channels_in_file,
                                                          selected_file_info)
+                else:
+                    monopole = []
+                    bipolar = []
+                    self.dgroup = self.bdfMontage(include_channels_in_file)
+                    dgroupKeys = list(self.dgroup.keys())
+                    glen = len(dgroupKeys)
+                    for i in range(glen):
+                        chs = self.dgroup.get(dgroupKeys[i])
+                        for j in range(len(chs) - 1):
+                            chs[j] = chs[j].split('-')[0]
+                            chs[j + 1] = chs[j + 1].split('-')[0]
+                            ch1 = "-".join([chs[j], chs[j + 1]])  # 单极
+                            monopole.append(ch1)
+                            if j < len(chs) - 2:
+                                chs[j + 2] = chs[j + 2].split('-')[0]
+                                ch2 = "-".join([chs[j], chs[j + 2]])
+                                bipolar.append(ch2)
+                    self.view.init_file_montage_setting_view(["Default", "单极", "双极"], [{"channels": include_channels_in_file, "name": "Default"}, {"channels": monopole, "name": "单极"}, {"channels": bipolar, "name": "双极"}], include_channels_in_file, selected_file_info)
         except Exception as e:
             print('getFileChannelsRes', e)
 
+    def bdfMontage(self, channels):
+        dgroup = {}
+        for channel in channels:
+            ch = channel.split('-')[0]
+            idx = len(ch) - 1
+            while idx >= 0:
+                if not ch[idx].isdigit():
+                    break
+                idx -= 1
+            key = ch[:idx + 1]
+            if key in dgroup.keys():
+                dgroup[key].append(channel)
+            else:
+                dgroup[key] = [channel]
+        return dgroup
 
     def on_clicked_tableWidgetFile(self):
         try:
@@ -973,7 +1008,7 @@ class autoController(QWidget):
                 QMessageBox.critical(self, 'Alert', '未选择分类器')
                 self.view.ui.pushButton.setEnabled(True)
                 return
-            if not self.if_leagel_file_info_list():
+            if self.status == "waveform" and not self.if_leagel_file_info_list():
                 self.view.ui.pushButton.setEnabled(True)
                 return
             row = self.view.ui.tableWidgetClassifierScan.currentRow()

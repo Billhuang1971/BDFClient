@@ -134,11 +134,11 @@ class Ui_Form(object):
 
         self.refChannel = CheckableComboBox()
         self.refChannel.addItems(
-             ['Default', 'Fp1', 'Fpz', 'Fp2', 'AF7', 'AF3', 'AFz', 'AF4', 'AF8', 'F9', 'F7', 'F5', 'F3', 'F1', 'Fz', 'F2', 'F4',
-              'F6', 'F8', 'F10', 'FT9', 'FT7', 'FC5', 'FC3', 'FC1', 'FCz', 'FC2', 'FC4', 'FC6', 'FT8', 'FT10', 'LPA/M1',
-              'RPA/M2', 'T7', 'C5', 'C3', 'C1', 'Cz', 'C2', 'C4', 'C6', 'T8', 'TP9', 'TP7', 'CP5', 'Cp3', 'CP1', 'CPz',
-              'CP2', 'CP4', 'CP6', 'TP8', 'TP10', 'P9', 'P7', 'P5', 'P3', 'P1', 'Pz', 'P2', 'P4', 'P6', 'P8', 'P10',
-              'PO7', 'PO3', 'POz', 'PO4', 'PO8', 'O1', 'Oz', 'O2', 'CB1', 'CB2'])
+             ['Default', 'FP1-REF', 'FPZ-REF', 'FP2-REF', 'AF7-REF', 'AF3-REF', 'AFZ-REF', 'AF4-REF', 'AF8-REF', 'F9-REF', 'F7-REF', 'F5-REF', 'F3-REF', 'F1-REF', 'Fz-REF', 'F2-REF', 'F4-REF',
+              'F6-REF', 'F8-REF', 'F10-REF', 'FT9-REF', 'FT7-REF', 'FC5-REF', 'FC3-REF', 'FC1-REF', 'FCZ-REF', 'FC2-REF', 'FC4-REF', 'FC6-REF', 'FT8-REF', 'FT10-REF', 'LPA/M1-REF',
+              'RPA/M2-REF', 'T7-REF', 'C5-REF', 'C3-REF', 'C1-REF', 'CZ-REF', 'C2-REF', 'C4-REF', 'C6-REF', 'T8-REF', 'TP9-REF', 'TP7-REF', 'CP5-REF', 'CP3-REF', 'CP1-REF', 'CPZ-REF',
+              'CP2-REF', 'CP4-REF', 'CP6-REF', 'TP8-REF', 'TP10-REF', 'P9-REF', 'P7-REF', 'P5-REF', 'P3-REF', 'P1-REF', 'PZ-REF', 'P2-REF', 'P4-REF', 'P6-REF', 'P8-REF', 'P10-REF',
+              'PO7-REF', 'PO3-REF', 'POZ-REF', 'PO4-REF', 'PO8-REF', 'O1-REF', 'OZ-REF', 'O2-REF', 'CB1-REF', 'CB2-REF'])
         self.label_30 = QtWidgets.QLabel(self.groupBox_3)
         self.label_30.setObjectName("label_30")
         self.label_30.setVisible(False)

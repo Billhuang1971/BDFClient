@@ -93,6 +93,8 @@ class assessLabelController(QWidget):
             self.prentryView.ui.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
             self.prentryView.ui.tableWidget.clicked.connect(self.on_tableWidget_itemClicked)
             self.prentryView.ui.btnConfirm.clicked.connect(self.on_btnConfirm_clicked)
+            self.prentryView.ui.pushButton_6.clicked.connect(self.on_btnSearch_clicked)
+            self.prentryView.ui.pushButton_7.clicked.connect(self.on_btnReset_clicked)
             self.prentryView.ui.btnReturn.clicked.connect(self.on_btnReturn_clicked)
             self.page = ['model_name']
             self.client.getModelIdName([self.curPageIndex, self.pageRows, False])
@@ -215,6 +217,20 @@ class assessLabelController(QWidget):
             self.client.assessClassifierInfoPaging(msg)
         except Exception as e:
             print('page_controller', e)
+
+    def on_btnSearch_clicked(self):
+        text = self.prentryView.ui.lineEdit_2.text()
+        self.isSearch = False
+        if text != "":
+            self.isSearch = True
+            self.key_word = "classifier_name"
+            self.key_value = text
+        self.page_controller("home")
+
+    def on_btnReset_clicked(self):
+        self.prentryView.ui.lineEdit_2.setText("")
+        self.isSearch = False
+        self.page_controller("home")
 
     def assessClassifierInfoPagingRes(self, REPData):
         try:

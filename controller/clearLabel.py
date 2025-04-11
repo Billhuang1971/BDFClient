@@ -222,6 +222,7 @@ class clearLabelController(QWidget):
         self.view.ui.comboCond.clear()
         for i in range(len(file_1)):
             self.view.ui.comboCond.addItem(item[i], file_1[i])
+        self.view.ui.comboCond.setSizeAdjustPolicy(QComboBox.AdjustToContents)
 
     # 初始化 模型列表/模型标注的文件列表
     # def init_tableWidget(self):
