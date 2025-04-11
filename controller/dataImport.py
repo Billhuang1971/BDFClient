@@ -87,6 +87,9 @@ class dataImportController(QWidget):
         # 存放所有病人
         self.patient = []
 
+        # 当前文件的类型（sEEG/EEG）
+        self.file_type = None
+
         # 当前选择行索引
         self.row = -1
         # 用来保存文件每次传的块大小(5M)
@@ -927,8 +930,10 @@ class dataImportController(QWidget):
                 # 检查 channels 中的每个通道是否都在 standard_128_channels 中
                 if set(judge_channels).issubset(set(standard_128_channels)):
                     is_ieeg = False
+                    self.file_type = 'EEG'
                 else:
                     is_ieeg = True
+                    self.file_type = 'sEEG'
                 print('当前is_ieeg的值是：',is_ieeg)
 
                 # 从列表里把最大值和最小值拎出来
@@ -1055,6 +1060,7 @@ class dataImportController(QWidget):
         REQmsg = []
         account = self.client.tUser[1]
         config_id = self.config_id
+        file_type = self.file_type
         # TODO：动态获取config_id,注释该行
         if mac != '':
             mac = mac
@@ -1062,7 +1068,7 @@ class dataImportController(QWidget):
             mac = self.cAppUtil.getMacAddress()
 
         if state == 'start':
-            filemsg = ['EEGUpload', state, self.check_id, self.file_id, mac, config_id]
+            filemsg = ['EEGUpload', state, self.check_id, self.file_id, mac, config_id, file_type]
         elif state == 'uploading':
             filemsg = ['EEGUpload',state, self.check_id, self.file_id, mac, block_id, data]
         elif state == 'uploaded':
@@ -1294,6 +1300,8 @@ class dataImportController(QWidget):
                     (QMessageBox.information(self, "上传完成",
                                              "当前待上传文件上传完成，可重新选择文件上传！！！",
                                              QMessageBox.Yes))
+
+                    self.is_uploading = False
                     # 刷新界面
                     # 清空服务端待上传文件列表
                     self.view.ui.tableWidget_1.setRowCount(0)
