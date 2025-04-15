@@ -132,13 +132,14 @@ class Ui_Form(object):
         self.horizontalLayout_13.addWidget(self.comboBox_5)
         self.horizontalLayout_13.addLayout(self.horizontalLayout_14)
 
-        self.refChannel = CheckableComboBox()
-        self.refChannel.addItems(
-             ['Default', 'FP1-REF', 'FPZ-REF', 'FP2-REF', 'AF7-REF', 'AF3-REF', 'AFZ-REF', 'AF4-REF', 'AF8-REF', 'F9-REF', 'F7-REF', 'F5-REF', 'F3-REF', 'F1-REF', 'Fz-REF', 'F2-REF', 'F4-REF',
-              'F6-REF', 'F8-REF', 'F10-REF', 'FT9-REF', 'FT7-REF', 'FC5-REF', 'FC3-REF', 'FC1-REF', 'FCZ-REF', 'FC2-REF', 'FC4-REF', 'FC6-REF', 'FT8-REF', 'FT10-REF', 'LPA/M1-REF',
-              'RPA/M2-REF', 'T7-REF', 'C5-REF', 'C3-REF', 'C1-REF', 'CZ-REF', 'C2-REF', 'C4-REF', 'C6-REF', 'T8-REF', 'TP9-REF', 'TP7-REF', 'CP5-REF', 'CP3-REF', 'CP1-REF', 'CPZ-REF',
-              'CP2-REF', 'CP4-REF', 'CP6-REF', 'TP8-REF', 'TP10-REF', 'P9-REF', 'P7-REF', 'P5-REF', 'P3-REF', 'P1-REF', 'PZ-REF', 'P2-REF', 'P4-REF', 'P6-REF', 'P8-REF', 'P10-REF',
-              'PO7-REF', 'PO3-REF', 'POZ-REF', 'PO4-REF', 'PO8-REF', 'O1-REF', 'OZ-REF', 'O2-REF', 'CB1-REF', 'CB2-REF'])
+        self.refChannel=QPushButton()
+        # self.refChannel = CheckableComboBox()
+        # self.refChannel.addItems(
+        #      ['Default', 'FP1-REF', 'FPZ-REF', 'FP2-REF', 'AF7-REF', 'AF3-REF', 'AFZ-REF', 'AF4-REF', 'AF8-REF', 'F9-REF', 'F7-REF', 'F5-REF', 'F3-REF', 'F1-REF', 'Fz-REF', 'F2-REF', 'F4-REF',
+        #       'F6-REF', 'F8-REF', 'F10-REF', 'FT9-REF', 'FT7-REF', 'FC5-REF', 'FC3-REF', 'FC1-REF', 'FCZ-REF', 'FC2-REF', 'FC4-REF', 'FC6-REF', 'FT8-REF', 'FT10-REF', 'LPA/M1-REF',
+        #       'RPA/M2-REF', 'T7-REF', 'C5-REF', 'C3-REF', 'C1-REF', 'CZ-REF', 'C2-REF', 'C4-REF', 'C6-REF', 'T8-REF', 'TP9-REF', 'TP7-REF', 'CP5-REF', 'CP3-REF', 'CP1-REF', 'CPZ-REF',
+        #       'CP2-REF', 'CP4-REF', 'CP6-REF', 'TP8-REF', 'TP10-REF', 'P9-REF', 'P7-REF', 'P5-REF', 'P3-REF', 'P1-REF', 'PZ-REF', 'P2-REF', 'P4-REF', 'P6-REF', 'P8-REF', 'P10-REF',
+        #       'PO7-REF', 'PO3-REF', 'POZ-REF', 'PO4-REF', 'PO8-REF', 'O1-REF', 'OZ-REF', 'O2-REF', 'CB1-REF', 'CB2-REF'])
         self.label_30 = QtWidgets.QLabel(self.groupBox_3)
         self.label_30.setObjectName("label_30")
         self.label_30.setVisible(False)
@@ -149,12 +150,12 @@ class Ui_Form(object):
         self.label_ECIC_30.setObjectName("label_ECIC_30")
         self.label_ECIC_30.setVisible(False)
         self.horizontalLayout_13.addWidget(self.label_ECIC_30)
-        self.ECIC_comboBox = CheckableComboBox()
-        self.ECIC_comboBox.addItems(['全部取消'])
-        self.ECIC_comboBox.setEditable(True)
-        self.ECIC_comboBox.setVisible(False)
-        self.ECIC_comboBox.lineEdit().setReadOnly(False)
-        self.horizontalLayout_13.addWidget(self.ECIC_comboBox)
+        self.ECIC_Btn = QPushButton()
+        # self.ECIC_comboBox.addItems(['全部取消'])
+        # self.ECIC_comboBox.setEditable(True)
+        self.ECIC_Btn.setVisible(False)
+        # self.ECIC_comboBox.lineEdit().setReadOnly(False)
+        self.horizontalLayout_13.addWidget(self.ECIC_Btn)
 
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_13.addItem(spacerItem1)
@@ -617,6 +618,8 @@ class Ui_Form(object):
         self.label_26.setText(_translate("Form", "文件: "))
         self.pushButton_3.setText(_translate("Form", "添加筛选"))
 
+        self.refChannel.setText(_translate("Form", "通道选择"))
+        self.ECIC_Btn.setText(_translate("Form", "通道选择"))
         self.pushButton.setText(_translate("Form", "构建数据集"))
         self.pushButton_1.setText(_translate("Form", "重置筛选"))
         self.pushButton_2.setText(_translate("Form", "集合导入"))
