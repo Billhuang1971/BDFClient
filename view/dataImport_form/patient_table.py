@@ -189,9 +189,19 @@ class PatientTableWidget(QMainWindow):
         """尾页点击信号"""
         self.control_signal.emit(["final", self.curPage.text()])
 
+    # def __confirm_skip(self):
+    #     """跳转页码确定"""
+    #     self.control_signal.emit(["confirm", self.skipPage.text()])
+
     def __confirm_skip(self):
         """跳转页码确定"""
-        self.control_signal.emit(["confirm", self.skipPage.text()])
+        try:
+            page = int(self.skipPage.text())
+            if page < 1:
+                raise ValueError
+            self.control_signal.emit(["confirm", str(page)])
+        except ValueError:
+            QMessageBox.warning(self, "输入错误", "请输入有效的页码（正整数）")
 
     def showTotalPage(self):
         """返回当前总页数"""
