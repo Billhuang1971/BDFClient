@@ -2,6 +2,7 @@ import json
 import math
 import os
 from view.setBuild import setBulidView
+from view.setBulid_form.channelselect import channelselectView,channelimportView
 from view.setBulid_form.pgb_form.form import pgbView
 from PyQt5 import QtCore, QtGui, QtWidgets
 from view.setBulid_form.secTable_form.form import SectableView
@@ -53,6 +54,9 @@ class setBuildController(QWidget):
             self.fltAllInfo = {}
             self.view.fltTable(self.fltContent)
 
+            self.channel=[]#选择的通道
+            self.ref=None #存储头皮通道选择view的对象
+            self.ECIC=None #存储颅内的通道选择view对象
             self.savePath = ''
             self.startBlock = 0
             self.originPath = ''
@@ -84,14 +88,38 @@ class setBuildController(QWidget):
             self.client.getSetExportDataResSig.connect(self.getSetExportDataRes)
             self.view.ui.re_scheme.currentTextChanged.connect(self.on_reverse_scheme_changed)
 
+            self.view.ui.refChannel.clicked.connect(self.init_ref) #头皮通道选择
+            self.view.ui.ECIC_Btn.clicked.connect(self.init_ECIC) #颅内通道选择
             # TODO 为了方便先暂时这样
-            self.view.ui.refChannel.model().item(0).setCheckState(Qt.Checked)
+            # self.view.ui.refChannel.model().item(0).setCheckState(Qt.Checked)
             # self.view.ui.lineEdit_3.setText('1')
             # self.view.ui.lineEdit_4.setText('0')
             # self.view.ui.lineEdit.setText('80')
             self.show_select()
         except Exception as e:
             print('__init__', e)
+    def init_ECIC(self):
+        if self.ECIC==None:
+            self.ECIC=channelimportView()
+            self.ECIC.btn_confirm.clicked.connect(self.get_result)
+            self.ECIC.btn_cancel.clicked.connect(self.ECIC.close)
+        self.ECIC.show()
+    def init_ref(self):
+        if self.ref==None:
+            self.ref=channelselectView()
+            self.ref.btn_confirm.clicked.connect(self.get_result)
+            self.ref.btn_cancel.clicked.connect(self.ref.close)
+        self.ref.show()
+
+    def get_result(self):
+        if self.ref!=None:
+            selected = [cb.text() for cb in self.ref.checkboxes if cb.isChecked()]
+            self.channel=selected
+            self.ref.close()
+        elif self.ECIC!=None:
+            selected = [cb.text() for cb in self.ECIC.checkboxes if cb.isChecked()]
+            self.channel = selected
+            self.ECIC.close()
 
     def show_select(self):
         msg_box = QMessageBox()
@@ -109,7 +137,6 @@ class setBuildController(QWidget):
             Qt.CustomizeWindowHint  # 允许自定义窗口属性
         )
         msg_box.setEscapeButton(None)  # 禁用ESC键
-        msg_box.setFixedSize(600, 300)
         msg_box.setStyleSheet("""
                 /* 调整按钮样式 */
                 QPushButton {
@@ -120,7 +147,7 @@ class setBuildController(QWidget):
 
                 /* 调整文本标签 */
                 QLabel {
-                    font-size: 16px;
+                    font-size: 20px;
                     margin-bottom: 20px;
                 }
             """)
@@ -133,13 +160,16 @@ class setBuildController(QWidget):
         msg_box.exec_()
 
     def handle_scalp_dataset(self):
-        self.set_signal = 1 #头皮
+        self.set_signal = 'EEG' #头皮
+
+        self.view.ui.groupBox_3.setTitle('头皮样本优选')
         # 数据初始化
         self.init_data()
         # 表格初始化,界面初始化默认先显示数据集的信息
         self.view.init_setTable(self.set_info)
     def handle_intracranial_dataset(self):
-        self.set_signal = 0 #颅内
+        self.set_signal = 'sEEG' #颅内
+        self.view.ui.groupBox_3.setTitle('颅内样本优选')
         # 数据初始化
         self.init_data()
         # 表格初始化,界面初始化默认先显示数据集的信息
@@ -195,21 +225,21 @@ class setBuildController(QWidget):
         self.view.ui.comboBox_2.setEnabled(False)
         self.view.ui.comboBox_3.setEnabled(False)
         self.view.ui.label_ECIC_30.setVisible(False)
-        self.view.ui.ECIC_comboBox.setVisible(False)
+        self.view.ui.ECIC_Btn.setVisible(False)
 
         if isChecked:
             if self.sender() == self.view.ui.radioButton3:
-                self.view.ui.label_13.setVisible(True) #参考方案
-                self.view.ui.comboBox_5.setVisible(True) #参考方案后的combox
+                # self.view.ui.label_13.setVisible(True) #参考方案
+                # self.view.ui.comboBox_5.setVisible(True) #参考方案后的combox
                 self.view.ui.comboBox_2.setEnabled(True) #波形类型的选择
             elif self.sender() == self.view.ui.radioButton4:
-                if self.set_signal==1:
+                if self.set_signal=='EEG':
                     self.view.ui.label_30.setVisible(True)#导联选取
                     self.view.ui.refChannel.setVisible(True) #导联选取后的combox
                     self.view.ui.comboBox_3.setEnabled(True) #状态类型的选择
-                else:
+                else:#颅内
                     self.view.ui.label_ECIC_30.setVisible(True)
-                    self.view.ui.ECIC_comboBox.setVisible(True)
+                    self.view.ui.ECIC_Btn.setVisible(True)
                     self.view.ui.comboBox_3.setEnabled(True)
             self.reset()
 
@@ -585,7 +615,7 @@ class setBuildController(QWidget):
         print(f'span: {self.span}, minSpan: {self.minSpan}')
 
         self.client.getSetBuildFltData([dataSource, comboBox.itemText(id), self.span,
-                                        self.minSpan, self.selectedTheme])
+                                        self.minSpan, self.selectedTheme,self.set_signal])
 
     # 构建数据集
     def setBuild(self):
@@ -635,13 +665,13 @@ class setBuildController(QWidget):
             else:
                 channels = self.montage[self.view.ui.comboBox_5.currentIndex() - 1]['channels']
         else:
-            if self.set_signal == 1:
-                channels = self.view.ui.refChannel.selectedItems()
+            if self.set_signal == 'EEG':#头皮
+                channels = self.channel
                 nChannel = len(channels)
-            else:
-                channels=self.view.ui.ECIC_comboBox.selectedItems()
+            else: #颅内
+                channels=self.channel
                 nChannel = len(channels)
-        print(f'nChannel: {nChannel}, channels: {channels}, {self.view.ui.refChannel.selectedItems()}')
+        print(f'nChannel: {nChannel}, channels: {channels}, {self.channel}')
 
         # 重新生成content
         self.finalContent.clear()
