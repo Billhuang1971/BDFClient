@@ -70,7 +70,6 @@ class Ui_Form(object):
         self.date_lineEdit.setMaximumSize(QtCore.QSize(18, 26))
         self.date_lineEdit.dateChanged.connect(partial(self.dateChanged, 1))
 
-
         self.date_lineEdit.setFont(font)
         self.horizontalLayout.addWidget(self.date_lineEdit)
 
@@ -219,7 +218,7 @@ class Ui_Form(object):
 
         self.pushButton.setText(_translate("Form", "查询"))
 
-        dt = QtCore.QDateTime.currentDateTime()
+        dt = QtCore.QDateTime.currentDateTime().addDays(1)
         self.date_lineEdit.setDateTime(dt)
         self.date_lineEdit2.setDateTime(dt)
 
@@ -273,7 +272,7 @@ class Ui_Form(object):
         self.tableWidget.setColumnWidth(6, 240)
     def dateChanged(self,gData):
         if gData==2:
-            mdate =  self.date_lineEdit2.date().toString('yyyy-MM-dd')
+            mdate = self.date_lineEdit2.date().toString('yyyy-MM-dd')
             self.lineEditDate2.setText(mdate)
         else:
             mdate = self.date_lineEdit.date().toString('yyyy-MM-dd')
