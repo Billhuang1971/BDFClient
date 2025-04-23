@@ -313,6 +313,9 @@ class setBuildController(QWidget):
             item = QStandardItem()
             item.setText("Random Select")
             list_view_model.appendRow(item)
+            item2 = QStandardItem()
+            item2.setText("Cluster Select")
+            list_view_model.appendRow(item2)
 
 
             revealMontage = ['Default'] + [item['name'] for item in self.montage]#参考方案
@@ -347,6 +350,8 @@ class setBuildController(QWidget):
     def delSetDataRes(self, data):
         print(f'delSetDataRes: {data}')
         if data[0] == '1':
+            self.curPageIndex = 1
+            self.view.ui.curPage.setText(str(self.curPageIndex))
             self.client.getSet([1, self.pageRows, 'home'])
         QMessageBox.information(self, '提示', data[1][0])
 
@@ -660,7 +665,7 @@ class setBuildController(QWidget):
         type = 'wave' if self.isType else 'state'
         if type == 'wave':
             nChannel = 1
-            if self.view.ui.comboBox_5.currentText() == 'Default':
+            if self.view.ui.comboBox_5.currentText() == 'Default':#没有删除 直接做隐藏，波形直接默认default
                 channels = ['Default']
             else:
                 channels = self.montage[self.view.ui.comboBox_5.currentIndex() - 1]['channels']
@@ -671,6 +676,10 @@ class setBuildController(QWidget):
             else: #颅内
                 channels=self.channel
                 nChannel = len(channels)
+            if channels==[]:
+                QMessageBox.information(self, '提示', '尚未选择通道')
+                return
+
         print(f'nChannel: {nChannel}, channels: {channels}, {self.channel}')
 
         # 重新生成content
@@ -731,7 +740,7 @@ class setBuildController(QWidget):
         print(msgJson)
 
         self.view.ui.pushButton.setEnabled(False)
-        self.client.buildSet([setName, msgJson, self.client.tUser[12], type])
+        self.client.buildSet([setName, msgJson, self.client.tUser[12], type,msg])
 
     # 构建前的检查,如果存在不符合的条件则弹出提示
     def build_check(self):
@@ -775,7 +784,6 @@ class setBuildController(QWidget):
             QMessageBox.information(self, '提示', '尚未选择延拓规则')
             tag = False
             return search_table, tag
-
         if len(self.addType) == 0:
             QMessageBox.information(self, '提示', '尚未添加任何标注类型')
             tag = False

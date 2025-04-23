@@ -201,7 +201,7 @@ class Ui_Form(object):
         self.label_19.setFont(font)
         self.counter_ratio = QtWidgets.QComboBox(self.groupBox_3)
         self.counter_ratio.addItems([str(i) for i in range(0, 11)])
-        self.re_scheme = QtWidgets.QComboBox(self.groupBox_3)
+        self.re_scheme = QtWidgets.QComboBox(self.groupBox_3) #负例构建方案的下拉框
         self.re_scheme.setFixedWidth(300)
         # item_widget = QtWidgets.QHBoxLayout()
         # self.re_scheme.addItems(['Random Select'])
