@@ -53,6 +53,7 @@ class dataImportController(QWidget):
         self.client.delPatientCheckInfoResSig.connect(self.delPatientCheckInfoRes)
         self.client.addCheckInfoResSig.connect(self.addCheckInfoRes)
         self.client.checkConfigResSig.connect(self.checkConfigRes)
+        self.client.getUserConfigResSig.connect(self.getUserConfigRes)
         self.client.makeFileNameResSig.connect(self.makeFileNameRes)
         self.client.writeEEGResSig.connect(self.writeEEGRes)
         self.client.updateCheckInfoResSig.connect(self.updateCheckInfoRes)
@@ -260,7 +261,7 @@ class dataImportController(QWidget):
                 self.from_filepath = self.convert_filepath
                 self.checkBasicConfig()
             else:
-                QMessageBox.information(self, "不支持的文件类型", "请上传有效的脑电文件格式 (.edf 或 .bdf).")
+                QMessageBox.information(self, "不支持的文件类型", "请上传有效的脑电文件格式 (.edf /.bdf).")
                 return
 
     def checkBasicConfig(self):
@@ -283,6 +284,40 @@ class dataImportController(QWidget):
         freq = raw.info['sfreq']
         REQmsg = [account, user_id, filemsg, freq]
         self.client.checkConfig(REQmsg)
+
+    def checkConfigRes(self, REPData):
+        try:
+            if REPData[0] == '1':
+                userConfig = REPData[3][0]
+                self.userConfig_info = userConfig
+                print('userConfig', userConfig)
+                # 获取check_number
+                check_number = self.patientCheck_info[self.row][5]
+                # 添加新任务到内存队列
+                self.addWaitFile(check_number)
+                # 这个位置有没有必要在内存等待队列文件中新增？到时候点击启动上传会更新
+                self.addPending(check_number)
+
+            elif REPData[0] == '2':
+                QMessageBox.information(self, "配置检查", REPData[2], QMessageBox.Yes)
+            else:
+                QMessageBox.information(self, "配置检查", REPData[2], QMessageBox.Yes)
+        except Exception as e:
+            print('checkConfigRes', e)
+
+    # 第二次进入重新获取UserConfig
+    def getUserConfigRes(self, REPData):
+        print("REPData:", REPData)
+        try:
+            if REPData[0] == '1':
+                self.userConfig_info = REPData[3][0]
+                self.process_bdf(self.userConfig_info, self.fileName)
+                self.fileName = None
+                print('userConfig:', self.userConfig_info)
+            else:
+                print('状态码非1:', REPData[0])
+        except Exception as e:
+            print('getUserConfigRes 错误:', e)
 
     def addWaitFile(self,check_number):
         # 添加新任务到内存队列
@@ -330,25 +365,7 @@ class dataImportController(QWidget):
 
         print("新记录已添加到文件")
 
-    def checkConfigRes(self, REPData):
-        try:
-            if REPData[0] == '1':
-                userConfig = REPData[3][0]
-                self.userConfig_info = userConfig
-                print('userConfig', userConfig)
-                # 获取check_number
-                check_number = self.patientCheck_info[self.row][5]
-                # 添加新任务到内存队列
-                self.addWaitFile(check_number)
-                # 这个位置有没有必要在内存等待队列文件中新增？到时候点击启动上传会更新
-                self.addPending(check_number)
 
-            elif REPData[0] == '2':
-                QMessageBox.information(self, "配置检查", REPData[2], QMessageBox.Yes)
-            else:
-                QMessageBox.information(self, "配置检查", REPData[2], QMessageBox.Yes)
-        except Exception as e:
-            print('checkConfigRes', e)
 
     # 删除服务端已上传的所有文件 与该脑电检查相关的所有记录 删除与该脑电检查对应的所有待传任务
     def on_btnRemove_clicked(self,row):
@@ -795,6 +812,7 @@ class dataImportController(QWidget):
         with open(self.queue_file_path, 'w', encoding='utf-8') as file:
             json.dump({"task": self.wait_file}, file, ensure_ascii=False, indent=4)
 
+    # MakeFileName会初始化文件名的相关变量
     def makeFileNameRes(self, REPData):
         with self.processing_lock:
             if self.is_processing:
@@ -815,13 +833,13 @@ class dataImportController(QWidget):
             with open(self.queue_file_path, 'r', encoding='utf-8') as file:
                 data = json.load(file)
                 if "task" in data and data["task"]:
-                    fileName = data["task"][0].get("fileName")  # 获取第一条记录
-                    if not fileName:
+                    self.fileName = data["task"][0].get("fileName")  # 获取第一条记录
+                    if not self.fileName:
                         raise ValueError("队列中的任务文件名无效！")
 
             # 开始处理文件
             # 这里给出一个分支
-            self.process_bdf(self.userConfig_info, fileName)
+            self.process_bdf(self.userConfig_info, self.fileName)
 
         except Exception as e:
             print("makeFileNameRes 错误：", e)
@@ -2426,6 +2444,7 @@ class dataImportController(QWidget):
         self.client.delPatientCheckInfoResSig.disconnect()
         self.client.addCheckInfoResSig.disconnect()
         self.client.checkConfigResSig.disconnect()
+        self.client.getUserConfigResSig.disconnect()
         self.client.makeFileNameResSig.disconnect()
         self.client.writeEEGResSig.disconnect()
         self.client.updateCheckInfoResSig.disconnect()
