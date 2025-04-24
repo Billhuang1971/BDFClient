@@ -325,6 +325,8 @@ class client(QObject, socketClient):
     # 新增
     getChoosePatientInfoResSig = pyqtSignal(list)
     getChooseDoctorInfoResSig = pyqtSignal(list)
+    # 获取配置信息信号
+    getUserConfigResSig = pyqtSignal(list)
 
     # 任务设置
     # 回调获取标注主题信号
@@ -2663,23 +2665,12 @@ class client(QObject, socketClient):
     def checkConfigRes(self, REPData):
         self.checkConfigResSig.emit(REPData[3])
 
-    # 生成文件名
-    def makeFileName(self,REQmsg):
-        REQmsg.insert(0,self.macAddr)
-        msg = ["dataImport", 10, self.tUser[0], REQmsg]
-        print("生成文件名传过去的msg:",msg)
-        self.sendRequest(msg)
-
-    # 处理返回的生成文件名信息
-    def makeFileNameRes(self,REPData):
-        self.makeFileNameResSig.emit(REPData[3])
-
-
     # 写脑电数据请求
     def writeEEG(self, REQmsg):
         REQmsg.insert(0, self.macAddr)
         msg = ["dataImport", 5, self.tUser[0], REQmsg]
         self.sendRequest(msg)
+
 
     # 处理客户端返回的写脑电
     def writeEEGRes(self, REPData):
@@ -2706,18 +2697,6 @@ class client(QObject, socketClient):
         print(REPData[3])
         self.getFileInfoResSig.emit(list(REPData[3]))
 
-    # 删除脑电文件方法
-    def delFileInfo(self,REQmsg):
-        REQmsg.insert(0, self.macAddr)
-        msg = ["dataImport", 11, self.tUser[0], REQmsg]
-        self.sendRequest(msg)
-
-    # 处理客户端返回的删除脑电文件的结果
-    def delFileInfoRes(self,REPData):
-        print(REPData[3])
-        self.delFileInfoResSig.emit(list(REPData[3]))
-
-
     # 查询选择的病人方法
     def getChoosePatientInfo(self, REQmsg):
         REQmsg.insert(0, self.macAddr)
@@ -2739,6 +2718,39 @@ class client(QObject, socketClient):
     def getChooseDoctorInfoRes(self, REPData):
         print(REPData[3])
         self.getChooseDoctorInfoResSig.emit(list(REPData[3]))
+
+    # 生成文件名
+    def makeFileName(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["dataImport", 10, self.tUser[0], REQmsg]
+        print("生成文件名传过去的msg:", msg)
+        self.sendRequest(msg)
+
+     # 处理返回的生成文件名信息
+    def makeFileNameRes(self, REPData):
+        self.makeFileNameResSig.emit(REPData[3])
+
+    # 删除脑电文件方法
+    def delFileInfo(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["dataImport", 11, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+     # 处理客户端返回的删除脑电文件的结果
+    def delFileInfoRes(self, REPData):
+        print(REPData[3])
+        self.delFileInfoResSig.emit(list(REPData[3]))
+
+    # 获取用户配置信息
+    def getUserConfig(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["dataImport", 12, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    # 处理客户端返回的获取配置信息
+    def getUserConfigRes(self, REPData):
+        self.getUserConfigResSig.emit(list(REPData[3]))
+
 
     # 任务设置模块
     # 查询标注主题方法
@@ -4101,34 +4113,6 @@ class client(QObject, socketClient):
             self.rgQ_get_labelsRes(REQmsg)
 
 
-        #### dsj ==]====
-
-        # 脑电导入模块
-        # 回调获取病人诊断信息信息
-        elif REQmsg[0] == 'dataImport' and REQmsg[1] == 1:
-            self.getPatientCheckInfoRes(REQmsg)
-        # 删除病人诊断信息
-        elif REQmsg[0] == 'dataImport' and REQmsg[1] == 2:
-            self.delPatientCheckInfoRes(REQmsg)
-        # 添加病人检查信息
-        elif REQmsg[0] == 'dataImport' and REQmsg[1] == 3:
-            self.addCheckInfoRes(REQmsg)
-        # 检查脑电文件
-        elif REQmsg[0] == 'dataImport' and REQmsg[1] == 4:
-            self.checkConfigRes(REQmsg)
-        # 写脑电请求
-        elif REQmsg[0] == 'dataImport' and REQmsg[1] == 5:
-            self.writeEEGRes(REQmsg)
-        # 更新脑电检查信息
-        elif REQmsg[0] == 'dataImport' and REQmsg[1] == 6:
-            self.updateCheckInfoRes(REQmsg)
-        # 获取脑电检查信息
-        elif REQmsg[0] == 'dataImport' and REQmsg[1] == 7:
-            self.getFileInfoRes(REQmsg)
-        # 删除脑电文件信息
-        elif REQmsg[0] == 'dataImport' and REQmsg[1] == 11:
-            self.delFileInfoRes(REQmsg)
-
         # 创建会诊
         # 获取医生信息
         elif REQmsg[0] == 'createCons' and REQmsg[1] == 1:
@@ -4185,9 +4169,6 @@ class client(QObject, socketClient):
         # 检查脑电文件配置
         elif REQmsg[0] == 'dataImport' and REQmsg[1] == 4:
             self.checkConfigRes(REQmsg)
-        #生成脑电文件名
-        elif REQmsg[0] == 'dataImport' and REQmsg[1] == 10:
-            self.makeFileNameRes(REQmsg)
         # 写脑电请求
         elif REQmsg[0] == 'dataImport' and REQmsg[1] == 5:
             self.writeEEGRes(REQmsg)
@@ -4203,6 +4184,15 @@ class client(QObject, socketClient):
         # 获取医生选择信息
         elif REQmsg[0] == 'dataImport' and REQmsg[1] == 9:
             self.getChooseDoctorInfoRes(REQmsg)
+        # 生成脑电文件名
+        elif REQmsg[0] == 'dataImport' and REQmsg[1] == 10:
+            self.makeFileNameRes(REQmsg)
+        # 删除脑电文件方法
+        elif REQmsg[0] == 'dataImport' and REQmsg[1] == 11:
+            self.delFileInfoRes(REQmsg)
+        # 获取脑电配置
+        elif REQmsg[0] == 'dataImport' and REQmsg[1] == 12:
+            self.getUserConfigRes(REQmsg)
 
         # 获取课堂信息
         elif REQmsg[0] == 'createLesson' and REQmsg[1] == 1:
