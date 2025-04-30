@@ -457,27 +457,29 @@ class dataImportController(QWidget):
         except Exception as e:
             print(f"从pending.json中删除task有误: {e}")
 
+    # 修改一下逻辑，先判断能否点击完成，再进行下列判断，也就是把当前两个提示的顺序修改一下，“是否上传完毕？”的提示放在最后
     # fixme:多个检查单号，无法点击第二个”完成“ 暂未复现
     def on_btnComplete_clicked(self,row):
         if self.row == -1:
             QMessageBox.information(self, ' ', '请先在病人诊断信息中选择一行')
             return
-        reply = QMessageBox.information(self, "检查id病人脑电上传状态",
-                                        f"当前检查单号为：{str(self.patientCheck_info[self.row][5])}病人：{self.patientCheck_info[self.row][self.view.field.index('pname') + 4]}脑电文件是否上传完毕？",
+
+        # 先获取远程服务器是否存在已上传完成的脑电文件
+        self.getFileInfo()
+        # 已上传文件不为空
+        if self.change_file:
+            check_number = self.patientCheck_info[self.row][5]
+            # pending.json中含有文件未上传，无法正常更新状态
+            # 若当前内存等待队列中存在未上传完成的文件，需要提醒用户进行上传后再点击完成按钮
+            exists = any(task["check_number"] == check_number for task in self.wait_file)
+            if exists:
+                    QMessageBox.information(self,"当前检查单号存在待上传文件",
+                                            f"请正确上传后再点击完成按钮以完成上传或直接删除当前待上传文件！！",QMessageBox.Yes)
+            else:
+                reply = QMessageBox.information(self, "检查id病人脑电上传状态",
+                                        f"当前检查单号为：{str(self.patientCheck_info[self.row][5])},脑电文件是否上传完毕？",
                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-        if reply == 16384:
-            # 先获取远程服务器是否存在已上传完成的脑电文件
-            self.getFileInfo()
-            # 已上传文件不为空
-            if self.change_file:
-                check_number = self.patientCheck_info[self.row][5]
-                # pending.json中含有文件未上传，无法正常更新状态
-                # 若当前内存等待队列中存在未上传完成的文件，需要提醒用户进行上传后再点击完成按钮
-                exists = any(task["check_number"] == check_number for task in self.wait_file)
-                if exists:
-                        QMessageBox.information(self,"当前检查单号存在待上传文件",
-                                                f"请正确上传后再点击完成按钮以完成上传或直接删除当前待上传文件！！",QMessageBox.Yes)
-                else:
+                if reply == 16384:
                     # 用户正常上传完成后正确更新状态
                     # 更新服务端状态
                     uid = self.client.tUser[0]
@@ -486,10 +488,10 @@ class dataImportController(QWidget):
                     state = 'uploaded'
                     REQmsg = [account, 'Send', [check_id, state, uid]]
                     self.client.updateCheckInfo(REQmsg)
-            # 已上传文件为空，提醒用户删除当前病人检查信息
-            else:
-                QMessageBox.information(self, "当前检查单号无已上传文件",
-                                        f"无法完成当前病人检查信息状态的更新，请上传文件或删除当前信息！！", QMessageBox.Yes)
+        # 已上传文件为空，提醒用户删除当前病人检查信息
+        else:
+            QMessageBox.information(self, "当前检查单号无已上传文件",
+                                    f"无法完成当前病人检查信息状态的更新，请上传文件或删除当前信息！！", QMessageBox.Yes)
 
     # 更新病人检查信息返回
     def updateCheckInfoRes(self, REPData):
