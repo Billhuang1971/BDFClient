@@ -21,6 +21,7 @@ import datetime
 from view.dataImport_form.patient_table import PatientTableWidget
 from view.dataImport_form.doctor_table import DoctorTableWidget
 from view.progressBarView import ProgressBarView
+from PyQt5.QtCore import QRegularExpression
 
 
 class dataImportController(QWidget):
@@ -2429,17 +2430,25 @@ class dataImportController(QWidget):
 
     # 检查编辑/增加 数据格式
     def check_item_pattern(self, data):
-        if data['check_num'] == '':
+        check_num = data.get('check_num', '').strip()
+        if not check_num:
             QMessageBox.information(self.view, '提示！', '请输入检查单号：检查单号不能为空！')
             return False
-        elif not ('patient_id' in data):
-            QMessageBox.information(self.view, '提示！', '未选择病人信息,请重新选择!!')
+
+        # 增加：检查单号只能包含字母、数字或下划线
+        pattern = QRegularExpression("^[a-zA-Z0-9_]+$")
+        if not pattern.match(check_num).hasMatch():
+            QMessageBox.information(self.view, '提示！', '检查单号不能包含特殊字符，只能包含字母、数字或下划线！')
             return False
-        elif not ('pUid' in data):
-            QMessageBox.information(self.view, '提示！', '未选择开单医生信息,请重新选择!!!')
+
+        if 'patient_id' not in data:
+            QMessageBox.information(self.view, '提示！', '未选择病人信息，请重新选择！')
             return False
-        else:
-            return True
+        if 'pUid' not in data:
+            QMessageBox.information(self.view, '提示！', '未选择开单医生信息，请重新选择！')
+            return False
+
+        return True
 
     def exit(self):
         self.client.getPatientCheckInfoResSig.disconnect()
