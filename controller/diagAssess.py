@@ -42,6 +42,11 @@ class diagAssessController(QWidget):
         self.sign_InfoView = None
         self.get_contents()
 
+
+
+
+
+
     # 槽对象中的槽函数
     def exit(self):
         if self.prentryView is not None:
@@ -95,6 +100,7 @@ class diagAssessController(QWidget):
             self.prentryView.ui.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
             self.prentryView.ui.tableWidget.clicked.connect(self.on_tableWidget_itemClicked)
             #self.prentryView.ui.btnConfirm.clicked.connect(self.on_btnConfirm_clicked)
+            self.prentryView.viewClosed.connect(self.on_btnReturn_clicked)  # 绑定到返回
 
             self.prentryView.ui.tableWidget.setColumnCount(col_num)
 
@@ -202,6 +208,7 @@ class diagAssessController(QWidget):
         self.prentryView2.ui.tableWidget.clicked.connect(self.on_tableWidget_itemClicked2)
         self.prentryView2.ui.btnConfirm.clicked.connect(self.on_btnConfirm_clicked)
         self.prentryView2.ui.btnReturn.clicked.connect(self.on_btnReturn2_clicked)
+
 
         self.prentryView2.ui.btnConfirm.setText("查看脑电图标注")
         col_num = 4
@@ -330,9 +337,9 @@ class diagAssessController(QWidget):
     def on_tableWidget_itemClicked(self):
         row = self.prentryView.ui.tableWidget.currentRow()
         #self.std_uid=self.pre_info[row][4]
-        self.stu_id = self.pre_info[row][1]
-        if row < 0:
+        if row <= 0:
             return
+        self.stu_id = self.pre_info[row][1]
         #self.checkBox[row].setCheckState(QtCore.Qt.CheckState.Checked)
         #self.stu_id = self.pre_info[row][1]
         self.prentryView.ui.btnConfirm.setEnabled(True)

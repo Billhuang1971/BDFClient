@@ -2,7 +2,7 @@
 from functools import partial
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtCore import Qt, QRect, pyqtSignal
 from PyQt5.QtGui import QFont
 
 from view.manual_form.diagList import Ui_diagList
@@ -72,10 +72,17 @@ class SettingView(QWidget):
         self.ui.setupUi(self, type_name, user_name, type_filter, user_filter)
 
 class PrentryView(QWidget):
+    viewClosed = pyqtSignal()
     def __init__(self,  parent=None):
         super().__init__(parent)
         self.ui = Ui_Prentry()
         self.ui.setupUi(self)
+
+    def closeEvent(self, a0):
+        """重写关闭事件处理"""
+        print("PrentryView 关闭事件触发")  # 调试输出
+        self.viewClosed.emit()
+        super().closeEvent(a0)
 
 class sign_InfoView(QMainWindow,QWidget):
     def __init__(self,parent=None):
