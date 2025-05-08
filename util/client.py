@@ -302,6 +302,8 @@ class client(QObject, socketClient):
     # 回调添加算法文件的信号
     addAlgorithmFileResSig = pyqtSignal(list)
     algorithmInfoPagingResSig = pyqtSignal(list)
+    algorithmTemplateResSig = pyqtSignal(list)
+    downloadTemplateResSig = pyqtSignal(list)
 
     # 导入脑电
     # 回调获取脑电诊断信息信号
@@ -3023,6 +3025,23 @@ class client(QObject, socketClient):
     def algorithmInfoPagingRes(self, REPData):
         self.algorithmInfoPagingResSig.emit(list(REPData[3]))
 
+
+    def getAlgorithmTample(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["algorithm", 8, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    def algorithmTampleRes(self, REPData):
+        self.algorithmTemplateResSig.emit(list(REPData[3]))
+
+    def download_template(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["algorithm", 9, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    def downloadTemplateRes(self, REPData):
+        self.downloadTemplateResSig.emit(list(REPData[3]))
+
     # 模型训练
     # 向服务器发送获取模型训练界面信息请求
     def getModelInfo(self, REQmsg):
@@ -4313,6 +4332,11 @@ class client(QObject, socketClient):
             self.getAlgorithmFileNameRes(REQmsg)
         elif REQmsg[0] == 'algorithm' and REQmsg[1] == 7:
             self.algorithmInfoPagingRes(REQmsg)
+        elif REQmsg[0] == 'algorithm' and REQmsg[1] == 8:
+            self.algorithmTampleRes(REQmsg)
+        elif REQmsg[0] == 'algorithm' and REQmsg[1] == 9:
+            self.downloadTemplateRes(REQmsg)
+
 
         # 执行查看模块
         # 回调获取某一用户创建的标注主题信息

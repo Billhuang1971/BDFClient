@@ -75,6 +75,14 @@ class Ui_AlogrithmForm(object):
         self.verticalLayout.addLayout(self.verticalLayout_4)
         self.verticalLayout.setStretch(0, 1)
 
+        self.pushButton1 = QtWidgets.QPushButton(AlogrithmForm)
+        font = QtGui.QFont()
+        font.setFamily("Arial")
+        font.setPointSize(16)
+        self.pushButton1.setFont(font)
+        self.pushButton1.setObjectName("pushButton1")
+        self.horizontalLayout.addWidget(self.pushButton1)
+
         self.retranslateUi(AlogrithmForm)
         QtCore.QMetaObject.connectSlotsByName(AlogrithmForm)
 
@@ -85,3 +93,4 @@ class Ui_AlogrithmForm(object):
         self.btnAdd.setText(_translate("AlogrithmForm", "添加"))
         self.btnDel.setText(_translate("AlogrithmForm", "删除"))
         self.pushButton.setText(_translate("AlogrithmForm", "重置"))
+        self.pushButton1.setText(_translate("AlogrithTemple", "算法模板"))
