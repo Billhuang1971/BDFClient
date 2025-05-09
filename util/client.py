@@ -256,6 +256,7 @@ class client(QObject, socketClient):
     getSetSig = pyqtSignal(list)
     getSetSearchSig = pyqtSignal(list)
     getSetDescribeSig = pyqtSignal(list)
+    channel_matchResSig=pyqtSignal(list)
 
     # 创建课堂
     # 回调获取课堂信息的信号
@@ -2327,7 +2328,12 @@ class client(QObject, socketClient):
     def getSetDescribeRes(self, REPData):
         self.getSetDescribeSig.emit([REPData[3][0], REPData[3][3]])
 
-
+    def channel_match(self,REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["setBuild", 12, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+    def channel_matchRes(self, REPData):
+        self.channel_matchResSig.emit([REPData[3][0], REPData[3][3]])
     # 标注类型模块
     # 查询标注类型模块方法
     def getTypeInfo(self, REQmsg):
@@ -4384,6 +4390,8 @@ class client(QObject, socketClient):
             self.getSetSearchRes(REQmsg)
         elif REQmsg[0] == 'setBuild' and REQmsg[1] == 11:
             self.getSetDescribeRes(REQmsg)
+        elif REQmsg[0] == 'setBuild' and REQmsg[1] == 12:
+            self.channel_matchRes(REQmsg)
 
         # 模型训练
         elif REQmsg[0] == 'modelTrain' and REQmsg[1] == 1:

@@ -6,6 +6,7 @@ from view.setBulid_form.channelselect import channelselectView,channelimportView
 from view.setBulid_form.pgb_form.form import pgbView
 from PyQt5 import QtCore, QtGui, QtWidgets
 from view.setBulid_form.secTable_form.form import SectableView
+from view.setBulid_form import Fltselect
 from PyQt5.Qt import *
 import re
 import warnings
@@ -53,6 +54,7 @@ class setBuildController(QWidget):
             self.fltSqlContent = {}
             self.fltAllInfo = {}
             self.view.fltTable(self.fltContent)
+            self.fltview=None
 
             self.channel=[]#选择的通道
             self.ref=None #存储头皮通道选择view的对象
@@ -68,6 +70,7 @@ class setBuildController(QWidget):
 
             # 用来判断是否构建完成
             self.isBuildDone = False
+            self.channel_state=[]
 
             # 一页显示多少行
             self.pageRows = 13
@@ -87,6 +90,7 @@ class setBuildController(QWidget):
             self.view.set_page_control_signal.connect(self.rg_paging)
             self.client.getSetExportDataResSig.connect(self.getSetExportDataRes)
             self.view.ui.re_scheme.currentTextChanged.connect(self.on_reverse_scheme_changed)
+            self.client.channel_matchResSig.connect(self.channel_matchRes)
 
             self.view.ui.refChannel.clicked.connect(self.init_ref) #头皮通道选择
             self.view.ui.ECIC_Btn.clicked.connect(self.init_ECIC) #颅内通道选择
@@ -112,15 +116,19 @@ class setBuildController(QWidget):
         self.ref.show()
 
     def get_result(self):
+        reply = QMessageBox.information(self, '提示', '确认选择后将锁定选定通道，重置筛选可解除锁定', QMessageBox.Yes | QMessageBox.No)
+        if reply != 16384:
+            return
         if self.ref!=None:
             selected = [cb.text() for cb in self.ref.checkboxes if cb.isChecked()]
+            self.view.ui.refChannel.setEnabled(False)
             self.channel=selected
             self.ref.close()
         elif self.ECIC!=None:
             selected = [cb.text() for cb in self.ECIC.checkboxes if cb.isChecked()]
+            self.view.ui.ECIC_Btn.setEnabled(False)
             self.channel = selected
             self.ECIC.close()
-
     def show_select(self):
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Information)
@@ -186,6 +194,7 @@ class setBuildController(QWidget):
         self.view.set_page_control_signal.disconnect()
         self.client.getSetSearchSig.disconnect()
         self.client.getSetDescribeSig.disconnect()
+        self.view.ui.pushButton_checkchennel.clicked.disconnect()
 
     # 数据初始化
     def init_data(self):
@@ -327,6 +336,7 @@ class setBuildController(QWidget):
             self.view.ui.comboBox_2.currentTextChanged.connect(
                 lambda: self.init_typeFilters(comboBox=self.view.ui.comboBox_2, isType=True))
             self.view.ui.comboBox_25.currentTextChanged.connect(self.patientChange)
+            self.view.ui.pushButton_checkchennel.clicked.connect(self.channel_match)
 
             self.view.ui.themeBox.currentTextChanged.connect(self.themeChange)
             self.view.ui.pushButton.clicked.connect(self.setBuild)
@@ -385,9 +395,14 @@ class setBuildController(QWidget):
         if tempInfo in self.fltContent:
             QMessageBox.warning(self, '提示', '当前选项已添加，请重新选择')
             return
-        self.fltContent.append(tempInfo)
-        self.fltContentIndex.append(tempIndexs)
+        self.fltContent.append(tempInfo) #存['tpye_name'，'user_name','patient_name','file_name']
+        self.fltContentIndex.append(tempIndexs) #存对应选项的下标
         self.view.fltTable(self.fltContent)
+        self.view.ui.comboBox_24.setEnabled(True) #配合通道匹配，添加筛选后恢复可选
+        self.view.ui.comboBox_25.setEnabled(True)
+        self.view.ui.comboBox_26.setEnabled(True)
+
+        self.view.ui.pushButton_3.setEnabled(False) #添加筛选后恢复不可选
 
         try:
             id = -1
@@ -400,7 +415,7 @@ class setBuildController(QWidget):
                 if label_type == self.curComboBox.currentText():
                     break
             print(f'id: {id}')
-            self.addType.append(id)
+            self.addType.append(id) #获取添加的类型id
             self.search_index.append(str(id))
         except Exception as e:
             print('addFlt', e)
@@ -430,7 +445,6 @@ class setBuildController(QWidget):
         self.curPageIndex=1
         self.view.ui.curPage.setText(str(self.curPageIndex))
         self.client.getSet([1, self.pageRows, 'home'])
-
     def patientChange(self):
         self.view.ui.comboBox_26.clear()
         if self.view.ui.comboBox_25.currentText() not in self.file_name.keys():
@@ -540,6 +554,15 @@ class setBuildController(QWidget):
             self.isType = True
             self.first_select = True
 
+            self.view.ui.ECIC_Btn.setEnabled(True)#重置筛选后可以重新选择通道
+            self.view.ui.refChannel.setEnabled(True)
+            self.channel=[] #重置已选通道
+
+            self.fltview=None #重置筛选后匹配将清零
+            self.view.ui.comboBox_24.setEnabled(False)  # 解除锁定选中的标注用户，病人，文件
+            self.view.ui.comboBox_25.setEnabled(False)
+            self.view.ui.comboBox_26.setEnabled(False)
+
             if delFlt:
                 self.fltContent.clear()
                 self.fltContentIndex.clear()
@@ -550,11 +573,12 @@ class setBuildController(QWidget):
                 self.view.ui.comboBox_24.setEnabled(False)
                 self.view.ui.comboBox_25.setEnabled(False)
                 self.view.ui.comboBox_26.setEnabled(False)
+                self.view.ui.pushButton_checkchennel.setEnabled(False)
         except Exception as e:
             print('reset', e)
 
     # 获取初始数据
-    def init_typeFilters(self, comboBox=None, isType=True):
+    def init_typeFilters(self, comboBox=None, isType=True): #T是波形 #F是状态
         print(f'init_typeFilters')
         self.isType = isType
         if comboBox.currentText() == "":
@@ -574,12 +598,16 @@ class setBuildController(QWidget):
             QMessageBox.information(self, '提示', '尚未选择主题')
             self.reset(False)
             return
-
+        if self.channel==[]:
+            QMessageBox.information(self, '提示', '尚未选择通道')
+            self.reset(False)
+            return
         if isType:
             self.view.ui.comboBox_5.setEnabled(True)
             info = self.type_info
             self.view.ui.comboBox_2.setEnabled(True)
             self.view.ui.comboBox_3.setEnabled(False)
+            self.view.ui.pushButton_3.setEnabled(True)
             self.view.ui.comboBox.clear()
             self.view.ui.comboBox.addItems(['中心延拓', '极值延拓'])
             if self.first_select:
@@ -591,11 +619,13 @@ class setBuildController(QWidget):
             if comboBox.currentText() not in self.state_info:
                 return
             info = self.state_info
-            self.view.ui.refChannel.setEnabled(True)
+            # self.view.ui.refChannel.setEnabled(True)
             self.view.ui.comboBox_2.setEnabled(False)
             self.view.ui.comboBox_3.setEnabled(True)
+            self.view.ui.pushButton_3.setEnabled(False)
             self.view.ui.comboBox.clear()
             self.view.ui.comboBox.addItems(['中心延拓', '极值延拓'])
+            self.view.ui.pushButton_checkchennel.setEnabled(True)
         self.view.ui.comboBox_24.setEnabled(True)
         self.view.ui.comboBox_25.setEnabled(True)
         self.view.ui.comboBox_26.setEnabled(True)
@@ -614,6 +644,10 @@ class setBuildController(QWidget):
 
         if self.view.ui.lineEdit_3.text() == "" or self.view.ui.lineEdit_4.text() == "":
             QMessageBox.warning(self, '提示', '请输入完整的信息')
+            self.view.ui.comboBox_24.setEnabled(False)
+            self.view.ui.comboBox_25.setEnabled(False)
+            self.view.ui.comboBox_26.setEnabled(False)
+            self.view.ui.pushButton_checkchennel.setEnabled(False)
             return
         self.span = int(float(self.view.ui.lineEdit_3.text()) * self.sampling_rate)
         self.minSpan = int(float(self.view.ui.lineEdit_4.text()) * self.sampling_rate)
@@ -665,7 +699,7 @@ class setBuildController(QWidget):
         type = 'wave' if self.isType else 'state'
         if type == 'wave':
             nChannel = 1
-            if self.view.ui.comboBox_5.currentText() == 'Default':#没有删除 直接做隐藏，波形直接默认default
+            if self.view.ui.comboBox_5.currentText() == 'Default':#没有删除 直接做隐藏，波形直接默认Default
                 channels = ['Default']
             else:
                 channels = self.montage[self.view.ui.comboBox_5.currentIndex() - 1]['channels']
@@ -697,14 +731,14 @@ class setBuildController(QWidget):
             print(f'tempInfo: {tempInfo}')
 
             file_names = {item: tempInfo[3][tempInfo[0][i]] for i, item in enumerate(tempInfo[1])}
-            print(f'file_names: {file_names}')
+            print(f'file_names: {file_names}') #{patient_id：[('file_name',(check_id,file_id)]}
 
             # 判断user_ids是否全选
-            selected_user_ids = tempInfo[5] if tempIndex[1] == -1 else [tempInfo[5][tempIndex[1]]]
+            selected_user_ids = tempInfo[5] if tempIndex[1] == -1 else [tempInfo[5][tempIndex[1]]] #标注用户id
             print(f'selected_user_ids: {selected_user_ids}')
             # 判断patient_ids是否全选
             if tempIndex[2] == -1:
-                print(f'quanxuan')
+                print(f'病人全选')
                 selected_patient_ids = tempInfo[1]
                 selected_file_names = {pid: file_names[pid] for pid in tempInfo[1]}
             else:
@@ -743,6 +777,67 @@ class setBuildController(QWidget):
         self.client.buildSet([setName, msgJson, self.client.tUser[12], type,msg])
 
     # 构建前的检查,如果存在不符合的条件则弹出提示
+    def channel_match(self):
+        self.view.ui.pushButton_checkchennel.setEnabled(False)
+        tempIndex = [self.curComboBox.currentIndex(),
+                      self.view.ui.comboBox_24.currentIndex() - 1,
+                      self.view.ui.comboBox_25.currentIndex() - 1,
+                      self.view.ui.comboBox_26.currentIndex() - 1]
+        match_content=[]
+        # 获取对应type_id的索引值（确保总是非负）
+        if self.isType:
+            selected_type_id = self.type_ids[tempIndex[0]]
+        else:
+            selected_type_id = self.state_ids[tempIndex[0]]
+        print(f'selected_type_id: {selected_type_id}')
+        tempInfo = self.fltAllInfo[selected_type_id]
+        print(f'tempInfo: {tempInfo}')
+
+        file_names = {item: tempInfo[3][tempInfo[0][i]] for i, item in enumerate(tempInfo[1])}
+        print(f'file_names: {file_names}') #{patient_id：[('file_name',(check_id,file_id)]}
+
+        # 判断user_ids是否全选
+        selected_user_ids = tempInfo[5] if tempIndex[1] == -1 else [tempInfo[5][tempIndex[1]]] #标注用户id
+        print(f'selected_user_ids: {selected_user_ids}')
+        # 判断patient_ids是否全选
+        if tempIndex[2] == -1:
+            print(f'病人全选')
+            selected_patient_ids = tempInfo[1]
+            selected_file_names = {pid: file_names[pid] for pid in tempInfo[1]}
+        else:
+            selected_patient_ids = [tempInfo[1][tempIndex[2]]]
+            selected_file_names = {tempInfo[1][tempIndex[2]]: [file_names[tempInfo[1][tempIndex[2]]][tempIndex[3]]]}
+        print(f'selected_patient_ids: {selected_patient_ids}')
+        print(f'selected_file_names: {selected_file_names}')
+
+        # 生成所有可能的组合
+        for user_id in selected_user_ids:
+            for patient_id in selected_patient_ids:
+                current_file_names = selected_file_names[patient_id]
+                for file_name in current_file_names:
+                    match_content.append((selected_type_id, user_id, patient_id, file_name[1],file_name[0]))
+        self.client.channel_match(match_content)
+
+    def channel_matchRes(self,REPData):
+        self.view.ui.pushButton_checkchennel.setEnabled(True)
+        if REPData[0]=='1':
+            data=REPData[1]
+            self.channel_state=data
+            if self.fltview:
+                self.fltview.update_data(self.channel,self.channel_state)
+            else:
+                self.fltview=Fltselect.ChannelDataViewer(self.channel,self.channel_state)
+                self.fltview.pass_btn.clicked.connect(self.flt_pass)
+            self.fltview.show()
+        else:
+            QMessageBox.information(self, "提示","获取构建数据集所需的通道信息失败")
+    def flt_pass(self):
+        self.view.ui.pushButton_3.setEnabled(True)
+        self.view.ui.comboBox_24.setEnabled(False) # 锁定选中的标注用户，病人，文件
+        self.view.ui.comboBox_25.setEnabled(False)
+        self.view.ui.comboBox_26.setEnabled(False)
+        self.fltview.close()
+
     def build_check(self):
         tag = True
         search_table = []
@@ -826,6 +921,8 @@ class setBuildController(QWidget):
                 QMessageBox.information(self, "提示", "构建数据集成功")
                 self.view.ui.pushButton.setEnabled(True)
                 # 刷新数据集列表
+                self.curPageIndex = 1
+                self.view.ui.curPage.setText(str(self.curPageIndex))
                 self.client.getSet([1, self.pageRows, 'home'])
         else:
             self.view.ui.pushButton.setEnabled(True)
