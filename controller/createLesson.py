@@ -498,6 +498,18 @@ class createLessonController(QWidget):
 
     def on_clicked_add_EEG(self, viewInfo, class_id, create_name):
         try:
+            if self.check_now_time(class_id) == False:
+                self.patientView.hide()
+                if self.is_search:
+                    self.view.initTable(self.searchInfo_without_id, self.on_clicked_studentView,
+                                        self.on_clicked_patientView,
+                                        self.on_clicked_show_student,
+                                        self.on_clicked_show_file)
+                else:
+                    self.view.initTable(self.lessonInfo_withoutid, self.on_clicked_studentView,
+                                        self.on_clicked_patientView,
+                                        self.on_clicked_show_student, self.on_clicked_show_file)
+                return
             # create_id = self.teacherInfo[create_name]
             # if create_id != self.client.tUser[0]:
             #     QMessageBox.information(self, '提示', '无法操作其他创建者的课堂')
@@ -885,7 +897,7 @@ class createLessonController(QWidget):
                     if self.search_student_page == int(signal[1]):
                         QMessageBox.information(self, "提示", "当前已显示该页面", QMessageBox.Yes)
                         return
-                    if self.search_student_page_max < int(signal[1]) or int(signal[1]) < 0:
+                    if self.search_student_page_max < int(signal[1]) or int(signal[1]) <= 0:
                         QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
                         return
                     self.search_student_page = int(signal[1])
@@ -894,7 +906,7 @@ class createLessonController(QWidget):
                     if self.student_page_current == int(signal[1]):
                         QMessageBox.information(self, "提示", "当前已显示该页面", QMessageBox.Yes)
                         return
-                    if self.student_page_max < int(signal[1]) or int(signal[1]) < 0:
+                    if self.student_page_max < int(signal[1]) or int(signal[1]) <= 0:
                         QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
                         return
                     self.student_page_current = int(signal[1])
@@ -985,6 +997,18 @@ class createLessonController(QWidget):
                 QMessageBox.information(self, '提示', '未选择学员信息', QMessageBox.Ok)
                 return
             else:
+                if self.check_now_time(lesson_id) == False:
+                    self.studentView.hide()
+                    if self.is_search:
+                        self.view.initTable(self.searchInfo_without_id, self.on_clicked_studentView,
+                                            self.on_clicked_patientView,
+                                            self.on_clicked_show_student,
+                                            self.on_clicked_show_file)
+                    else:
+                        self.view.initTable(self.lessonInfo_withoutid, self.on_clicked_studentView,
+                                            self.on_clicked_patientView,
+                                            self.on_clicked_show_student, self.on_clicked_show_file)
+                    return
                 self.lesson_student_id = []
                 for index in self.studentView.selected_row:
                     student_name = self.studentView.ui.tableWidget.item(index, 1).text()
@@ -1379,6 +1403,14 @@ class createLessonController(QWidget):
         cp = QDesktopWidget().availableGeometry().center()  # 获取屏幕的中心点
         qr.moveCenter(cp)  # 将窗口的中心点移动到屏幕的中心点
         self.move(qr.topLeft())  # 将窗口移动到新的位置
+
+    def check_now_time(self, lesson_id):
+        start_time = next(sublist[5] for sublist in self.lessonInfo_withID if sublist[0] == lesson_id)
+        now_time = datetime.now()
+        if start_time < now_time:
+            QMessageBox.information(self, '提示', '课堂已经开始，无法添加', QMessageBox.Ok)
+            return False
+        return True
 
     def on_clicked_del_content_info(self, class_id, class_time, create_id):
         try:
