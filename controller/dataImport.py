@@ -18,6 +18,8 @@ from view.dataImport import AddFormView
 import pyedflib
 import re
 import datetime
+
+from view.dataImport_form.loadingform import LoadingDialog
 from view.dataImport_form.patient_table import PatientTableWidget
 from view.dataImport_form.doctor_table import DoctorTableWidget
 from view.progressBarView import ProgressBarView
@@ -46,8 +48,12 @@ class dataImportController(QWidget):
         # 存放处理过后的脑电文件目录,在addUserFolder中得到拼接
         self.dir_path = None
 
+        # 存放用户内存等待队列文件的上级目录
+        self.wait_path = os.path.join(self.root_path,'upload','EEGQueue')
+        # 存放等待队列文件的目录，在addUserFolder中得到拼接
+        self.wait_dir_path = None
         # 内存中等待队列文件
-        self.queue_file_path = os.path.join(self.root_path,'upload','EEGQueue','pending.json')
+        self.queue_file_path = None
         # 引入线程锁
         self.lock = threading.Lock()
         self.client.getPatientCheckInfoResSig.connect(self.getPatientCheckInfoRes)
@@ -128,6 +134,9 @@ class dataImportController(QWidget):
         # 获取表格的信息
         self.getPatientCheckInfo()
 
+        # 获取当前用户的配置信息
+        self.getUserConfig()
+
         # 获取内存等待文件
         self.initWaitFile()
 
@@ -193,6 +202,12 @@ class dataImportController(QWidget):
             # 确保路径存在
             if os.path.exists(self.dir_path):
                 os.rmdir(self.dir_path)  # 删除空文件夹
+        # 对queue_file_path判空，如果退出的时候当前用户不存在待上传文件了，就要把当前文件夹删除
+        if self.cAppUtil.isNull(self.queue_file_path):
+            os.remove(self.queue_file_path)
+            if os.path.exists(self.wait_dir_path):
+                os.rmdir(self.wait_dir_path)  # 删除空文件夹
+
 
     def addUserFolder(self):
         account = self.client.tUser[1] # 获取用户账户名称
@@ -202,6 +217,10 @@ class dataImportController(QWidget):
         # 检查目录是否存在，如果不存在则创建
         if not os.path.exists(self.dir_path):
             os.makedirs(self.dir_path)
+        self.wait_dir_path = os.path.join(self.wait_path, account)
+        if not os.path.exists(self.wait_dir_path):
+            os.makedirs(self.wait_dir_path)
+        self.queue_file_path = os.path.join(self.wait_dir_path, 'pending.json')
 
     def showMessageBoxwithTimer(self, title, message, close_time=5000, buttons=QMessageBox.Ok):
         """
@@ -239,8 +258,26 @@ class dataImportController(QWidget):
         else:
             print(f"未找到队列文件，创建新文件：{self.queue_file_path}")
 
+    def long_task_with_dialog(self, post_callback=None):
+        self.loading_dialog = LoadingDialog("正在转换 EDF 文件，请稍候...", self)
+        self.loading_dialog.show()
+
+        QApplication.processEvents()  # 强制 UI 刷新
+
+        QTimer.singleShot(100, lambda: self._do_actual_work(post_callback))
+
+    def _do_actual_work(self, post_callback=None):
+        try:
+            self.convert_edf_to_bdf()
+            self.from_filepath = self.convert_filepath
+            if post_callback:
+                post_callback()
+        finally:
+            self.loading_dialog.close()
+            self.loading_dialog = None
+
     # 测下这里上传的edf文件
-    def on_btnAddFile_clicked(self , row):
+    def on_btnAddFile_clicked(self, row):
         if self.row == -1:
             QMessageBox.information(self, ' ', '请先在病人诊断信息中选择一行')
             return
@@ -250,17 +287,16 @@ class dataImportController(QWidget):
                                                             "C:/",
                                                             "脑电文件 (*.edf *.bdf *.txt)")
         if ok:
-            # 这里的from_filepath指的是添加新文件时暂存的一个文件路径，在处理时不能用，要从pending.json里读
             self.from_filepath = get_filename_path
-            # 根据文件后缀判断文件类型
             file_extension = os.path.splitext(self.from_filepath)[1].lower()
+
             if file_extension == '.bdf':
-                self.from_filepath = get_filename_path
                 self.checkBasicConfig()
+
             elif file_extension == '.edf':
-                self.convert_edf_to_bdf()
-                self.from_filepath = self.convert_filepath
-                self.checkBasicConfig()
+                # 转换完成后再执行 checkBasicConfig
+                self.long_task_with_dialog(post_callback=self.checkBasicConfig)
+
             else:
                 QMessageBox.information(self, "不支持的文件类型", "请上传有效的脑电文件格式 (.edf /.bdf).")
                 return
@@ -306,14 +342,17 @@ class dataImportController(QWidget):
         except Exception as e:
             print('checkConfigRes', e)
 
+    def getUserConfig(self):
+        account = self.client.tUser[1]
+        REQmsg = [account, self.config_id]
+        self.client.getUserConfig(REQmsg)
+
     # 第二次进入重新获取UserConfig
     def getUserConfigRes(self, REPData):
         print("REPData:", REPData)
         try:
             if REPData[0] == '1':
                 self.userConfig_info = REPData[3][0]
-                self.process_bdf(self.userConfig_info, self.fileName)
-                self.fileName = None
                 print('userConfig:', self.userConfig_info)
             else:
                 print('状态码非1:', REPData[0])
