@@ -93,7 +93,7 @@ class MainView(QMainWindow):
         self.client = client
         userInfo = self.client.tUser
         print(f'authority: {userInfo[14]}')
-        for i in range(2, 34):
+        for i in range(2, 35):
             if i != 11 and i != 26 and i != 13:
                 exec('self.ui.action_UC{:0>2d}.setEnabled(True)'.format(i))
         for i in userInfo[14]:

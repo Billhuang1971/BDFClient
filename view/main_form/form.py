@@ -120,6 +120,9 @@ class Ui_MainWindow(object):
         self.action_UC32.setObjectName("action_UC32")
         self.action_UC33 = QtWidgets.QAction(MainWindow)
         self.action_UC33.setObjectName("action_UC33")
+        self.action_UC34 = QtWidgets.QAction(MainWindow)
+        self.action_UC34.setObjectName("action_UC34")
+
 
         self.menu_1.addAction(self.action_UC03)
         self.menu_1.addAction(self.action_UC02)
@@ -150,6 +153,8 @@ class Ui_MainWindow(object):
         self.menu_3.addAction(self.action_UC19)
         self.menu_3.addAction(self.action_UC20)
 
+        self.menu_4.addAction(self.action_UC34)
+        self.menu_4.addSeparator()
         self.menu_4.addAction(self.action_UC21)
         self.menu_4.addSeparator()
         self.menu_4.addAction(self.action_UC22)
@@ -219,3 +224,4 @@ class Ui_MainWindow(object):
         self.action_UC31.setText(_translate("MainWindow", "脑电扫描"))
         self.action_UC32.setText(_translate("MainWindow", "评估样本"))
         self.action_UC33.setText(_translate("MainWindow", "清理样本"))
+        self.action_UC34.setText(_translate("MainWindow", "科研导入"))

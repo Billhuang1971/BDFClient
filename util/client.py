@@ -331,6 +331,35 @@ class client(QObject, socketClient):
     # 获取配置信息信号
     getUserConfigResSig = pyqtSignal(list)
 
+    # 科研导入
+    # 回调获取脑电诊断信息信号
+    getPatientCheckInfoResSig1 = pyqtSignal(list)
+    # 回调删除脑电检查信息信号
+    delPatientCheckInfoResSig1 = pyqtSignal(list)
+    # 回调添加脑电检查信息信号
+    addCheckInfoResSig1 = pyqtSignal(list)
+    # 检查配置信息信号
+    checkConfigResSig1 = pyqtSignal(list)
+    # 生成文件名信息信号
+    makeFileNameResSig1 = pyqtSignal(list)
+    # 写脑电文件信息信号
+    writeEEGResSig1 = pyqtSignal(list)
+    # 回调更新脑电检查信息
+    updateCheckInfoResSig1 = pyqtSignal(list)
+    # 回调获取脑电文件信息
+    getFileInfoResSig1 = pyqtSignal(list)
+    # 回调删除脑电文件信息
+    delFileInfoResSig1 = pyqtSignal(list)
+    # 新增
+    getChoosePatientInfoResSig1 = pyqtSignal(list)
+    getChooseDoctorInfoResSig1 = pyqtSignal(list)
+    # 获取配置信息信号
+    getUserConfigResSig1 = pyqtSignal(list)
+    # 获取标注类型信息
+    getChooseLabelTypeInfoResSig1 = pyqtSignal(list)
+    # 批量插入样本信息
+    insertSampleInfoBatchResSig =  pyqtSignal(list)
+
     # 任务设置
     # 回调获取标注主题信号
     getThemeInfoResSig = pyqtSignal(list)
@@ -2226,6 +2255,150 @@ class client(QObject, socketClient):
 
     def getSpecNumFromFltRes(self, REPData):
         self.getSpecNumFromFltResSig.emit(list(REPData[3][3]))
+
+    # 科研导入模块
+    # 查询病人诊断信息方法
+
+    def getPatientCheckInfo1(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["researchImport", 1, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    # 处理客户端返回的查询病人诊断信息的结果
+    def getPatientCheckInfoRes1(self, REPData):
+        print(REPData[3])
+        self.getPatientCheckInfoResSig1.emit(list(REPData[3]))
+
+    # 删除病人诊断信息
+    def delPatientCheckInfo1(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["researchImport", 2, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    # 处理客户端返回的删除标注类型信息
+    def delPatientCheckInfoRes1(self, REPData):
+        self.delPatientCheckInfoResSig1.emit(REPData[3])
+
+    # 添加脑电检查信息
+    def addCheckInfo1(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["researchImport", 3, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    # 处理客户端返回的添添加脑电检查信息
+    def addCheckInfoRes1(self, REPData):
+        self.addCheckInfoResSig1.emit(REPData[3])
+
+    # 检查配置
+    def checkConfig1(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["researchImport", 4, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    # 处理客户端返回的检查配置信息
+    def checkConfigRes1(self, REPData):
+        self.checkConfigResSig1.emit(REPData[3])
+
+    # 写脑电数据请求
+    def writeEEG1(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["researchImport", 5, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    # 处理客户端返回的写脑电
+    def writeEEGRes1(self, REPData):
+        self.writeEEGResSig1.emit(REPData[3])
+
+    # 更新脑电检查表
+    def updateCheckInfo1(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["researchImport", 6, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    # 更新脑电检查表返回
+    def updateCheckInfoRes1(self, REPData):
+        self.updateCheckInfoResSig1.emit(REPData[3])
+
+    # 查询脑电文件方法
+    def getFileInfo1(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["researchImport", 7, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    # 处理客户端返回的查询脑电文件的结果
+    def getFileInfoRes1(self, REPData):
+        print(REPData[3])
+        self.getFileInfoResSig1.emit(list(REPData[3]))
+
+    # 查询选择的病人方法
+    def getChoosePatientInfo1(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["researchImport", 8, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    # 处理客户端返回的查询选择的病人的结果
+    def getChoosePatientInfoRes1(self, REPData):
+        print(REPData[3])
+        self.getChoosePatientInfoResSig1.emit(list(REPData[3]))
+
+    # 查询选择的医生方法
+    def getChooseDoctorInfo1(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["researchImport", 9, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    # 处理客户端返回的查询选择的医生的结果
+    def getChooseDoctorInfoRes1(self, REPData):
+        print(REPData[3])
+        self.getChooseDoctorInfoResSig1.emit(list(REPData[3]))
+
+    # 生成文件名
+    def makeFileName1(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["researchImport", 10, self.tUser[0], REQmsg]
+        print("生成文件名传过去的msg:", msg)
+        self.sendRequest(msg)
+
+    # 处理返回的生成文件名信息
+    def makeFileNameRes1(self, REPData):
+        self.makeFileNameResSig1.emit(REPData[3])
+
+    # 删除脑电文件方法
+    def delFileInfo1(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["researchImport", 11, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    # 处理客户端返回的删除脑电文件的结果
+    def delFileInfoRes1(self, REPData):
+        print(REPData[3])
+        self.delFileInfoResSig1.emit(list(REPData[3]))
+
+    # 获取用户配置信息
+    def getUserConfig1(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["researchImport", 12, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    # 处理客户端返回的获取配置信息
+    def getUserConfigRes1(self, REPData):
+        self.getUserConfigResSig1.emit(list(REPData[3]))
+
+    def getChooseLabelTypeInfo1(self,REQmsg):
+        REQmsg.insert(0,self.macAddr)
+        msg = ["researchImport", 13, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    def getChooseLabelTypeInfoRes1(self,REPData):
+        self.getChooseLabelTypeInfoResSig1.emit(list(REPData[3]))
+
+    def insertSampleInfoBatch(self,REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["researchImport", 14, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    def insertSampleInfoBatchRes(self,REPData):
+        self.insertSampleInfoBatchResSig.emit(list(REPData[3]))
 
 
     # 构建集合
@@ -4267,6 +4440,52 @@ class client(QObject, socketClient):
             self.eggPagingRes(REQmsg)
         elif REQmsg[0] == 'createLesson' and REQmsg[1] == 24:
             self.searchEegPageInfoRes(REQmsg)
+
+        # 科研导入
+        # 脑电导入模块
+        # 回调获取病人诊断信息信息
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 1:
+            self.getPatientCheckInfoRes1(REQmsg)
+        # 删除病人诊断信息
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 2:
+            self.delPatientCheckInfoRes1(REQmsg)
+        # 添加病人检查信息
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 3:
+            self.addCheckInfoRes1(REQmsg)
+        # 检查脑电文件配置
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 4:
+            self.checkConfigRes1(REQmsg)
+        # 写脑电请求
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 5:
+            self.writeEEGRes1(REQmsg)
+        # 更新脑电检查信息
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 6:
+            self.updateCheckInfoRes1(REQmsg)
+        # 获取脑电检查信息
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 7:
+            self.getFileInfoRes1(REQmsg)
+        # 获取病人选择信息
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 8:
+            self.getChoosePatientInfoRes1(REQmsg)
+        # 获取医生选择信息
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 9:
+            self.getChooseDoctorInfoRes1(REQmsg)
+        # 生成脑电文件名
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 10:
+            self.makeFileNameRes1(REQmsg)
+        # 删除脑电文件方法
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 11:
+            self.delFileInfoRes1(REQmsg)
+        # 获取脑电配置
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 12:
+            self.getUserConfigRes1(REQmsg)
+        # 选择标注类型
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 13:
+            self.getChooseLabelTypeInfoRes1(REQmsg)
+        # 批量插入样本信息
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 14:
+            self.insertSampleInfoBatchRes(REQmsg)
+
 
         # 样本统计模块
         # 样本统计

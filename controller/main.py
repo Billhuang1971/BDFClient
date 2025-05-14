@@ -40,6 +40,8 @@ from controller.auto import autoController
 from controller.assessLabel import assessLabelController
 from controller.clearLabel import clearLabelController
 
+from controller.researchImport import researchImportController
+
 import sys
 
 _translate = QtCore.QCoreApplication.translate
@@ -49,7 +51,10 @@ class MainController(QWidget):
     EEG_FOR_CONSULTING = 0
 
     # 定义模块切换信号
-    switch_signal = pyqtSignal(str)
+    dataImport_switch_signal = pyqtSignal(str)
+
+    researchImport_switch_signal = pyqtSignal(str)
+
 
     def __init__(self, cAppUtil, client):
         super().__init__()
@@ -77,7 +82,9 @@ class MainController(QWidget):
         # 用户登录
 
         # 信号绑定切换操作
-        self.switch_signal.connect(self.switch_page)
+        self.dataImport_switch_signal.connect(self.switch_page)
+
+        self.researchImport_switch_signal.connect(self.switch_page)
 
     def serverExcept(self):
         reply = QMessageBox.information(self, "登录", f'服务器异常', QMessageBox.Yes)
@@ -182,6 +189,9 @@ class MainController(QWidget):
 
         self.view.ui.action_UC33.triggered.connect(lambda: self.view.setPosition('脑电科研支撑', '删除样本'))
         self.view.ui.action_UC33.triggered.connect(lambda: self.switch_page("clearLabelController"))
+
+        self.view.ui.action_UC34.triggered.connect(lambda: self.view.setPosition('脑电科研支撑','科研导入'))
+        self.view.ui.action_UC34.triggered.connect(lambda: self.switch_page("researchImportController"))
 
     # 用户切换
     def userSwitch(self):
@@ -351,7 +361,7 @@ class MainController(QWidget):
 
         elif controller_name == "dataImportController":
             self.controller = dataImportController(client=self.client, cAppUtil=self.cAppUtil,mainMenubar=self.view.ui.menubar)
-            self.controller.switch_signal.connect(self.switch_signal.emit)
+            self.controller.switch_signal.connect(self.dataImport_switch_signal.emit)
 
         elif controller_name == "configOptionsController":
             self.controller = configOptionsController(client=self.client, cAppUtil=self.cAppUtil)
@@ -393,6 +403,10 @@ class MainController(QWidget):
 
         elif controller_name == "clearLabelController":
             self.controller = clearLabelController(client=self.client, cAppUtil=self.cAppUtil)
+
+        elif controller_name == "researchImportController":
+            self.controller = researchImportController(client=self.client, cAppUtil=self.cAppUtil,mainMenubar=self.view.ui.menubar)
+            self.controller.switch_signal.connect(self.researchImport_switch_signal.emit)
 
 
     def switchToEEGPage(self, msg):
