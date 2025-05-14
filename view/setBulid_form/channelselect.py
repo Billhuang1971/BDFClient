@@ -36,7 +36,7 @@ class channelselectView(QWidget):
         self.checkboxes = []
         options = ['Default', 'FP1-REF', 'FPZ-REF', 'FP2-REF', 'AF7-REF', 'AF3-REF', 'AFZ-REF', 'AF4-REF',
                    'AF8-REF',
-                   'F9-REF', 'F7-REF', 'F5-REF', 'F3-REF', 'F1-REF', 'Fz-REF', 'F2-REF', 'F4-REF', 'F6-REF',
+                   'F9-REF', 'F7-REF', 'F5-REF', 'F3-REF', 'F1-REF', 'FZ-REF', 'F2-REF', 'F4-REF', 'F6-REF',
                    'F8-REF',
                    'F10-REF', 'FT9-REF', 'FT7-REF', 'FC5-REF', 'FC3-REF', 'FC1-REF', 'FCZ-REF', 'FC2-REF',
                    'FC4-REF',

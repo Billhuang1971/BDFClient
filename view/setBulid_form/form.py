@@ -173,7 +173,7 @@ class Ui_Form(object):
         font.setPixelSize(18)
         self.label_15.setFont(font)
         doubleValidator = QtGui.QDoubleValidator()
-        self.lineEdit_3 = QtWidgets.QLineEdit(self.groupBox_3)
+        self.lineEdit_3 = QtWidgets.QLineEdit(self.groupBox_3) #样本长度
         self.lineEdit_3.setObjectName("lineEdit_3")
         self.lineEdit_3.setMaximumSize(QtCore.QSize(90, 16777215))
         self.lineEdit_3.setValidator(doubleValidator)
@@ -222,7 +222,7 @@ class Ui_Form(object):
 
         self.re_scheme.setToolTip("从未选中的脑电进行随机抽取反例，且要求反例与正例不相交")
 
-        self.lineEdit_4 = QtWidgets.QLineEdit(self.groupBox_3)
+        self.lineEdit_4 = QtWidgets.QLineEdit(self.groupBox_3) #最小长度
         self.lineEdit_4.setObjectName("lineEdit_3")
         self.lineEdit_4.setMaximumSize(QtCore.QSize(90, 16777215))
         self.lineEdit_4.setValidator(doubleValidator)
@@ -321,14 +321,14 @@ class Ui_Form(object):
         self.label_6.setObjectName("label_6")
         self.horizontalLayout_6.addWidget(self.label_6)
 
-        self.comboBox_2 = QtWidgets.QComboBox(self.groupBox_3)
+        self.comboBox_2 = QtWidgets.QComboBox(self.groupBox_3) #波形类型选择
         self.comboBox_2.setObjectName("comboBox_2")
         self.comboBox_2.setEnabled(False)
         self.horizontalLayout_6.addWidget(self.comboBox_2)
         self.label_14 = QtWidgets.QLabel(self.groupBox_3)
         self.label_14.setObjectName("label_14")
         self.horizontalLayout_6.addWidget(self.label_14)
-        self.comboBox_3 = QtWidgets.QComboBox(self.groupBox_3)
+        self.comboBox_3 = QtWidgets.QComboBox(self.groupBox_3) #状态类型选择
         self.comboBox_3.setObjectName("comboBox_3")
         self.comboBox_3.setEnabled(False)
         self.horizontalLayout_6.addWidget(self.comboBox_3)
@@ -340,23 +340,31 @@ class Ui_Form(object):
         self.horizontalLayout_20 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_20.setObjectName("horizontalLayout_20")
         self.horizontalLayout_20.addWidget(self.label_24)
-        self.comboBox_24 = QtWidgets.QComboBox(self.groupBox_3)
+        self.comboBox_24 = QtWidgets.QComboBox(self.groupBox_3) #标注用户
         self.comboBox_24.setObjectName("comboBox_24")
         self.comboBox_24.setEnabled(False)
         self.horizontalLayout_20.addWidget(self.comboBox_24)
 
         self.horizontalLayout_20.addWidget(self.label_25)
-        self.comboBox_25 = QtWidgets.QComboBox(self.groupBox_3)
+        self.comboBox_25 = QtWidgets.QComboBox(self.groupBox_3) #病人
         self.comboBox_25.setObjectName("comboBox_25")
         self.comboBox_25.setEnabled(False)
         self.horizontalLayout_20.addWidget(self.comboBox_25)
 
         self.horizontalLayout_20.addWidget(self.label_26)
-        self.comboBox_26 = QtWidgets.QComboBox(self.groupBox_3)
+        self.comboBox_26 = QtWidgets.QComboBox(self.groupBox_3) #文件
         self.comboBox_26.setObjectName("comboBox_26")
         self.comboBox_26.setEnabled(False)
         self.horizontalLayout_20.addWidget(self.comboBox_26)
         self.horizontalLayout_20.setStretch(5, 1)
+
+        self.pushButton_checkchennel = QtWidgets.QPushButton(Form)
+        self.pushButton_checkchennel.setFont(font)
+        self.pushButton_checkchennel.setObjectName("pushButton_3")
+        self.horizontalLayout_20.addWidget(self.pushButton_checkchennel)
+        self.pushButton_checkchennel.setEnabled(False)
+
+
 
         self.pushButton_3 = QtWidgets.QPushButton(Form)
         self.pushButton_3.setFont(font)
@@ -616,6 +624,7 @@ class Ui_Form(object):
         self.label_24.setText(_translate("Form", "标注用户: "))
         self.label_25.setText(_translate("Form", "病人: "))
         self.label_26.setText(_translate("Form", "文件: "))
+        self.pushButton_checkchennel.setText(_translate("Form", "通道匹配"))
         self.pushButton_3.setText(_translate("Form", "添加筛选"))
 
         self.refChannel.setText(_translate("Form", "通道选择"))

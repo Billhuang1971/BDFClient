@@ -1,9 +1,9 @@
 import sys
 from functools import partial
 
-import numpy as np
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QMouseEvent, QFont, QStandardItemModel, QStandardItem, QBrush
+from PyQt5.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont
+import re
 
 from view.algorithm_form.train_parameter import Ui_train
 from view.algorithm_form.parameter_1 import Ui_Parameter_1
@@ -384,6 +384,123 @@ class TableWidget(QWidget):
 
     def set_selectRow(self, item):
         self.select_row = item.row()
+
+# 语法高亮器
+class PythonHighlighter(QSyntaxHighlighter):
+    def __init__(self, document):
+        super().__init__(document)
+
+        # 关键字
+        keyword_format = QTextCharFormat()
+        keyword_format.setForeground(QColor("#569CD6"))
+        keyword_format.setFontWeight(QFont.Bold)
+        keywords = [
+            'and', 'as', 'assert', 'break', 'class', 'continue', 'def',
+            'del', 'elif', 'else', 'except', 'False', 'finally', 'for',
+            'from', 'global', 'if', 'import', 'in', 'is', 'lambda',
+            'None', 'nonlocal', 'not', 'or', 'pass', 'raise', 'return',
+            'True', 'try', 'while', 'with', 'yield'
+        ]
+
+        self.highlighting_rules = [(re.compile(r'\b' + kw + r'\b'), keyword_format) for kw in keywords]
+
+        # 字符串
+        string_format = QTextCharFormat()
+        string_format.setForeground(QColor("#CE9178"))
+        self.highlighting_rules.append((re.compile(r'".*?"'), string_format))
+        self.highlighting_rules.append((re.compile(r"'.*?'"), string_format))
+
+        # 注释
+        comment_format = QTextCharFormat()
+        comment_format.setForeground(QColor("#6A9955"))
+        comment_format.setFontItalic(True)
+        self.highlighting_rules.append((re.compile(r'#.*'), comment_format))
+
+    def highlightBlock(self, text):
+        for pattern, fmt in self.highlighting_rules:
+            for match in pattern.finditer(text):
+                start, end = match.start(), match.end()
+                self.setFormat(start, end - start, fmt)
+
+class AlgTemplate(QDialog):
+    def __init__(self, download_template):
+        super().__init__()
+        self.setWindowTitle("算法模板")
+        self.resize(1200, 1000)
+
+        self.main_layout = QVBoxLayout()
+
+        # 顶部布局：右上角放复制按钮
+        top_layout = QHBoxLayout()
+        top_layout.addStretch()  # 左边留空
+        self.copy_button = QPushButton("复制")
+        self.copy_button.clicked.connect(self.copy_current_tab)
+        self.download_button = QPushButton("下载")
+        self.download_button.clicked.connect(download_template)
+        top_layout.addWidget(self.copy_button)
+        top_layout.addWidget(self.download_button)
+
+
+        self.tabs = QTabWidget()
+
+        # 页面1
+        self.tab1 = QWidget()
+        self.tab1_layout = QVBoxLayout()
+        self.editor1 = QPlainTextEdit()
+        self.editor1.setReadOnly(True)
+        self.editor1.setFont(QFont("Consolas", 11))
+        self.tab1_layout.addWidget(self.editor1)
+        self.tab1.setLayout(self.tab1_layout)
+
+        # 页面2
+        self.tab2 = QWidget()
+        self.tab2_layout = QVBoxLayout()
+        self.editor2 = QPlainTextEdit()
+        self.editor2.setReadOnly(True)
+        self.editor2.setFont(QFont("Consolas", 11))
+        self.tab2_layout.addWidget(self.editor2)
+        self.tab2.setLayout(self.tab2_layout)
+
+        # 页面3
+        self.tab3 = QWidget()
+        self.tab3_layout = QVBoxLayout()
+        self.editor3 = QPlainTextEdit()
+        self.editor3.setReadOnly(True)
+        self.editor3.setFont(QFont("Consolas", 11))
+        self.tab3_layout.addWidget(self.editor3)
+        self.tab3.setLayout(self.tab3_layout)
+
+        self.highlighter1 = PythonHighlighter(self.editor1.document())
+        self.highlighter2 = PythonHighlighter(self.editor2.document())
+        self.highlighter3 = PythonHighlighter(self.editor3.document())
+
+        self.tabs.addTab(self.tab1, "训练算法")
+        self.tabs.addTab(self.tab2, "测试算法")
+        self.tabs.addTab(self.tab3, "预测算法")
+
+        self.main_layout.addLayout(top_layout)
+        self.main_layout.addWidget(self.tabs)
+        self.setLayout(self.main_layout)
+
+    def setContents(self, train_alg, test_alg, predict_alg):
+        self.editor1.setPlainText(train_alg)
+        self.editor2.setPlainText(test_alg)
+        self.editor3.setPlainText(predict_alg)
+
+    def copy_current_tab(self):
+        current_index = self.tabs.currentIndex()
+        if current_index == 0:
+            text = self.editor1.toPlainText()
+        elif current_index == 1:
+            text = self.editor2.toPlainText()
+        elif current_index == 2:
+            text = self.editor3.toPlainText()
+        else:
+            text = ""
+
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

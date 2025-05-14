@@ -9,7 +9,7 @@ from functools import partial
 # from pyqt5_plugins.examplebuttonplugin import QtGui
 
 from view.algorithm import algorithmView, ParameterView, FileUploadView, Parameter_view, TableWidget, \
-    train_parameter_view
+    train_parameter_view, AlgTemplate
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -76,21 +76,81 @@ class algorithmController(QWidget):
             self.searchPage = 1
             self.searchPageMax = 1
             self.upload_finished.connect(self.uploadFinished)
+            self.alg_template = AlgTemplate(self.download_template)
+            self.alg_template_loaded = False
+            self.progress = None
+            self.file = None
             # self.update_process.connect(self.updateProcessValue)
             self.view.ui.pushButton.clicked.connect(self.reset)
             self.view.ui.btnAdd.clicked.connect(self.on_clicked_add_algorithm)
             self.view.ui.btnDel.clicked.connect(self.on_clicked_del_algorithm)
             self.view.ui.btnSelect.clicked.connect(self.on_clicked_select_algorithm)
+            self.view.ui.pushButton1.clicked.connect(self.on_clicked_alg_template)
             self.client.getAlgorithmInfoResSig.connect(self.getAlgorithmInfoRes)
             self.client.addAlgorithmInfoResSig.connect(self.addAlgorithmInfoRes)
             self.client.addAlgorithmFileResSig.connect(self.addAlgorithmFileRes)
             self.client.delAlgorithmInfoResSig.connect(self.delAlgorithmInfoRes)
+            self.client.downloadTemplateResSig.connect(self.download_template_res)
             self.client.getAlgorithmFileNameResSig.connect(self.getAlgorithmFileNameRes)
             self.client.inquiryAlgorithmInfoResSig.connect(self.inquiryAlgorithmInfoRes)
             self.client.algorithmInfoPagingResSig.connect(self.algorithmInfoPagingRes)
+            self.client.algorithmTemplateResSig.connect(self.algorithmTemplateRes)
             self.client.getAlgorithmInfo([self.curPageIndex, self.pageRows, False])
         except Exception as e:
             print('__init__', e)
+
+    def download_template(self):
+        save_path, _ = QFileDialog.getSaveFileName(
+            self, "保存文件", "alg_template.zip",
+            "All Files (*)"
+        )
+
+        if not save_path:
+            return  # 用户取消了保存
+
+        # 打开文件准备写入
+        self.file = open(save_path, 'wb')
+        self.progress = ProgressBarView()
+        self.progress.show()
+        self.client.download_template([0])
+
+    def download_template_res(self, REPData):
+        if REPData[0] == 0 or REPData[2] == -1:
+            self.progress.close()
+            QMessageBox.warning(self, "错误", "下载失败")
+            self.file = None
+            self.progress = None
+            self.block = 0
+            return
+        block = REPData[2]
+        file_size = REPData[3]
+        data = REPData[4]
+        self.file.write(data)
+        self.progress.updateProgressBar(block * 100 // file_size)
+        if block >= file_size:
+            self.file.close()
+            self.file = None
+            self.progress.close()
+            self.progress = None
+            QMessageBox.information(self, "完成", "下载完成")
+            return
+        self.client.download_template([block])
+
+    def on_clicked_alg_template(self):
+        if self.alg_template_loaded:
+            self.alg_template.exec_()
+            return
+        self.client.getAlgorithmTample([])
+
+    def algorithmTemplateRes(self, REPData):
+        if REPData[0] == 0:
+            return
+        self.alg_template_loaded = True
+        train_alg = REPData[2]
+        test_alg = REPData[3]
+        predict_alg = REPData[4]
+        self.alg_template.setContents(train_alg, test_alg, predict_alg)
+        self.alg_template.exec_()
 
     def show_parameter_setting(self, row):
         try:

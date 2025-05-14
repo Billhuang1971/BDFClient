@@ -92,7 +92,7 @@ class Ui_Form(object):
 
         self.lineEditDate2 = QtWidgets.QLineEdit(Form)
         self.lineEditDate2.setEnabled(True)
-        self.lineEditDate2.setObjectName("lineEditDate1")
+        self.lineEditDate2.setObjectName("lineEditDate2")
 
         self.lineEditDate2.setFont(font)
         self.lineEditDate2.setMaximumSize(QtCore.QSize(120, 26))
@@ -315,6 +315,14 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
+
+        dt = QtCore.QDateTime.currentDateTime().addDays(1)
+        self.date_lineEdit.setDateTime(dt)
+        self.date_lineEdit2.setDateTime(dt)
+
+        self.lineEditDate2.setText("")
+        self.lineEditDate1.setText("")
+
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
         self.docSelBtn.setText(_translate("Form", "选择医生"))
