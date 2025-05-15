@@ -222,10 +222,11 @@ class researchImportController(QWidget):
                 os.rmdir(self.dir_path)  # 删除空文件夹
 
         # 对queue_file_path判空，如果退出的时候当前用户不存在待上传文件了，就要把当前文件夹删除
-        if self.cAppUtil.isNull(self.queue_file_path):
-            os.remove(self.queue_file_path)
-            if os.path.exists(self.wait_dir_path):
-                os.rmdir(self.wait_dir_path)  # 删除空文件夹
+        if os.path.exists(self.queue_file_path):
+            if self.cAppUtil.isNull(self.queue_file_path):
+                os.remove(self.queue_file_path)
+                if os.path.exists(self.wait_dir_path):
+                    os.rmdir(self.wait_dir_path)  # 删除空文件夹
 
         # 如果sample插入完成，check_number正确点击完成即mapping使用完毕，这俩文件为空，需要删除
         if self.isJsonListEmpty(self.mapping_path) and self.isJsonListEmpty(self.sample_path):
@@ -317,7 +318,6 @@ class researchImportController(QWidget):
             self.loading_dialog = None
 
 
-    # 测下这里上传的edf文件
     def on_btnAddFile_clicked(self, row):
         if row < 0 or row >= len(self.patientCheck_info):
             QMessageBox.information(self, ' ', '请先在病人诊断信息中选择一行')

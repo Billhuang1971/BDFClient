@@ -202,11 +202,12 @@ class dataImportController(QWidget):
             # 确保路径存在
             if os.path.exists(self.dir_path):
                 os.rmdir(self.dir_path)  # 删除空文件夹
-        # 对queue_file_path判空，如果退出的时候当前用户不存在待上传文件了，就要把当前文件夹删除
-        if self.cAppUtil.isNull(self.queue_file_path):
-            os.remove(self.queue_file_path)
-            if os.path.exists(self.wait_dir_path):
-                os.rmdir(self.wait_dir_path)  # 删除空文件夹
+        # self.queue_file_path存在才判空，对queue_file_path判空，如果退出的时候当前用户不存在待上传文件了，就要把当前文件夹删除
+        if os.path.exists(self.queue_file_path):
+            if self.cAppUtil.isNull(self.queue_file_path):
+                os.remove(self.queue_file_path)
+                if os.path.exists(self.wait_dir_path):
+                    os.rmdir(self.wait_dir_path)  # 删除空文件夹
 
 
     def addUserFolder(self):
