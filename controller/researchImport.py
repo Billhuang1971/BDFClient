@@ -336,7 +336,8 @@ class researchImportController(QWidget):
             file_extension = os.path.splitext(self.from_filepath)[1].lower()
             if file_extension == '.dat':
                 # 提取sample_info
-                self.extractSampleInfo()
+                # self.extractSampleInfo()
+                # 提取sample_info在convert_dat_to_bdf()中进行
                 # 转换完成后再执行 checkBasicConfig
                 self.long_task_with_dialog(post_callback=self.checkBasicConfig)
             else:
@@ -1460,93 +1461,92 @@ class researchImportController(QWidget):
         except Exception as e:
             print('writeEEGRes', e)
 
-    def load_bcidat(self):
-        """Python版的load_bcidat，返回类似MATLAB的结构体"""
-        stream = bcistream(self.from_filepath)
-        sig, states = stream.decode(nsamp="all", states="all", apply_gains=True)
+    # def load_bcidat(self):
+    #     """Python版的load_bcidat，返回类似MATLAB的结构体"""
+    #     stream = bcistream(self.from_filepath)
+    #     sig, states = stream.decode(nsamp="all", states="all", apply_gains=True)
+    #
+    #     # 转换states为字典，并压缩形状 (1, nsamp) -> (nsamp,)
+    #     states_dict = {name: np.squeeze(values) for name, values in states.items()}
+    #
+    #     # 获取原始状态向量(raw_states)
+    #     stream.rewind()
+    #     _, raw_states = stream.read(nsamp="all", apply_gains=False)
+    #
+    #     # 封装成类似MATLAB的结构体
+    #     data = SimpleNamespace()
+    #     data.signal = sig.T  # (nsamp, nchan)
+    #     data.states = SimpleNamespace(**states_dict)  # 支持data.states.Running访问
+    #     data.raw_states = raw_states  # 原始状态向量(用于事件检测)
+    #     data.parameters = stream.params
+    #     data.sampling_rate = stream.samplingrate()
+    #     data.channel_names = stream.params.get("ChannelNames", [f"Channel_{i + 1}" for i in range(stream.channels())])
+    #
+    #     stream.close()
+    #     return data
 
-        # 转换states为字典，并压缩形状 (1, nsamp) -> (nsamp,)
-        states_dict = {name: np.squeeze(values) for name, values in states.items()}
-
-        # 获取原始状态向量(raw_states)
-        stream.rewind()
-        _, raw_states = stream.read(nsamp="all", apply_gains=False)
-
-        # 封装成类似MATLAB的结构体
-        data = SimpleNamespace()
-        data.signal = sig.T  # (nsamp, nchan)
-        data.states = SimpleNamespace(**states_dict)  # 支持data.states.Running访问
-        data.raw_states = raw_states  # 原始状态向量(用于事件检测)
-        data.parameters = stream.params
-        data.sampling_rate = stream.samplingrate()
-        data.channel_names = stream.params.get("ChannelNames", [f"Channel_{i + 1}" for i in range(stream.channels())])
-
-        stream.close()
-        return data
-
-    def extractSampleInfo(self):
-        check_number = self.patientCheck_info[self.row][5]
-        data = self.load_bcidat()
-        """
-        根据 mapping.json 和 check_number 提取 sample_info，并保存为 all_sample_info.json
-        """
-        if not os.path.exists(self.mapping_path):
-            raise FileNotFoundError(f"mapping.json 文件未找到: {self.mapping_path}")
-
-        with open(self.mapping_path, 'r', encoding='utf-8') as f:
-            label_data = json.load(f)
-
-        matched_entry = next((item for item in label_data if str(item.get("check_number")) == str(check_number)), None)
-        if not matched_entry:
-            raise ValueError(f"未找到 check_number 为 {check_number} 的映射配置")
-
-        sample_info = []
-        for config in matched_entry.get("configs", []):
-            field = config.get("states_field")
-            type_id = config.get("type_id")
-            extract_type = config.get("extract_type")
-
-            if not field or type_id is None:
-                continue
-            if not hasattr(data.states, field):
-                continue
-
-            s = getattr(data.states, field)
-            if s.ndim == 0:
-                continue
-
-            if extract_type == "nonzero_rising":
-                idxs = ((s[:-1] == 0) & (s[1:] != 0)).nonzero()[0] + 1
-            elif extract_type == "value_transition":
-                from_val, to_val = config.get("from"), config.get("to")
-                if from_val is None or to_val is None:
-                    continue
-                idxs = ((s[:-1] == from_val) & (s[1:] == to_val)).nonzero()[0] + 1
-            else:
-                continue
-
-            for idx in idxs:
-                sample_info.append({
-                    "begin": int(idx),
-                    "type_id": type_id
-                })
-
-
-        os.makedirs(os.path.dirname(self.sample_path), exist_ok=True)
-
-        # 追加到列表中
-        if os.path.exists(self.sample_path):
-            with open(self.sample_path, 'r', encoding='utf-8') as f:
-                all_sample_info = json.load(f)
-        else:
-            all_sample_info = []
-
-        all_sample_info.append(sample_info)
-
-        with open(self.sample_path, 'w', encoding='utf-8') as f:
-            json.dump(all_sample_info, f, ensure_ascii=False, indent=2)
-
-        print(f"✅ sample_info 已添加到 json文件，共 {len(all_sample_info)} 个任务")
+    # def extractSampleInfo(self):
+    #     check_number = self.patientCheck_info[self.row][5]
+    #     data = self.load_bcidat()
+    #     """
+    #     根据 mapping.json 和 check_number 提取 sample_info，并保存为 all_sample_info.json
+    #     """
+    #     if not os.path.exists(self.mapping_path):
+    #         raise FileNotFoundError(f"mapping.json 文件未找到: {self.mapping_path}")
+    #
+    #     with open(self.mapping_path, 'r', encoding='utf-8') as f:
+    #         label_data = json.load(f)
+    #
+    #     matched_entry = next((item for item in label_data if str(item.get("check_number")) == str(check_number)), None)
+    #     if not matched_entry:
+    #         raise ValueError(f"未找到 check_number 为 {check_number} 的映射配置")
+    #
+    #     sample_info = []
+    #     for config in matched_entry.get("configs", []):
+    #         field = config.get("states_field")
+    #         type_id = config.get("type_id")
+    #         extract_type = config.get("extract_type")
+    #
+    #         if not field or type_id is None:
+    #             continue
+    #         if not hasattr(data.states, field):
+    #             continue
+    #
+    #         s = getattr(data.states, field)
+    #         if s.ndim == 0:
+    #             continue
+    #
+    #         if extract_type == "nonzero_rising":
+    #             idxs = ((s[:-1] == 0) & (s[1:] != 0)).nonzero()[0] + 1
+    #         elif extract_type == "value_transition":
+    #             from_val, to_val = config.get("from"), config.get("to")
+    #             if from_val is None or to_val is None:
+    #                 continue
+    #             idxs = ((s[:-1] == from_val) & (s[1:] == to_val)).nonzero()[0] + 1
+    #         else:
+    #             continue
+    #
+    #         for idx in idxs:
+    #             sample_info.append({
+    #                 "begin": int(idx),
+    #                 "type_id": type_id
+    #             })
+    #
+    #     os.makedirs(os.path.dirname(self.sample_path), exist_ok=True)
+    #
+    #     # 追加到列表中
+    #     if os.path.exists(self.sample_path):
+    #         with open(self.sample_path, 'r', encoding='utf-8') as f:
+    #             all_sample_info = json.load(f)
+    #     else:
+    #         all_sample_info = []
+    #
+    #     all_sample_info.append(sample_info)
+    #
+    #     with open(self.sample_path, 'w', encoding='utf-8') as f:
+    #         json.dump(all_sample_info, f, ensure_ascii=False, indent=2)
+    #
+    #     print(f"✅ sample_info 已添加到 json文件，共 {len(all_sample_info)} 个任务")
 
 
 
@@ -2732,7 +2732,126 @@ class researchImportController(QWidget):
         except Exception as e:
             print('delPatientCheckInfo', e)
 
+    # 分块读取 BCI2000 .dat 文件，返回基础数据字典（不做结构体封装）
+    def readBCIdatChunks(self, chunk_size=10000):
+        # 这行不会自动读取整个文件！它只是打开文件，初始化流对象，准备“按需读取”。
+        stream = bcistream(self.from_filepath)
+
+        sampling_rate = int(stream.samplingrate()) #采样率
+        n_channels = stream.channels() #通道数
+        channel_names = stream.params.get("ChannelNames", [f"Channel_{i + 1}" for i in range(n_channels)])
+        parameters = stream.params
+
+        # 分块读取信号
+        signal_chunks = []
+        while True:
+            sig_chunk, _ = stream.read(nsamp=chunk_size, apply_gains=True)
+            if sig_chunk is None or sig_chunk.size == 0:
+                break
+            signal_chunks.append(sig_chunk.T)  # 转为 (chunk_size, n_channels)
+        signal_data = np.vstack(signal_chunks)
+
+        # 读取原始状态（无增益）
+        stream.rewind()
+        _, raw_states = stream.read(nsamp="all", apply_gains=False)
+
+        stream.close()
+
+        return {
+            "signal": signal_data,
+            "raw_states": raw_states,
+            "sampling_rate": sampling_rate,
+            "channel_names": channel_names,
+            "parameters": parameters
+        }
+
+    # 从 read_bcidat_chunks 返回的原始数据，组装成类似 MATLAB 的结构体
+    def assembleBCIdatStruct(self,raw_data):
+        # 用 filepath 创建 stream（仅用于 decode 状态）
+        stream = bcistream(self.from_filepath)
+        stream.rewind()
+        _, decoded_states = stream.decode(nsamp="all", states="all", apply_gains=True)
+        stream.close()
+
+        states_dict = {name: np.squeeze(values) for name, values in decoded_states.items()}
+
+        data = SimpleNamespace()
+        data.signal = raw_data["signal"]
+        data.raw_states = raw_data["raw_states"]
+        data.sampling_rate = raw_data["sampling_rate"]
+        data.channel_names = raw_data["channel_names"]
+        data.parameters = raw_data["parameters"]
+        data.states = SimpleNamespace(**states_dict)
+        return data
+
+    def extractSampleInfo(self, data):
+        check_number = self.patientCheck_info[self.row][5]
+        """
+        根据 mapping.json 和 check_number 提取 sample_info，并保存为 all_sample_info.json
+        """
+        if not os.path.exists(self.mapping_path):
+            raise FileNotFoundError(f"mapping.json 文件未找到: {self.mapping_path}")
+
+        with open(self.mapping_path, 'r', encoding='utf-8') as f:
+            label_data = json.load(f)
+
+        matched_entry = next((item for item in label_data if str(item.get("check_number")) == str(check_number)), None)
+        if not matched_entry:
+            raise ValueError(f"未找到 check_number 为 {check_number} 的映射配置")
+
+        sample_info = []
+        for config in matched_entry.get("configs", []):
+            field = config.get("states_field")
+            type_id = config.get("type_id")
+            extract_type = config.get("extract_type")
+
+            if not field or type_id is None:
+                continue
+            if not hasattr(data.states, field):
+                continue
+
+            s = getattr(data.states, field)
+            if s.ndim == 0:
+                continue
+
+            if extract_type == "nonzero_rising":
+                idxs = ((s[:-1] == 0) & (s[1:] != 0)).nonzero()[0] + 1
+            elif extract_type == "value_transition":
+                from_val, to_val = config.get("from"), config.get("to")
+                if from_val is None or to_val is None:
+                    continue
+                idxs = ((s[:-1] == from_val) & (s[1:] == to_val)).nonzero()[0] + 1
+            else:
+                continue
+
+            for idx in idxs:
+                sample_info.append({
+                    "begin": int(idx),
+                    "type_id": type_id
+                })
+
+        os.makedirs(os.path.dirname(self.sample_path), exist_ok=True)
+
+        # 追加到列表中
+        if os.path.exists(self.sample_path):
+            with open(self.sample_path, 'r', encoding='utf-8') as f:
+                all_sample_info = json.load(f)
+        else:
+            all_sample_info = []
+
+        all_sample_info.append(sample_info)
+
+        with open(self.sample_path, 'w', encoding='utf-8') as f:
+            json.dump(all_sample_info, f, ensure_ascii=False, indent=2)
+
+        print(f"✅ sample_info 已添加到 json文件，共 {len(all_sample_info)} 个任务")
+
     def convert_dat_to_bdf(self):
+        # 分块读取
+        raw_data = self.readBCIdatChunks()
+        # 封装成matlab格式并提取
+        data = self.assembleBCIdatStruct(raw_data)
+        self.extractSampleInfo(data)
         try:
             # 生成转换后的 BDF 文件名
             directory, filename = os.path.split(self.from_filepath)
@@ -2740,15 +2859,11 @@ class researchImportController(QWidget):
             new_filename = f"{filename_without_extension}.bdf"
             self.convert_filepath = os.path.join(directory, new_filename)
 
-            # 读取dat文件
-            dat_stream = bcistream(self.from_filepath)
-            sampling_rate = int(dat_stream.samplingrate())  # 采样率
-            n_channels = dat_stream.channels()  # 通道数
-            channel_names = dat_stream.params.get("ChannelNames", [f"Channel_{i + 1}" for i in range(n_channels)])
-
-            # 读取信号数据，并应用增益
-            signal_data, raw_states = dat_stream.read(nsamp="all", apply_gains=True)  # 确保单位正确
-            signal_data = signal_data.T  # 转置为 (n_samples, n_channels)
+            sampling_rate = raw_data["sampling_rate"]
+            signal_data = raw_data["signal"]  # 已经是 (n_samples, n_channels)
+            raw_states = raw_data["raw_states"]  # 原始状态值 (n_statevars, n_samples)
+            channel_names = raw_data["channel_names"]  # 通道名称列表
+            n_channels = len(channel_names)  # 通道数
 
             prev_state = None
             events = []
