@@ -228,14 +228,15 @@ class researchImportController(QWidget):
                 if os.path.exists(self.wait_dir_path):
                     os.rmdir(self.wait_dir_path)  # 删除空文件夹
 
-        # 如果sample插入完成，check_number正确点击完成即mapping使用完毕，这俩文件为空，需要删除
-        if self.isJsonListEmpty(self.mapping_path) and self.isJsonListEmpty(self.sample_path):
-            os.remove(self.sample_path)
-            os.remove(self.mapping_path)
-        # 对extract/user的文件夹判空,为空说明这个空文件夹可以删
-        if self.cAppUtil.isNull(self.extract_path):
-            if os.path.exists(self.extract_path):
-                os.rmdir(self.extract_path)
+            # 不存在待上传文件了，就说明用户肯定进行了上传操作并且后续没有待上传任务了，退出的时候可以对映射信息和样本信息进行判空
+            # 如果sample插入完成，check_number正确点击完成即mapping使用完毕，这俩文件为空，需要删除
+            if self.isJsonListEmpty(self.mapping_path) and self.isJsonListEmpty(self.sample_path):
+                os.remove(self.sample_path)
+                os.remove(self.mapping_path)
+            # 对extract/user的文件夹判空,为空说明这个空文件夹可以删
+            if self.cAppUtil.isNull(self.extract_path):
+                if os.path.exists(self.extract_path):
+                    os.rmdir(self.extract_path)
 
 
 
