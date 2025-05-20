@@ -49,16 +49,18 @@ class diagAssessController(QWidget):
 
     # 槽对象中的槽函数
     def exit(self):
-        if self.prentryView is not None:
-            self.prentryView.close()
-        if self.prentryView2 is not None:
-            self.prentryView2.close()
         self.client.da_get_ClassContentsResSig.disconnect()
         self.client.da_del_ClassResSig.disconnect()
         self.client.da_get_ClassStudentResSig.disconnect()
         self.client.da_get_contentsResSig.disconnect()
         self.client.da_del_StudentsTestResSig.disconnect()
         self.client.da_get_diagResSig.disconnect()
+        # if hasattr(self, 'prentryView'):
+        #     self.prentryView.deleteLater()  # 将删除操作推迟到事件循环
+        #     self.prentryView = None
+        # if hasattr(self, 'prentryView2'):
+        #     self.prentryView2.deleteLater()  # 将删除操作推迟到事件循环
+        #     self.prentryView2 = None
 
 
     def get_ClassStudentRes(self, REPData):
