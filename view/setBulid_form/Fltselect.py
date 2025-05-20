@@ -102,8 +102,9 @@ class ChannelDataViewer(QMainWindow):
                     self.reference_channels = set(channel)
                 else:
                     self.reference_channels = data_list[0][0]
-            except IndexError:
+            except (IndexError, TypeError) as e:
                 QMessageBox.critical(self, "错误", "数据格式不正确")
+                print(f"数据格式错误: {e}")
                 return
 
         for row, item in enumerate(data_list):
@@ -145,7 +146,7 @@ class ChannelDataViewer(QMainWindow):
         if current_data:
             try:
                 if channel[0]!='Default':
-                    self.reference_channels=channel
+                    self.reference_channels=set(channel)
                 else:
                     if len(self.store_channels)!=0: #上次成功匹配
                         self.reference_channels = self.store_channels[0][0]
