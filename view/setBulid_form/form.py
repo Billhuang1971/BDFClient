@@ -213,6 +213,9 @@ class Ui_Form(object):
         self.label_25 = QtWidgets.QLabel(self.groupBox_3)
         self.label_25.setObjectName("label_25")
         self.label_25.setFont(font)
+        self.label_checkid=QtWidgets.QLabel(self.groupBox_3)
+        self.label_checkid.setObjectName("label_checkid")
+        self.label_checkid.setFont(font)
         self.label_26 = QtWidgets.QLabel(self.groupBox_3)
         self.label_26.setObjectName("label_26")
         self.label_26.setFont(font)
@@ -351,12 +354,21 @@ class Ui_Form(object):
         self.comboBox_25.setEnabled(False)
         self.horizontalLayout_20.addWidget(self.comboBox_25)
 
+        self.horizontalLayout_20.addWidget(self.label_checkid)
+        self.comboBox_checkid = QtWidgets.QComboBox(self.groupBox_3)  # 颅内专用（只能选择一次检查单号的文件）
+        self.comboBox_checkid.setObjectName("comboBox_25")
+        self.comboBox_checkid.setEnabled(False)
+        self.comboBox_checkid.setVisible(False)
+        self.label_checkid.setVisible(False)
+        self.horizontalLayout_20.addWidget(self.comboBox_checkid)
+
         self.horizontalLayout_20.addWidget(self.label_26)
         self.comboBox_26 = QtWidgets.QComboBox(self.groupBox_3) #文件
         self.comboBox_26.setObjectName("comboBox_26")
         self.comboBox_26.setEnabled(False)
         self.horizontalLayout_20.addWidget(self.comboBox_26)
-        self.horizontalLayout_20.setStretch(5, 1)
+        self.horizontalLayout_20.setStretch(5,1)
+        self.horizontalLayout_20.setStretch(7, 1)
 
         self.pushButton_checkchennel = QtWidgets.QPushButton(Form)
         self.pushButton_checkchennel.setFont(font)
@@ -623,6 +635,7 @@ class Ui_Form(object):
 
         self.label_24.setText(_translate("Form", "标注用户: "))
         self.label_25.setText(_translate("Form", "病人: "))
+        self.label_checkid.setText(_translate("Form", "检查单号: "))
         self.label_26.setText(_translate("Form", "文件: "))
         self.pushButton_checkchennel.setText(_translate("Form", "通道匹配"))
         self.pushButton_3.setText(_translate("Form", "添加筛选"))
