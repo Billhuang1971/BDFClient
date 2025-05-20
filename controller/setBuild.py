@@ -103,12 +103,18 @@ class setBuildController(QWidget):
         except Exception as e:
             print('__init__', e)
     def init_ECIC(self):
+        if self.view.ui.lineEdit_3.text()=='':
+            QMessageBox.information(self, '提示', '请先输入样本长度')
+            return
         if self.ECIC==None:
             self.ECIC=channelimportView()
             self.ECIC.btn_confirm.clicked.connect(self.get_result)
             self.ECIC.btn_cancel.clicked.connect(self.ECIC.close)
         self.ECIC.show()
     def init_ref(self):
+        if self.view.ui.lineEdit_3.text()=='':
+            QMessageBox.information(self, '提示', '请先输入样本长度')
+            return
         if self.ref==None:
             self.ref=channelselectView()
             self.ref.btn_confirm.clicked.connect(self.get_result)
@@ -178,6 +184,8 @@ class setBuildController(QWidget):
     def handle_intracranial_dataset(self):
         self.set_signal = 'sEEG' #颅内
         self.view.ui.groupBox_3.setTitle('颅内样本优选')
+        self.view.ui.label_checkid.setVisible(True)
+        self.view.ui.comboBox_checkid.setVisible(True)
         # 数据初始化
         self.init_data()
         # 表格初始化,界面初始化默认先显示数据集的信息
@@ -195,6 +203,7 @@ class setBuildController(QWidget):
         self.client.getSetSearchSig.disconnect()
         self.client.getSetDescribeSig.disconnect()
         self.view.ui.pushButton_checkchennel.clicked.disconnect()
+        self.client.channel_matchResSig.disconnect()
 
     # 数据初始化
     def init_data(self):
@@ -380,10 +389,13 @@ class setBuildController(QWidget):
             return
         print(f'addFlt typeStr: {typeStr}, user: {user}, patient: {patient}, checkName: {checkName}')
         tempInfo = [typeStr, user, patient, checkName]
-        tempIndexs = [self.curComboBox.currentIndex(),
-                      self.view.ui.comboBox_24.currentIndex() - 1,
-                      self.view.ui.comboBox_25.currentIndex() - 1,
-                      self.view.ui.comboBox_26.currentIndex() - 1]
+        if self.set_signal=='EEG': #
+            tempIndexs = [self.curComboBox.currentIndex(),
+                          self.view.ui.comboBox_24.currentIndex() - 1,
+                          self.view.ui.comboBox_25.currentIndex() - 1,
+                          self.view.ui.comboBox_26.currentIndex() - 1]
+        elif self.set_signal=='sEEG':
+            pass
         print(f'tempIndex: {tempIndexs}')
         print(f'type_ids: {self.type_ids}')
         print(f'user_ids: {self.user_ids}')
@@ -512,12 +524,21 @@ class setBuildController(QWidget):
                                              self.user, self.user_ids]
         print(f'fltAllInfo: {self.fltAllInfo}')
 
-        self.view.ui.comboBox_24.clear()
-        self.view.ui.comboBox_24.addItems(['全部'] + self.user)
-        self.view.ui.comboBox_25.clear()
-        self.view.ui.comboBox_25.addItems(['全部'] + self.patient_name)
-        self.view.ui.comboBox_26.addItems(['全部'])
-        self.view.ui.comboBox_26.setEnabled(False)
+        if self.set_signal=='EEG': #头皮
+            self.view.ui.comboBox_24.clear()
+            self.view.ui.comboBox_24.addItems(['全部'] + self.user)
+            self.view.ui.comboBox_25.clear()
+            self.view.ui.comboBox_25.addItems(['全部'] + self.patient_name)
+            self.view.ui.comboBox_26.addItems(['全部'])
+            self.view.ui.comboBox_26.setEnabled(False)
+        elif self.set_signal=='sEEG': #颅内
+            self.view.ui.comboBox_24.clear()
+            self.view.ui.comboBox_24.addItems(['全部'] + self.user)
+            self.view.ui.comboBox_25.clear()
+            self.view.ui.comboBox_25.addItems(['全部'] + self.patient_name)
+            self.view.ui.comboBox_checkid.addItems() #添加相应单号
+            self.view.ui.comboBox_26.addItems(['全部'])
+            self.view.ui.comboBox_26.setEnabled(False)
 
     # 响应集合名称输入框：输入判断
     def on_lineEdit_2_text_changed(self):
@@ -554,11 +575,6 @@ class setBuildController(QWidget):
             self.isType = True
             self.first_select = True
 
-            self.view.ui.ECIC_Btn.setEnabled(True)#重置筛选后可以重新选择通道
-            self.view.ui.refChannel.setEnabled(True)
-            self.channel=[] #重置已选通道
-
-            self.fltview=None #重置筛选后匹配将清零
             self.view.ui.comboBox_24.setEnabled(False)  # 解除锁定选中的标注用户，病人，文件
             self.view.ui.comboBox_25.setEnabled(False)
             self.view.ui.comboBox_26.setEnabled(False)
@@ -569,6 +585,12 @@ class setBuildController(QWidget):
                 self.search_index.clear()
                 self.addType.clear()
                 self.view.fltTable(self.fltContent)
+
+                self.view.ui.ECIC_Btn.setEnabled(True)  # 重置筛选后可以重新选择通道
+                self.view.ui.refChannel.setEnabled(True)
+                self.channel = []  # 重置已选通道
+
+                self.fltview = None  # 重置筛选后匹配将清零
 
                 self.view.ui.comboBox_24.setEnabled(False)
                 self.view.ui.comboBox_25.setEnabled(False)
@@ -598,10 +620,6 @@ class setBuildController(QWidget):
             QMessageBox.information(self, '提示', '尚未选择主题')
             self.reset(False)
             return
-        if self.channel==[]:
-            QMessageBox.information(self, '提示', '尚未选择通道')
-            self.reset(False)
-            return
         if isType:
             self.view.ui.comboBox_5.setEnabled(True)
             info = self.type_info
@@ -617,6 +635,10 @@ class setBuildController(QWidget):
                 return
         else:
             if comboBox.currentText() not in self.state_info:
+                return
+            if self.channel == []:
+                QMessageBox.information(self, '提示', '尚未选择通道')
+                self.reset(False)
                 return
             info = self.state_info
             # self.view.ui.refChannel.setEnabled(True)
