@@ -105,6 +105,12 @@ class Ui_Form(object):
         self.pushButton.setObjectName("pushButton")
 
         self.horizontalLayout.addWidget(self.pushButton)
+
+        self.pushButton_reset =QtWidgets.QPushButton(Form)
+        self.pushButton_reset.setFont(font)
+        self.pushButton_reset.setObjectName("pushButton_reset")
+        self.horizontalLayout.addWidget(self.pushButton_reset)
+
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.verticalLayout.addLayout(self.horizontalLayout)
@@ -217,7 +223,7 @@ class Ui_Form(object):
         _translate = QtCore.QCoreApplication.translate
 
         self.pushButton.setText(_translate("Form", "查询"))
-
+        self.pushButton_reset.setText(_translate("Form", "重置"))
         dt = QtCore.QDateTime.currentDateTime().addDays(1)
         self.date_lineEdit.setDateTime(dt)
         self.date_lineEdit2.setDateTime(dt)

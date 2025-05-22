@@ -888,6 +888,7 @@ class setBuildController(QWidget):
         self.view.ui.comboBox_24.setEnabled(False) # 锁定选中的标注用户，病人，文件
         self.view.ui.comboBox_25.setEnabled(False)
         self.view.ui.comboBox_26.setEnabled(False)
+        self.view.ui.comboBox_checkid.setEnabled(False)
         self.fltview.close()
 
     def build_check(self):

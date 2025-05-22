@@ -44,6 +44,7 @@ class ManualView(QWidget):
         self.ui.confirmSkip.clicked.connect(self.confirm_skip)
 
         self.ui.pushButton.clicked.connect(self.my_Query)
+        self.ui.pushButton_reset.clicked.connect(self.reset)
     # def mouseDoubleClickEvent(self, a0: typing.Optional[QtGui.QMouseEvent]):
     #     self.ui.date_lineEdit.clear()
 
@@ -164,6 +165,9 @@ class ManualView(QWidget):
 
     def my_Query(self):
         self.page_control_signal.emit(["query"])
+
+    def reset(self):
+        self.page_control_signal.emit(["reset"])
 #
 # if __name__ == '__main__':
 #     app = QApplication(sys.argv)

@@ -116,6 +116,17 @@ class manualQueryController(QWidget):
         elif page_to[0] == "query":
             self.curPageIndex = 1
             self.view.ui.curPage.setText(str(self.curPageIndex))
+        elif page_to[0] == "reset":
+            self.curPageIndex = 1
+            self.view.ui.curPage.setText(str(self.curPageIndex))
+            self.view.ui.comboBox.setCurrentIndex(0)
+            self.view.ui.lineEdit.clear()
+            #设置日期控件到未来第二天
+            dt = QtCore.QDateTime.currentDateTime().addDays(1)
+            self.view.ui.date_lineEdit.setDateTime(dt)
+            self.view.ui.date_lineEdit2.setDateTime(dt)
+            self.view.ui.lineEditDate1.clear()
+            self.view.ui.lineEditDate2.clear()
         pname = self.view.ui.comboBox.currentText()
         pvalue = self.view.ui.lineEdit.text()
         if pname == '测量日期':
