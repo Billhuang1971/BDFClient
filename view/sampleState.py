@@ -27,6 +27,7 @@ def show_text(function):
                 Qt.Checked if l == l_ else Qt.Unchecked if l == 0 else Qt.PartiallyChecked)
             # set_text = "(全选)" if l == l_ else "(无选择)" if l == 0 else ";".join((item.text() for item in items))
             set_tip = "(全选)" if l == l_ else "(无选择)" if l == 0 else "已添加：\n\t" + "\n\t".join((item.text() for item in items))
+
             self.vars["lineEdit"].setText("")
             if self.is_research:
                 self.vars["lineEdit"].setPlaceholderText("点击可搜索,移动至此有提示")
@@ -81,6 +82,7 @@ class QComboCheckBox(QComboBox):
         self.setLineEdit(self.vars["lineEdit"])
         self.vars['completer'] = QCompleter(self.tool_bar, self)
         self.vars['completer'].setFilterMode(Qt.MatchContains)
+        self.vars['completer'].activated.connect(self._handle_completer_selection)
         self.vars["lineEdit"].setCompleter(self.vars['completer'])
         self.vars['completer'].setCaseSensitivity(Qt.CaseInsensitive)
         self.activated.connect(self.__show_selected)
@@ -96,6 +98,19 @@ class QComboCheckBox(QComboBox):
             self.vars["listViewModel"].item(i).setToolTip(item)
             i += 1
 
+    def _handle_completer_selection(self, text):
+        """当用户通过补全器选择项时，直接勾选对应的复选框"""
+        """当用户通过补全器选择项时，直接勾选对应的复选框"""
+        # 找到匹配的项（跳过第一项"(全选)"）
+        items = self.find_text(text)
+        if items:
+            # 检查是否所有匹配项都已选中
+            all_checked = all(item.checkState() == Qt.Checked for item in items)
+            # 调用原有的select_text方法，但传入反转后的状态
+            self.select_text(text, not all_checked)
+
+        # 保持原有的清空和焦点处理
+        self.vars["lineEdit"].clearFocus()
     def count(self):
         # 返回子项数
         return super().count() - 1
