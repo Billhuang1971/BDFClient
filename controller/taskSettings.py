@@ -1377,11 +1377,20 @@ class taskSettingsController(QWidget):
             self.view.tableWidget_marker.curPage.setText(str(int(signal[1]) + 1))
         elif "final" == signal[0]:
             self.view.tableWidget_marker.curPage.setText(str(total_page))
+        # elif "confirm" == signal[0]:
+        #     if total_page < int(signal[1]) or int(signal[1]) < 1:
+        #         QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
+        #         self.view.tableWidget_marker.skipPage.setText('1')
+        #         return
         elif "confirm" == signal[0]:
-            if total_page < int(signal[1]) or int(signal[1]) < 1:
-                QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
-                self.view.tableWidget_marker.skipPage.setText('1')
+            if not signal[1].isdigit():
+                QMessageBox.information(self, "提示", "请输入有效的正整数页码", QMessageBox.Yes)
                 return
+            page_num = int(signal[1])
+            if page_num < 1 or page_num > total_page:
+                QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
+                return
+
             is_fromSkip = True
             self.view.tableWidget_marker.curPage.setText(signal[1])
         self.changeTableContent_marker(is_fromSkip)  # 改变表格内容
