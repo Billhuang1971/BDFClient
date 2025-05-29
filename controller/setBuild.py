@@ -345,6 +345,7 @@ class setBuildController(QWidget):
             self.view.ui.comboBox_2.currentTextChanged.connect(
                 lambda: self.init_typeFilters(comboBox=self.view.ui.comboBox_2, isType=True))
             self.view.ui.comboBox_25.currentTextChanged.connect(self.patientChange)
+            self.view.ui.comboBox_checkid.currentTextChanged.connect(self.check_nameChange)
             self.view.ui.pushButton_checkchennel.clicked.connect(self.channel_match)
 
             self.view.ui.themeBox.currentTextChanged.connect(self.themeChange)
@@ -395,7 +396,10 @@ class setBuildController(QWidget):
                           self.view.ui.comboBox_25.currentIndex() - 1,
                           self.view.ui.comboBox_26.currentIndex() - 1]
         elif self.set_signal=='sEEG':
-            pass
+            tempIndexs = [self.curComboBox.currentIndex(),
+                          self.view.ui.comboBox_24.currentIndex(),
+                          self.view.ui.comboBox_25.currentIndex(),
+                          self.view.ui.comboBox_26.currentIndex() -1]
         print(f'tempIndex: {tempIndexs}')
         print(f'type_ids: {self.type_ids}')
         print(f'user_ids: {self.user_ids}')
@@ -413,8 +417,8 @@ class setBuildController(QWidget):
         self.view.ui.comboBox_24.setEnabled(True) #配合通道匹配，添加筛选后恢复可选
         self.view.ui.comboBox_25.setEnabled(True)
         self.view.ui.comboBox_26.setEnabled(True)
-
-        self.view.ui.pushButton_3.setEnabled(False) #添加筛选后恢复不可选
+        if self.view.ui.radioButton4.isChecked(): #是状态需要匹配的情况下恢复不可选，等匹配了才可选
+            self.view.ui.pushButton_3.setEnabled(False) #添加筛选后恢复不可选
 
         try:
             id = -1
@@ -458,17 +462,38 @@ class setBuildController(QWidget):
         self.view.ui.curPage.setText(str(self.curPageIndex))
         self.client.getSet([1, self.pageRows, 'home'])
     def patientChange(self):
-        self.view.ui.comboBox_26.clear()
-        if self.view.ui.comboBox_25.currentText() not in self.file_name.keys():
-            return
-        if self.view.ui.comboBox_25.currentText() != '全部':
-            self.view.ui.comboBox_26.setEnabled(True)
-            fileName = [item[0] for item in self.file_name[self.view.ui.comboBox_25.currentText()]]
-            self.view.ui.comboBox_26.addItems(['全部'] + fileName)
-        else:
-            self.view.ui.comboBox_26.setEnabled(False)
-            self.view.ui.comboBox_26.addItems(['全部'])
+        if self.set_signal=='EEG': #头皮
+            self.view.ui.comboBox_26.clear()
+            if self.view.ui.comboBox_25.currentText() not in self.file_name.keys():
+                return
+            if self.view.ui.comboBox_25.currentText() != '全部':
+                self.view.ui.comboBox_26.setEnabled(True)
+                fileName = [item[0] for item in self.file_name[self.view.ui.comboBox_25.currentText()]]
+                self.view.ui.comboBox_26.addItems(['全部'] + fileName)
+            else:
+                self.view.ui.comboBox_26.setEnabled(False)
+                self.view.ui.comboBox_26.addItems(['全部'])
+        elif self.set_signal=='sEEG':
+            self.view.ui.comboBox_checkid.clear()
+            if self.view.ui.comboBox_25.currentText() not in self.file_name.keys():
+                return
+            if self.view.ui.comboBox_25.currentText() != '全部':
+                self.view.ui.comboBox_checkid.setEnabled(True)
+                fileName = [item[0] for item in self.file_name[self.view.ui.comboBox_25.currentText()]]
+                check_name=fileName[0].split('-')[0]
+                self.view.ui.comboBox_checkid.addItems([check_name])
 
+    def check_nameChange(self):
+        self.view.ui.comboBox_26.clear()
+        self.view.ui.comboBox_26.setEnabled(True)
+        patient = self.view.ui.comboBox_25.currentText()
+        checkName=self.view.ui.comboBox_checkid.currentText()
+        if patient!='': #避免重置时报错
+            matched_files = [
+                file_name for file_name, _ in self.file_name[patient]
+                if file_name.startswith(checkName)
+            ]
+            self.view.ui.comboBox_26.addItems(['全部'] + matched_files)
     def themeChange(self):
         print(f'themeChange')
         self.selectedTheme = [self.themeInfo[i.row() - 1] for i in self.view.ui.themeBox.get_selected()]
@@ -512,6 +537,8 @@ class setBuildController(QWidget):
         self.patient_ids = [info[0] for info in data['patientName']]
         self.measure_date = [d.strftime("%Y-%m-%d") for d in data['measureDate'][0]]
         self.file_name = data['fileName']
+        # tempt=[item[0][0] for item in self.file_name]
+        # self.check_num = [file_name.split('-')[0] for file_name in tempt] #提取检查单号名称
         self.user = [info[1] for info in data['user']]
         self.user_ids = [info[0] for info in data['user']]
 
@@ -533,12 +560,13 @@ class setBuildController(QWidget):
             self.view.ui.comboBox_26.setEnabled(False)
         elif self.set_signal=='sEEG': #颅内
             self.view.ui.comboBox_24.clear()
-            self.view.ui.comboBox_24.addItems(['全部'] + self.user)
+            self.view.ui.comboBox_24.addItems(self.user)
             self.view.ui.comboBox_25.clear()
-            self.view.ui.comboBox_25.addItems(['全部'] + self.patient_name)
-            self.view.ui.comboBox_checkid.addItems() #添加相应单号
-            self.view.ui.comboBox_26.addItems(['全部'])
-            self.view.ui.comboBox_26.setEnabled(False)
+            self.view.ui.comboBox_25.addItems(self.patient_name)
+            # self.view.ui.comboBox_checkid.addItems(self.check_num) #添加相应单号
+            # self.view.ui.comboBox_checkid.setEnabled(False)
+            # self.view.ui.comboBox_26.addItems(['全部'])
+            # self.view.ui.comboBox_26.setEnabled(False)
 
     # 响应集合名称输入框：输入判断
     def on_lineEdit_2_text_changed(self):
@@ -578,6 +606,8 @@ class setBuildController(QWidget):
             self.view.ui.comboBox_24.setEnabled(False)  # 解除锁定选中的标注用户，病人，文件
             self.view.ui.comboBox_25.setEnabled(False)
             self.view.ui.comboBox_26.setEnabled(False)
+            if self.set_signal=='sEEG':
+                self.view.ui.comboBox_checkid.setEnabled(False)
 
             if delFlt:
                 self.fltContent.clear()
@@ -802,8 +832,8 @@ class setBuildController(QWidget):
     def channel_match(self):
         self.view.ui.pushButton_checkchennel.setEnabled(False)
         tempIndex = [self.curComboBox.currentIndex(),
-                      self.view.ui.comboBox_24.currentIndex() - 1,
-                      self.view.ui.comboBox_25.currentIndex() - 1,
+                      self.view.ui.comboBox_24.currentIndex(),
+                      self.view.ui.comboBox_25.currentIndex(),
                       self.view.ui.comboBox_26.currentIndex() - 1]
         match_content=[]
         # 获取对应type_id的索引值（确保总是非负）
@@ -858,6 +888,7 @@ class setBuildController(QWidget):
         self.view.ui.comboBox_24.setEnabled(False) # 锁定选中的标注用户，病人，文件
         self.view.ui.comboBox_25.setEnabled(False)
         self.view.ui.comboBox_26.setEnabled(False)
+        self.view.ui.comboBox_checkid.setEnabled(False)
         self.fltview.close()
 
     def build_check(self):

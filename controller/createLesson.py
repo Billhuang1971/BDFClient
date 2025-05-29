@@ -893,6 +893,10 @@ class createLessonController(QWidget):
                     self.student_page_current = self.student_page_max
                     self.studentView.ui.label_6.setText(str(self.student_page_current))
             elif "confirm" == signal[0]:
+                if signal[0].isdigit():
+                    if int(signal[0]) <= 0:
+                        return
+                    print("signal[0] 是非零数字字符串")
                 if self.is_student_search:
                     if self.search_student_page == int(signal[1]):
                         QMessageBox.information(self, "提示", "当前已显示该页面", QMessageBox.Yes)
@@ -1020,6 +1024,7 @@ class createLessonController(QWidget):
                          self.key_word, self.key_value])
                 else:
                     self.client.addStudent([self.lesson_student_id, lesson_id, self.student_page_current, self.is_student_search])
+                self.studentView.ui.pushButton_7.setEnabled(False)
         except Exception as e:
             print('on_clicked_add_student_info', e)
 
@@ -1228,6 +1233,7 @@ class createLessonController(QWidget):
         try:
             if REPData[0] == '0':
                 QMessageBox.information(self, '提示', '添加课堂学员失败, 请重新尝试', QMessageBox.Ok)
+                self.studentView.ui.pushButton_7.setEnabled(True)
                 return
             else:
                 is_search = REPData[5]
@@ -1250,6 +1256,7 @@ class createLessonController(QWidget):
                 self.studentView.show()
                 QMessageBox.information(self, '提示', '添加课堂学员成功', QMessageBox.Ok)
                 self.studentView.selected_row.clear()
+                self.studentView.ui.pushButton_7.setEnabled(True)
         except Exception as e:
             print('addLessonRes', e)
 
