@@ -160,49 +160,52 @@ class patientManagerController(QWidget):
             print('getPatientInfoRes', e)
 
     def page_controller(self, signal):
-        if "home" == signal[0]:
-            if self.curPageIndex == 1:
-                QMessageBox.information(self, "提示", "已经是首页了", QMessageBox.Yes)
-                return
-            self.curPageIndex = 1
-            self.tableWidget.curPage.setText(str(self.curPageIndex))
-        elif "pre" == signal[0]:
-            if 1 == int(signal[1]):
-                QMessageBox.information(self, "提示", "已经是第一页了", QMessageBox.Yes)
-                return
-            if self.curPageIndex <= 1:
-                return
-            self.curPageIndex = self.curPageIndex - 1
-            self.tableWidget.curPage.setText(str(self.curPageIndex))
-        elif "next" == signal[0]:
-            if self.curPageMax == int(signal[1]):
-                QMessageBox.information(self, "提示", "已经是最后一页了", QMessageBox.Yes)
-                return
-            self.curPageIndex = self.curPageIndex + 1
-            self.tableWidget.curPage.setText(str(self.curPageIndex))
-        elif "final" == signal[0]:
-            if self.curPageIndex == self.curPageMax:
-                QMessageBox.information(self, "提示", "已经是尾页了", QMessageBox.Yes)
-                return
-            self.curPageIndex = self.curPageMax
-            self.tableWidget.curPage.setText(str(self.curPageMax))
-        elif "confirm" == signal[0]:
-            if signal[1]=='':
-                QMessageBox.information(self, "提示", "请输入页码进行跳转", QMessageBox.Yes)
-                return
-            if self.curPageIndex == int(signal[1]):
-                QMessageBox.information(self, "提示", "当前已显示该页面", QMessageBox.Yes)
-                return
-            if self.curPageMax < int(signal[1]) or int(signal[1]) <= 0:
-                QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
-                return
-            self.curPageIndex = int(signal[1])
-            self.tableWidget.curPage.setText(signal[1])
-        msg = [self.curPageIndex, self.pageRows, signal[0]]
-        if self.view.ui.lineEdit.text() != '':
-            self.inqPatientInfo(pageIndex=self.curPageIndex)
+        if self.isEdit==False and self.isAdd ==False:
+            if "home" == signal[0]:
+                if self.curPageIndex == 1:
+                    QMessageBox.information(self, "提示", "已经是首页了", QMessageBox.Yes)
+                    return
+                self.curPageIndex = 1
+                self.tableWidget.curPage.setText(str(self.curPageIndex))
+            elif "pre" == signal[0]:
+                if 1 == int(signal[1]):
+                    QMessageBox.information(self, "提示", "已经是第一页了", QMessageBox.Yes)
+                    return
+                if self.curPageIndex <= 1:
+                    return
+                self.curPageIndex = self.curPageIndex - 1
+                self.tableWidget.curPage.setText(str(self.curPageIndex))
+            elif "next" == signal[0]:
+                if self.curPageMax == int(signal[1]):
+                    QMessageBox.information(self, "提示", "已经是最后一页了", QMessageBox.Yes)
+                    return
+                self.curPageIndex = self.curPageIndex + 1
+                self.tableWidget.curPage.setText(str(self.curPageIndex))
+            elif "final" == signal[0]:
+                if self.curPageIndex == self.curPageMax:
+                    QMessageBox.information(self, "提示", "已经是尾页了", QMessageBox.Yes)
+                    return
+                self.curPageIndex = self.curPageMax
+                self.tableWidget.curPage.setText(str(self.curPageMax))
+            elif "confirm" == signal[0]:
+                if signal[1]=='':
+                    QMessageBox.information(self, "提示", "请输入页码进行跳转", QMessageBox.Yes)
+                    return
+                if self.curPageIndex == int(signal[1]):
+                    QMessageBox.information(self, "提示", "当前已显示该页面", QMessageBox.Yes)
+                    return
+                if self.curPageMax < int(signal[1]) or int(signal[1]) <= 0:
+                    QMessageBox.information(self, "提示", "跳转页码超出范围", QMessageBox.Yes)
+                    return
+                self.curPageIndex = int(signal[1])
+                self.tableWidget.curPage.setText(signal[1])
+            msg = [self.curPageIndex, self.pageRows, signal[0]]
+            if self.view.ui.lineEdit.text() != '':
+                self.inqPatientInfo(pageIndex=self.curPageIndex)
+            else:
+                self.client.patientPaging(msg)
         else:
-            self.client.patientPaging(msg)
+            QMessageBox.information(self, "提示", "请先完成编辑再翻页", QMessageBox.Yes)
 
     def patientPagingRes(self, REPData):
         try:
@@ -333,11 +336,14 @@ class patientManagerController(QWidget):
                 if self.isEdit:
                     self.isEdit = False
                     if self.isSearch:
+                        self.select_row = None#避免在添加或修改后仍保留选中行1
                         self.client.updatePatientInfo(REQmsg=[patient_info, self.searchID[row], row])
                     else:
+                        self.select_row = None#避免在添加或修改后仍保留选中行1
                         self.client.updatePatientInfo(REQmsg=[patient_info, self.patientId_list[row], row])
                 else:
                     patient_info.append(self.curPageIndex)
+                    self.select_row = None#避免在添加或修改后仍保留选中行1
                     self.client.addPatientInfo(REQmsg=patient_info)
         except Exception as e:
             print('editConfirm', e)
@@ -352,6 +358,7 @@ class patientManagerController(QWidget):
                     self.tableWidget.table.setRowCount(self.tableWidget.table.rowCount() - 1)
                     self.clear(row)
                     self.itemIsEditable()
+                    self.select_row=None# 在取消和确定时重置选中行
             elif self.isEdit:
                 # print(self.isEdit)
                 reply = QMessageBox.information(self, "提示", '是否取消修改', QMessageBox.Yes | QMessageBox.No)
@@ -359,6 +366,7 @@ class patientManagerController(QWidget):
                     self.isEdit = False
                     self.clear(row)
                     self.itemIsEditable()
+                    self.select_row = None
                     # for i in range(0, self.col_num):
                     #     self.view.tableWidget.item(row, i + 1).setText(self.patient_info[row][i])
         except Exception as e:
