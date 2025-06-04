@@ -83,6 +83,7 @@ class researchImportController(QWidget):
         self.client.getChooseDoctorInfoResSig1.connect(self.get_choose_doctor_infoRes)
         self.client.getChooseLabelTypeInfoResSig1.connect(self.get_choose_labeltype_infoRes)
         self.client.insertSampleInfoBatchResSig.connect(self.insertSampleInfoBatchRes)
+        self.client.getCheckNumberByIDResSig.connect(self.getCheckNumberByIDRes)
         self.uploadFileSig.connect(self.upload_startCall)
 
 
@@ -121,9 +122,7 @@ class researchImportController(QWidget):
         self.block_num = None
         # 存放选中需要转换的脑电文件路径
         self.from_filepath = None
-        # 存放传感器字段修复后的edf文件名
-        self.repair_filepath = None
-        # 增加bdf文件转化为edf文件后的新文件名
+        # 增加其他文件转化为bdf文件后的新文件名
         self.convert_filepath = None
         # 存放返回的脑电文件名字
         self.file_path = None
@@ -177,6 +176,8 @@ class researchImportController(QWidget):
 
         # 存储添加的信息
         self.addInfo = {}
+        # 先将这个选定标志类型的属性置零
+        self.addInfo['isChoose_labelType'] = 0
 
         # 添加部分的槽函数链接
         # 设置选择医生
@@ -227,16 +228,20 @@ class researchImportController(QWidget):
                 os.remove(self.queue_file_path)
                 if os.path.exists(self.wait_dir_path):
                     os.rmdir(self.wait_dir_path)  # 删除空文件夹
+        else:
+            if os.path.exists(self.wait_dir_path):
+                os.rmdir(self.wait_dir_path)  # 删除空文件夹
 
-            # 不存在待上传文件了，就说明用户肯定进行了上传操作并且后续没有待上传任务了，退出的时候可以对映射信息和样本信息进行判空
-            # 如果sample插入完成，check_number正确点击完成即mapping使用完毕，这俩文件为空，需要删除
-            if self.isJsonListEmpty(self.mapping_path) and self.isJsonListEmpty(self.sample_path):
-                os.remove(self.sample_path)
-                os.remove(self.mapping_path)
-            # 对extract/user的文件夹判空,为空说明这个空文件夹可以删
-            if self.cAppUtil.isNull(self.extract_path):
-                if os.path.exists(self.extract_path):
-                    os.rmdir(self.extract_path)
+
+        # 不存在待上传文件了，就说明用户肯定进行了上传操作并且后续没有待上传任务了，退出的时候可以对映射信息和样本信息进行判空
+        # 如果sample插入完成，check_number正确点击完成即mapping使用完毕，这俩文件为空，需要删除
+        if self.isJsonListEmpty(self.mapping_path) and self.isJsonListEmpty(self.sample_path):
+            os.remove(self.sample_path)
+            os.remove(self.mapping_path)
+        # 对extract/user的文件夹判空,为空说明这个空文件夹可以删
+        if self.cAppUtil.isNull(self.extract_path):
+            if os.path.exists(self.extract_path):
+                os.rmdir(self.extract_path)
 
 
 
@@ -449,6 +454,7 @@ class researchImportController(QWidget):
 
         print("新记录已添加到文件")
 
+    # 删除病人检查信息的时候，如果存在mapping和未插入的sample需要及时删除
     def on_btnRemove_clicked(self, row):
         if row == -1 or row >= len(self.patientCheck_info):
             QMessageBox.information(self.view, ' ', '请先在病人诊断信息中选择一行')
@@ -481,6 +487,10 @@ class researchImportController(QWidget):
         # 删除 wait_file 和 pending.json 中该检查号的任务
         self.removeWaitFile(check_number)
 
+        # 删除check_number对应的mapping.json和sample.josn
+        self.removeMapping(check_number)
+        self.removeSample(check_number)
+
         # 删除未上传完成的 EEG 文件
         if not self.cAppUtil.isNull(self.dir_path):
             bdfFileNameList = self.findFile(self.dir_path, '.bdf')
@@ -492,63 +502,9 @@ class researchImportController(QWidget):
 
         # 删除病人检查信息
         self.client.delPatientCheckInfo1(REQmsg)
-
         # 清空 row
         self.row = -1
 
-    # 删除服务端已上传的所有文件 与该脑电检查相关的所有记录 删除与该脑电检查对应的所有待传任务
-    def on_btnRemove_clicked(self,row):
-        if self.row != -1:
-            self.row = self.view.ui.tableWidget.currentRow()
-            # 找到当前检查信息的脑电上传医生
-            print("这里的patientCheckInfo:",self.patientCheck_info)
-            pdoctorname = self.patientCheck_info[self.row][3]
-            if pdoctorname == self.client.tUser[0]:
-                answer = QMessageBox.warning(
-                    self.view, '确认删除！', '您将进行删除操作！',
-                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-                if answer == QMessageBox.Yes:
-                    if self.row == -1:
-                        QMessageBox.information(self.view, ' ', '请先选中一行')
-                        return
-                    # 暂时只能选中一行删除
-                    print('row', self.row)
-                    check_id = self.patientCheck_info[self.row][0]
-                    account = self.client.tUser[1]
-                    REQmsg = [account, check_id, self.row]
-                    # 在这里删除了当前行 需要将ui界面上的待上传文件清空并将wait_file中属于该检查单号的文件删除
-                    # 清空客户端待上传文件列表
-                    self.view.ui.tableWidget_1.setRowCount(0)
-                    self.view.ui.tableWidget_1.clearContents()
-
-                    # 清空对应的wait_file中的任务和pending中对应的任务
-                    check_number = self.patientCheck_info[self.row][5]
-                    self.removeWaitFile(check_number)
-
-                    self.row = -1
-
-                    # 如果当前有上传到一半的任务进行检查单号的删除，upload/EEG中有文件残留
-                    # 这个残留如果要删除的话需要做判断，如果check_id相吻合，需要删除
-                    if not self.cAppUtil.isNull(self.dir_path):
-                        bdfFileNameList = self.findFile(self.dir_path, '.bdf')
-                        bdfFileName = bdfFileNameList[0]
-                        # 匹配 _ 之前的数字，并去掉前导零
-                        match = re.match(r"0*(\d+)_", bdfFileName)
-                        if match:
-                            check_id1 = int(match.group(1))
-                            if check_id1 == check_id:
-                                # 同时删除当前未上传完成的脑电文件
-                                self.cAppUtil.empty(self.dir_path, filename=bdfFileName)
-
-                    # 删除病人检查信息
-                    self.client.delPatientCheckInfo1(REQmsg)
-                else:
-                    return
-            else:
-                QMessageBox.information(self.view, '提示', '你不是本次检查的脑电上传医生，你无权进行删除！！！')
-        else:
-            QMessageBox.information(self, ' ', '请先在病人诊断信息中选择一行')
-            return
 
     # 删除指定的wait_file,会连带着删除Pending中对应的记录
     def removeWaitFile(self,check_number):
@@ -556,7 +512,7 @@ class researchImportController(QWidget):
 
         # 判断check_number是否在wait_file中
         if not any(task["check_number"] == check_number for task in self.wait_file):
-            print(f"当前检查单号不存在待上传任务，删除完成")
+            print(f"当前实验单号不存在待上传任务，删除完成")
             return  # 如果没有找到任务，说明当前检查单号还未创建上传任务，直接返回，不进行删除操作
 
         original_length = len(self.wait_file)
@@ -586,18 +542,43 @@ class researchImportController(QWidget):
         except Exception as e:
             print(f"从pending.json中删除task有误: {e}")
 
+    def removeSample(self, check_number):
+        """
+        从 sample_info 文件中删除指定 check_number 的所有记录。
+        :param file_path: sample_info JSON 文件路径
+        :param check_number: 要删除的检查编号
+        """
+        # 加载已有数据
+        if os.path.exists(self.sample_path) and not self.isJsonListEmpty(self.sample_path):
+            with open(self.sample_path, 'r', encoding='utf-8') as f:
+                all_sample_info = json.load(f)
+                # 过滤掉匹配的 check_number 项
+                original_len = len(all_sample_info)
+                all_sample_info = [entry for entry in all_sample_info if str(entry.get("check_number")) != str(check_number)]
+                new_len = len(all_sample_info)
+
+                if new_len == original_len:
+                    print(f"未找到 check_number 为 {check_number} 的记录")
+                else:
+                    with open(self.sample_path, 'w', encoding='utf-8') as f:
+                        json.dump(all_sample_info, f, ensure_ascii=False, indent=2)
+                    print(f"已删除 check_number 为 {check_number} 的记录，共删除 {original_len - new_len} 项")
+        else:
+            print(f"当前json文件中已不存在信息可以删除")
+
+
     # fixme:多个检查单号，无法点击第二个”完成“ 暂未复现
     def on_btnComplete_clicked(self, row):
         if row < 0 or row >= len(self.patientCheck_info):
-            QMessageBox.information(self, ' ', '请先在病人诊断信息中选择一行')
+            QMessageBox.information(self, ' ', '请先在实验信息中选择一行')
             return
 
         if row >= len(self.patientCheck_info):
             QMessageBox.information(self, ' ', '选中的行索引超出范围')
             return
 
-        reply = QMessageBox.information(self, "检查id病人脑电上传状态",
-                                        f"当前检查单号为：{str(self.patientCheck_info[row][5])}病人：{self.patientCheck_info[row][self.view.field.index('pname') + 4]}脑电文件是否上传完毕？",
+        reply = QMessageBox.information(self, "实验id被试脑电上传状态",
+                                        f"当前实验单号为：{str(self.patientCheck_info[row][5])}被试：{self.patientCheck_info[row][self.view.field.index('pname') + 4]}脑电文件是否上传完毕？",
                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if reply == 16384:
             # 先获取远程服务器是否存在已上传完成的脑电文件
@@ -609,12 +590,12 @@ class researchImportController(QWidget):
                 # 若当前内存等待队列中存在未上传完成的文件，需要提醒用户进行上传后再点击完成按钮
                 exists = any(task["check_number"] == check_number for task in self.wait_file)
                 if exists:
-                        QMessageBox.information(self,"当前检查单号存在待上传文件",
+                        QMessageBox.information(self,"当前实验单号存在待上传文件",
                                                 f"请正确上传后再点击完成按钮以完成上传或直接删除当前待上传文件！！",QMessageBox.Yes)
                 else:
                     # 用户正常上传完成后正确更新状态
                     # 完成上传将当前映射及样本信息都删除
-                    # 1.1 删除映射信息并判空
+                    # 删除映射信息
                     check_number = self.patientCheck_info[row][5]
                     self.removeMapping(check_number)
                     # 更新服务端状态
@@ -626,13 +607,13 @@ class researchImportController(QWidget):
                     self.client.updateCheckInfo1(REQmsg)
             # 已上传文件为空，提醒用户删除当前病人检查信息
             else:
-                QMessageBox.information(self, "当前检查单号无已上传文件",
-                                        f"无法完成当前病人检查信息状态的更新，请上传文件或删除当前信息！！", QMessageBox.Yes)
+                QMessageBox.information(self, "当前实验单号无已上传文件",
+                                        f"无法完成当前实验信息状态的更新，请上传文件或删除当前信息！！", QMessageBox.Yes)
 
 
     def isJsonListEmpty(self,file_path):
         if not os.path.exists(file_path):
-            return True  # 文件不存在就算空
+            return False  # 这里特殊一点 文件不存在的话算false
 
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -670,6 +651,7 @@ class researchImportController(QWidget):
         except Exception as e:
             print('updateCheckInfoRes', e)
 
+    # 这里删除文件应该删除对应的sample_info，不然读取的时候按照拿到第一条的方式去读取会有问题，读到问题数据
     def on_btnDelFile_clicked(self,row):
         file_to_delete = self.wait_file[row]
         print(f"删除文件: {file_to_delete['fileName']}")
@@ -705,6 +687,10 @@ class researchImportController(QWidget):
         except json.JSONDecodeError:
             print(f"读取 {self.queue_file_path} 时发生错误。")
 
+
+        # 删除对应sample_info
+        self.removeSampleInfoByFileName(file_to_delete['fileName'])
+
         # 更新表格
         # 最好是把这个更新表格的操作给抽出来，另外，在wait_file中删除可以先不动那个内存等待队列文件，到时点击启动上传有更新操作
         check_number = self.patientCheck_info[self.row][5]
@@ -722,7 +708,38 @@ class researchImportController(QWidget):
             self.view.ui.tableWidget_1.setRowCount(0)
             self.view.ui.tableWidget_1.clearContents()
 
+    def removeSampleInfoByFileName(self, target_file_name):
+        """
+        从 sample_info.json 中删除第一个 fileName 匹配的记录
+        :param target_file_name: 需要删除的原始文件路径（原始路径格式）
+        """
+        if not os.path.exists(self.sample_path) or self.isJsonListEmpty(self.sample_path):
+            print(f"sample_info 文件不存在: {self.sample_path}")
+            return
 
+        with open(self.sample_path, 'r', encoding='utf-8') as f:
+            all_sample_info = json.load(f)
+
+        # 标准化路径（兼容不同斜杠写法）
+        target_file_name = target_file_name.replace("\\", "/")
+
+        updated_sample_info = []
+        deleted = False
+        for entry in all_sample_info:
+            current_file = entry.get("fileName", "").replace("\\", "/")
+            if not deleted and current_file == target_file_name:
+                deleted = True  # 只删除第一个匹配的
+                continue
+            updated_sample_info.append(entry)
+
+        if not deleted:
+            print(f"未找到匹配 fileName={target_file_name} 的 sample_info，未执行删除")
+            return
+
+        with open(self.sample_path, 'w', encoding='utf-8') as f:
+            json.dump(updated_sample_info, f, ensure_ascii=False, indent=2)
+
+        print(f"已删除 sample_info 中第一个匹配 fileName={target_file_name} 的记录")
 
     # 响应点击病人诊断信息列表
     def on_tableWidget_itemClicked(self):
@@ -950,17 +967,6 @@ class researchImportController(QWidget):
             ret = ['0', f'读取数据块失败: {e}.']
             return ret
 
-
-    # 查找某一路径指定文件后缀文件名
-    def findFile(self, filepath, suffix):
-        # 获取文件夹下所有文件
-        fileslist = os.listdir(filepath)
-        fileName = []
-        # 遍历文件夹中的文件
-        for file in fileslist:
-            if file.endswith(suffix):  # 判断文件名是否以指定的文件名开头
-                fileName.append(file.split('.')[0])
-        return fileName  # 返回不带后缀的文件名
 
     # 查找同名文件
     def findSameFile(self, filepath, fileName):
@@ -1406,37 +1412,13 @@ class researchImportController(QWidget):
 
                 # 脑电文件传输协议6.4情况
                 elif state == 'uploaded':
-                    if os.path.exists(self.sample_path):
-                        # 加载 JSON 并发送
-                        user_id = self.client.tUser[0]
-                        REQmsg = self.buildSampleInfo(self.sample_path, self.check_id, self.file_id, user_id)
-                        self.client.insertSampleInfoBatch(REQmsg)
-                        # 批量写入完成，删除临时文件
-                        # os.remove(sample_info_file)
-                        print("sample_info信息已上传并成功删除对应项")
+                    if os.path.exists(self.sample_path) or not self.isJsonListEmpty(self.sample_path):
+                        # 有 sample_info，走异步数据写入流程
+                        self.prepareSampleInfoInsert()
                     else:
                         print("未发现需要上传的 sample_info 文件")
-                    self.cAppUtil.empty(self.dir_path, filename=self.filename)
-                    # 上传完成关闭进度条
-                    if hasattr(self, 'progressBarView'):
-                        self.progressBarView.close()
-                    self.progress_value = 0
-                    # QMessageBox.information(self, '上传完成！', '脑电文件上传完成,并且已经删除本地已经处理过后的文件！')
-                    self.showMessageBoxwithTimer(
-                        title='上传完成',
-                        message='脑电文件上传完成,并且已经删除本地已经处理过后的文件！此消息将在5秒内自动关闭',
-                        close_time=5000
-                    )
-                    self.view.initTable(self.patientCheck_info,
-                                        on_btnAddFile_clicked=self.on_btnAddFile_clicked,
-                                        on_btnRemove_clicked=self.on_btnRemove_clicked,
-                                        on_btnComplete_clicked=self.on_btnComplete_clicked,
-                                        on_btnViewMapping_clicked=self.on_btnViewMapping_clicked)
-                    # 更新File_info表展示
-                    self.getFileInfo()
-                    self.is_uploading = False
-                    # 上传完成，释放上传完成信号
-                    self.upload_finished.emit()
+                        # 无需插入，直接清理和 UI 更新
+                        self.finalizeUpload()
 
                 # 脑电文件传输协议6.5情况
                 elif state == 'recover':
@@ -1462,105 +1444,101 @@ class researchImportController(QWidget):
         except Exception as e:
             print('writeEEGRes', e)
 
-    # def load_bcidat(self):
-    #     """Python版的load_bcidat，返回类似MATLAB的结构体"""
-    #     stream = bcistream(self.from_filepath)
-    #     sig, states = stream.decode(nsamp="all", states="all", apply_gains=True)
-    #
-    #     # 转换states为字典，并压缩形状 (1, nsamp) -> (nsamp,)
-    #     states_dict = {name: np.squeeze(values) for name, values in states.items()}
-    #
-    #     # 获取原始状态向量(raw_states)
-    #     stream.rewind()
-    #     _, raw_states = stream.read(nsamp="all", apply_gains=False)
-    #
-    #     # 封装成类似MATLAB的结构体
-    #     data = SimpleNamespace()
-    #     data.signal = sig.T  # (nsamp, nchan)
-    #     data.states = SimpleNamespace(**states_dict)  # 支持data.states.Running访问
-    #     data.raw_states = raw_states  # 原始状态向量(用于事件检测)
-    #     data.parameters = stream.params
-    #     data.sampling_rate = stream.samplingrate()
-    #     data.channel_names = stream.params.get("ChannelNames", [f"Channel_{i + 1}" for i in range(stream.channels())])
-    #
-    #     stream.close()
-    #     return data
+    def prepareSampleInfoInsert(self):
+        """
+        准备插入 sample_info 的第一步：获取 check_number。
+        """
+        account = self.client.tUser[1]
+        REQmsg = [account, self.check_id]
+        self.client.getCheckNumberByID(REQmsg)
 
-    # def extractSampleInfo(self):
-    #     check_number = self.patientCheck_info[self.row][5]
-    #     data = self.load_bcidat()
-    #     """
-    #     根据 mapping.json 和 check_number 提取 sample_info，并保存为 all_sample_info.json
-    #     """
-    #     if not os.path.exists(self.mapping_path):
-    #         raise FileNotFoundError(f"mapping.json 文件未找到: {self.mapping_path}")
-    #
-    #     with open(self.mapping_path, 'r', encoding='utf-8') as f:
-    #         label_data = json.load(f)
-    #
-    #     matched_entry = next((item for item in label_data if str(item.get("check_number")) == str(check_number)), None)
-    #     if not matched_entry:
-    #         raise ValueError(f"未找到 check_number 为 {check_number} 的映射配置")
-    #
-    #     sample_info = []
-    #     for config in matched_entry.get("configs", []):
-    #         field = config.get("states_field")
-    #         type_id = config.get("type_id")
-    #         extract_type = config.get("extract_type")
-    #
-    #         if not field or type_id is None:
-    #             continue
-    #         if not hasattr(data.states, field):
-    #             continue
-    #
-    #         s = getattr(data.states, field)
-    #         if s.ndim == 0:
-    #             continue
-    #
-    #         if extract_type == "nonzero_rising":
-    #             idxs = ((s[:-1] == 0) & (s[1:] != 0)).nonzero()[0] + 1
-    #         elif extract_type == "value_transition":
-    #             from_val, to_val = config.get("from"), config.get("to")
-    #             if from_val is None or to_val is None:
-    #                 continue
-    #             idxs = ((s[:-1] == from_val) & (s[1:] == to_val)).nonzero()[0] + 1
-    #         else:
-    #             continue
-    #
-    #         for idx in idxs:
-    #             sample_info.append({
-    #                 "begin": int(idx),
-    #                 "type_id": type_id
-    #             })
-    #
-    #     os.makedirs(os.path.dirname(self.sample_path), exist_ok=True)
-    #
-    #     # 追加到列表中
-    #     if os.path.exists(self.sample_path):
-    #         with open(self.sample_path, 'r', encoding='utf-8') as f:
-    #             all_sample_info = json.load(f)
-    #     else:
-    #         all_sample_info = []
-    #
-    #     all_sample_info.append(sample_info)
-    #
-    #     with open(self.sample_path, 'w', encoding='utf-8') as f:
-    #         json.dump(all_sample_info, f, ensure_ascii=False, indent=2)
-    #
-    #     print(f"✅ sample_info 已添加到 json文件，共 {len(all_sample_info)} 个任务")
+    # getCheckNumberByID 的回调
+    def getCheckNumberByIDRes(self, REPData):
+        try:
+            user_id = self.client.tUser[0]
+            check_number = REPData[3][0][0]
+            REQmsg = self.buildSampleInfo(check_number, self.sample_path, self.check_id, self.file_id, user_id)
+            self.client.insertSampleInfoBatch(REQmsg)
+        except Exception as e:
+            print('getCheckNumberByIDRes 错误:', e)
+            self.finalizeUpload()  # 即便出错，也要完成清理
 
+    #  插入 sample_info 的最终回调
+    def insertSampleInfoBatchRes(self, REPData):
+        if REPData[0]:
+            print("批量插入 sample_info 成功")
+        else:
+            print("批量插入 sample_info 失败")
+        # 不管成功失败，都继续执行后续
+        self.finalizeUpload()
 
+    # 所有上传流程结束后统一执行清理和 UI 更新
+    def finalizeUpload(self):
+        self.cAppUtil.empty(self.dir_path, filename=self.filename)
+        # 上传完成关闭进度条
+        if hasattr(self, 'progressBarView'):
+            self.progressBarView.close()
+        self.progress_value = 0
 
-    def buildSampleInfo(self, file_path, check_id, file_id, uid, channel="all"):
-        with open(file_path, 'r', encoding='utf-8') as f:
+        self.showMessageBoxwithTimer(
+            title='上传完成',
+            message='脑电文件上传完成,并且已经删除本地已经处理过后的文件！此消息将在5秒内自动关闭',
+            close_time=5000
+        )
+
+        self.view.initTable(
+            self.patientCheck_info,
+            on_btnAddFile_clicked=self.on_btnAddFile_clicked,
+            on_btnRemove_clicked=self.on_btnRemove_clicked,
+            on_btnComplete_clicked=self.on_btnComplete_clicked,
+            on_btnViewMapping_clicked=self.on_btnViewMapping_clicked
+        )
+        # 更新file_info展示
+        self.getFileInfo()
+        self.is_uploading = False
+        self.upload_finished.emit()
+
+    def buildSampleInfo(self, check_number, sample_json_path, check_id, file_id, uid,channel="all"):
+        # 读取上传记录文件，获得原始 file path
+        fileNameList = self.findFile(self.dir_path, 'txt')
+        upload_record_path = os.path.join(self.dir_path, fileNameList[0]+str('.txt'))
+        if not os.path.exists(upload_record_path):
+            raise FileNotFoundError(f"上传记录文件不存在: {upload_record_path}")
+
+        with open(upload_record_path, 'rb') as f:
+            upload_record = pickle.load(f)
+
+        original_file_path = os.path.abspath(upload_record.get("path", "")).replace("\\", "/")
+        if not original_file_path:
+            raise ValueError("上传记录中没有找到有效的文件路径")
+
+        # 读取 sample_info.json
+        with open(sample_json_path, 'r', encoding='utf-8') as f:
             all_sample_info = json.load(f)
 
         if not all_sample_info:
             raise ValueError("sample_info 列表为空，无法构建")
 
-        # 取第一个 sample_info 列表
-        current_sample_info = all_sample_info.pop(0)
+        # 精确匹配 check_number + fileName
+        target_index = -1
+        for i, entry in enumerate(all_sample_info):
+            entry_check = str(entry.get("check_number"))
+            entry_file = os.path.abspath(entry.get("fileName", "")).replace("\\", "/")
+            if entry_check == str(check_number) and entry_file == original_file_path:
+                target_index = i
+                break
 
+        if target_index == -1:
+            raise ValueError(f"未找到 check_number={check_number} 且 fileName={original_file_path} 的 sample_info")
+
+        # 提取并删除这条 entry
+        target_entry = all_sample_info.pop(target_index)
+        current_sample_info = target_entry.get("sample_info", [])
+
+        if not current_sample_info:
+            raise ValueError("sample_info 数据为空")
+
+        # 构建 messages
         messages = []
         for item in current_sample_info:
             begin = int(item["begin"])
@@ -1568,19 +1546,11 @@ class researchImportController(QWidget):
             msg = [check_id, file_id, begin, channel, begin, uid, type_id]
             messages.append(msg)
 
-        # 写回剩余的 sample_info 列表
-        with open(file_path, 'w', encoding='utf-8') as f:
+        # 写回 sample_info.json
+        with open(sample_json_path, 'w', encoding='utf-8') as f:
             json.dump(all_sample_info, f, ensure_ascii=False, indent=2)
 
         return messages
-
-    def insertSampleInfoBatchRes(self, REPData):
-        result = REPData[0]
-        if result:
-            print("批量插入sample_info成功，可在此处查看插入的sample_info")
-        else:
-            print("批量插入sample_info失败")
-
 
     def upload_finishedCall(self):
         with self.lock:  # 加锁以保护队列访问
@@ -1923,6 +1893,7 @@ class researchImportController(QWidget):
             # 显示界面
             self.labeltype_view.show()
 
+    # fixme:直接叉掉labeltype_view无法二次选择 另外在输入字段后未强制要求在数据库中选择标注类型
     def confirm_mappings(self):
         check_number = self.view.ui.check_num.text()
         field_configs = self.labeltype_view.get_all_field_configs(check_number)
@@ -1941,6 +1912,8 @@ class researchImportController(QWidget):
 
         if added > 0:
             QMessageBox.information(None, "成功", f"成功添加了 {added} 项映射", QMessageBox.Yes)
+            # 添加成功，将这个选定标志类型的属性置1
+            self.addInfo['isChoose_labelType'] = 1
             self.labeltype_view.close()
 
     def save_to_json(self, check_number, configs):
@@ -2787,28 +2760,28 @@ class researchImportController(QWidget):
 
     def extractSampleInfo(self, data):
         check_number = self.patientCheck_info[self.row][5]
-        """
-        根据 mapping.json 和 check_number 提取 sample_info，并保存为 all_sample_info.json
-        """
+
         if not os.path.exists(self.mapping_path):
             raise FileNotFoundError(f"mapping.json 文件未找到: {self.mapping_path}")
 
         with open(self.mapping_path, 'r', encoding='utf-8') as f:
             label_data = json.load(f)
 
-        matched_entry = next((item for item in label_data if str(item.get("check_number")) == str(check_number)), None)
+        matched_entry = next(
+            (item for item in label_data if str(item.get("check_number")) == str(check_number)),
+            None
+        )
         if not matched_entry:
             raise ValueError(f"未找到 check_number 为 {check_number} 的映射配置")
 
+        # 构建 sample_info 列表
         sample_info = []
         for config in matched_entry.get("configs", []):
             field = config.get("states_field")
             type_id = config.get("type_id")
             extract_type = config.get("extract_type")
 
-            if not field or type_id is None:
-                continue
-            if not hasattr(data.states, field):
+            if not field or type_id is None or not hasattr(data.states, field):
                 continue
 
             s = getattr(data.states, field)
@@ -2833,32 +2806,44 @@ class researchImportController(QWidget):
 
         os.makedirs(os.path.dirname(self.sample_path), exist_ok=True)
 
-        # 追加到列表中
-        if os.path.exists(self.sample_path):
+        # 统一文件路径格式
+        file_path = self.convert_filepath.replace("\\", "/")
+
+        # 读取原始 sample_info 文件
+        if os.path.exists(self.sample_path) and not self.isJsonListEmpty(self.sample_path):
             with open(self.sample_path, 'r', encoding='utf-8') as f:
                 all_sample_info = json.load(f)
         else:
             all_sample_info = []
 
-        all_sample_info.append(sample_info)
+        # 追加一条记录
+        all_sample_info.append({
+            "check_number": str(check_number),
+            "fileName": file_path,
+            "sample_info": sample_info
+        })
 
+        # 写回 JSON 文件
         with open(self.sample_path, 'w', encoding='utf-8') as f:
             json.dump(all_sample_info, f, ensure_ascii=False, indent=2)
 
-        print(f"✅ sample_info 已添加到 json文件，共 {len(all_sample_info)} 个任务")
+        print(f"sample_info 提取完成，check_number={check_number}, file={file_path}, 共 {len(sample_info)} 条")
+
+
 
     def convert_dat_to_bdf(self):
+        # 生成转换后的 BDF 文件名
+        directory, filename = os.path.split(self.from_filepath)
+        filename_without_extension = os.path.splitext(filename)[0]
+        new_filename = f"{filename_without_extension}.bdf"
+        self.convert_filepath = os.path.join(directory, new_filename)
+
         # 分块读取
         raw_data = self.readBCIdatChunks()
         # 封装成matlab格式并提取
         data = self.assembleBCIdatStruct(raw_data)
         self.extractSampleInfo(data)
         try:
-            # 生成转换后的 BDF 文件名
-            directory, filename = os.path.split(self.from_filepath)
-            filename_without_extension = os.path.splitext(filename)[0]
-            new_filename = f"{filename_without_extension}.bdf"
-            self.convert_filepath = os.path.join(directory, new_filename)
 
             sampling_rate = raw_data["sampling_rate"]
             signal_data = raw_data["signal"]  # 已经是 (n_samples, n_channels)
@@ -2955,6 +2940,10 @@ class researchImportController(QWidget):
         if data['check_num'] == '':
             QMessageBox.information(self.view, '提示！', '请输入检查单号：检查单号不能为空！')
             return False
+        elif data['isChoose_labelType'] == 0:
+            QMessageBox.information(self.view, '提示！', '你还没有选定标注类型！')
+            self.view.ui.selectLabelTypeBtn.setEnabled(True)
+            return False
         elif not ('patient_id' in data):
             QMessageBox.information(self.view, '提示！', '未选择病人信息,请重新选择!!')
             return False
@@ -2979,3 +2968,4 @@ class researchImportController(QWidget):
         self.client.getChooseDoctorInfoResSig1.disconnect()
         self.client.getChooseLabelTypeInfoResSig1.disconnect()
         self.client.insertSampleInfoBatchResSig.disconnect()
+        self.client.getCheckNumberByIDResSig.disconnect()

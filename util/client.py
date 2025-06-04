@@ -359,6 +359,8 @@ class client(QObject, socketClient):
     getChooseLabelTypeInfoResSig1 = pyqtSignal(list)
     # 批量插入样本信息
     insertSampleInfoBatchResSig =  pyqtSignal(list)
+    # 根据ID获取CheckNumber
+    getCheckNumberByIDResSig = pyqtSignal(list)
 
     # 任务设置
     # 回调获取标注主题信号
@@ -2399,6 +2401,16 @@ class client(QObject, socketClient):
 
     def insertSampleInfoBatchRes(self,REPData):
         self.insertSampleInfoBatchResSig.emit(list(REPData[3]))
+
+    def getCheckNumberByID(self,REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["researchImport", 15, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
+    def getCheckNumberByIDRes(self,REPData):
+        self.getCheckNumberByIDResSig.emit(list(REPData[3]))
+
+
 
 
     # 构建集合
@@ -4485,6 +4497,9 @@ class client(QObject, socketClient):
         # 批量插入样本信息
         elif REQmsg[0] == 'researchImport' and REQmsg[1] == 14:
             self.insertSampleInfoBatchRes(REQmsg)
+        # 根据ID获取Check Number
+        elif REQmsg[0] == 'researchImport' and REQmsg[1] == 15:
+            self.getCheckNumberByIDRes(REQmsg)
 
 
         # 样本统计模块

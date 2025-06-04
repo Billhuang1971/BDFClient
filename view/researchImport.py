@@ -77,7 +77,8 @@ class ResearchImportView(QWidget):
                 self.setActionButtons(r, on_btnAddFile_clicked, on_btnRemove_clicked,
                                       on_btnComplete_clicked, on_btnViewMapping_clicked)
 
-            self.ui.tableWidget.currentCellChanged.connect(self.updateButtonStates)
+            # self.ui.tableWidget.currentCellChanged.connect(self.updateButtonStates)
+            self.ui.tableWidget.currentCellChanged.connect(self.onCurrentCellChanged)
             self.ui.tableWidget.setColumnHidden(3, True)
             self.ui.tableWidget.horizontalHeader().setHighlightSections(False)
             self.ui.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -178,10 +179,20 @@ class ResearchImportView(QWidget):
 
         table.setCellWidget(r, table.columnCount() - 1, action_widget)
 
-    def updateButtonStates(self, currentRow, currentColumn, previousRow, previousColumn):
-        for row_index, buttons in enumerate(self.row_buttons):
-            for btn in buttons:
-                btn.setEnabled(row_index == currentRow)
+    def onCurrentCellChanged(self, currentRow, currentColumn, previousRow, previousColumn):
+        """用于处理当前行变化时更新按钮状态"""
+        self.updateButtonStates(previousRow, currentRow)
+
+    def updateButtonStates(self, previousRow, currentRow):
+        """只更新前一行与当前行的按钮状态，提高效率"""
+        for row in (previousRow, currentRow):
+            if 0 <= row < self.ui.tableWidget.rowCount():
+                cell_widget = self.ui.tableWidget.cellWidget(row, self.ui.tableWidget.columnCount() - 1)
+                if cell_widget:
+                    buttons = cell_widget.findChildren(QPushButton)
+                    for btn in buttons:
+                        btn.setEnabled(row == currentRow)
+
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
