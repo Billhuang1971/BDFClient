@@ -1458,7 +1458,12 @@ class researchImportController(QWidget):
             user_id = self.client.tUser[0]
             check_number = REPData[3][0][0]
             REQmsg = self.buildSampleInfo(check_number, self.sample_path, self.check_id, self.file_id, user_id)
-            self.client.insertSampleInfoBatch(REQmsg)
+            if REQmsg:
+                self.client.insertSampleInfoBatch(REQmsg)
+            else:
+                print("样本信息插入:无需插入样本信息。")
+                # 继续执行后续
+                self.finalizeUpload()
         except Exception as e:
             print('getCheckNumberByIDRes 错误:', e)
             self.finalizeUpload()  # 即便出错，也要完成清理
@@ -1466,9 +1471,9 @@ class researchImportController(QWidget):
     #  插入 sample_info 的最终回调
     def insertSampleInfoBatchRes(self, REPData):
         if REPData[0]:
-            print("批量插入 sample_info 成功")
+            print("样本信息插入:批量插入样本信息成功。")
         else:
-            print("批量插入 sample_info 失败")
+            print("样本信息插入:批量插入样本信息失败。")
         # 不管成功失败，都继续执行后续
         self.finalizeUpload()
 
@@ -1529,7 +1534,9 @@ class researchImportController(QWidget):
                 break
 
         if target_index == -1:
-            raise ValueError(f"未找到 check_number={check_number} 且 fileName={original_file_path} 的 sample_info")
+            # 未获取到对应条目
+            return None
+            # raise ValueError(f"未找到 check_number={check_number} 且 fileName={original_file_path} 的 sample_info")
 
         # 提取并删除这条 entry
         target_entry = all_sample_info.pop(target_index)
@@ -2761,74 +2768,77 @@ class researchImportController(QWidget):
 
     def extractSampleInfo(self, data):
         check_number = self.patientCheck_info[self.row][5]
+        # mapping.json存在
+        if os.path.exists(self.mapping_path):
+            with open(self.mapping_path, 'r', encoding='utf-8') as f:
+                label_data = json.load(f)
 
-        if not os.path.exists(self.mapping_path):
-            raise FileNotFoundError(f"mapping.json 文件未找到: {self.mapping_path}")
+            matched_entry = next(
+                (item for item in label_data if str(item.get("check_number")) == str(check_number)),
+                None
+            )
+            if matched_entry:
+                # 构建 sample_info 列表
+                sample_info = []
+                for config in matched_entry.get("configs", []):
+                    field = config.get("states_field")
+                    type_id = config.get("type_id")
+                    extract_type = config.get("extract_type")
 
-        with open(self.mapping_path, 'r', encoding='utf-8') as f:
-            label_data = json.load(f)
+                    if not field or type_id is None or not hasattr(data.states, field):
+                        continue
 
-        matched_entry = next(
-            (item for item in label_data if str(item.get("check_number")) == str(check_number)),
-            None
-        )
-        if not matched_entry:
-            raise ValueError(f"未找到 check_number 为 {check_number} 的映射配置")
+                    s = getattr(data.states, field)
+                    if s.ndim == 0:
+                        continue
 
-        # 构建 sample_info 列表
-        sample_info = []
-        for config in matched_entry.get("configs", []):
-            field = config.get("states_field")
-            type_id = config.get("type_id")
-            extract_type = config.get("extract_type")
+                    if extract_type == "nonzero_rising":
+                        idxs = ((s[:-1] == 0) & (s[1:] != 0)).nonzero()[0] + 1
+                    elif extract_type == "value_transition":
+                        from_val, to_val = config.get("from"), config.get("to")
+                        if from_val is None or to_val is None:
+                            continue
+                        idxs = ((s[:-1] == from_val) & (s[1:] == to_val)).nonzero()[0] + 1
+                    else:
+                        continue
 
-            if not field or type_id is None or not hasattr(data.states, field):
-                continue
+                    for idx in idxs:
+                        sample_info.append({
+                            "begin": int(idx),
+                            "type_id": type_id
+                        })
 
-            s = getattr(data.states, field)
-            if s.ndim == 0:
-                continue
+                os.makedirs(os.path.dirname(self.sample_path), exist_ok=True)
 
-            if extract_type == "nonzero_rising":
-                idxs = ((s[:-1] == 0) & (s[1:] != 0)).nonzero()[0] + 1
-            elif extract_type == "value_transition":
-                from_val, to_val = config.get("from"), config.get("to")
-                if from_val is None or to_val is None:
-                    continue
-                idxs = ((s[:-1] == from_val) & (s[1:] == to_val)).nonzero()[0] + 1
-            else:
-                continue
+                # 统一文件路径格式
+                file_path = self.convert_filepath.replace("\\", "/")
 
-            for idx in idxs:
-                sample_info.append({
-                    "begin": int(idx),
-                    "type_id": type_id
+                # 读取原始 sample_info 文件
+                if os.path.exists(self.sample_path) and not self.isJsonListEmpty(self.sample_path):
+                    with open(self.sample_path, 'r', encoding='utf-8') as f:
+                        all_sample_info = json.load(f)
+                else:
+                    all_sample_info = []
+
+                # 追加一条记录
+                all_sample_info.append({
+                    "check_number": str(check_number),
+                    "fileName": file_path,
+                    "sample_info": sample_info
                 })
 
-        os.makedirs(os.path.dirname(self.sample_path), exist_ok=True)
+                # 写回 JSON 文件
+                with open(self.sample_path, 'w', encoding='utf-8') as f:
+                    json.dump(all_sample_info, f, ensure_ascii=False, indent=2)
 
-        # 统一文件路径格式
-        file_path = self.convert_filepath.replace("\\", "/")
-
-        # 读取原始 sample_info 文件
-        if os.path.exists(self.sample_path) and not self.isJsonListEmpty(self.sample_path):
-            with open(self.sample_path, 'r', encoding='utf-8') as f:
-                all_sample_info = json.load(f)
+                print(f"sample_info 提取完成，check_number={check_number}, file={file_path}, 共 {len(sample_info)} 条")
+            else:
+                # 不存在entry条目
+                pass
         else:
-            all_sample_info = []
+            # 不存在mapping.json
+            pass
 
-        # 追加一条记录
-        all_sample_info.append({
-            "check_number": str(check_number),
-            "fileName": file_path,
-            "sample_info": sample_info
-        })
-
-        # 写回 JSON 文件
-        with open(self.sample_path, 'w', encoding='utf-8') as f:
-            json.dump(all_sample_info, f, ensure_ascii=False, indent=2)
-
-        print(f"sample_info 提取完成，check_number={check_number}, file={file_path}, 共 {len(sample_info)} 条")
 
 
 
