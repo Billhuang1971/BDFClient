@@ -1861,7 +1861,7 @@ class researchImportController(QWidget):
         if check_num == '':
                 QMessageBox.information(self.view, '提示！', '请填写完检查单后再选择标注类型!')
         else:
-            self.view.ui.selectLabelTypeBtn.setEnabled(False)
+            # self.view.ui.selectLabelTypeBtn.setEnabled(False)
             self.get_labeltype_info(flag='1')  # 初始加载所有 labeltype
 
 
@@ -2579,9 +2579,10 @@ class researchImportController(QWidget):
 
     # 取消添加标注类型信息方法
     def on_btnCancelAdd_clicked(self):
-        # 取消添加的话，需要在mapping.json中作删除处理
+        # 取消添加的话，需要在mapping.json中作删除处理 先判断是否存在，再做删除处理
         check_number = self.view.ui.check_num.text()
-        self.removeMapping(check_number)
+        if os.path.exists(self.mapping_path):
+            self.removeMapping(check_number)
         self.addInfo = {}
         # 关闭弹出添加框
         # self.addFormView.close()
@@ -2940,10 +2941,10 @@ class researchImportController(QWidget):
         if data['check_num'] == '':
             QMessageBox.information(self.view, '提示！', '请输入检查单号：检查单号不能为空！')
             return False
-        elif data['isChoose_labelType'] == 0:
-            QMessageBox.information(self.view, '提示！', '你还没有选定标注类型！')
-            self.view.ui.selectLabelTypeBtn.setEnabled(True)
-            return False
+        # elif data['isChoose_labelType'] == 0:
+        #     QMessageBox.information(self.view, '提示！', '你还没有选定标注类型！')
+        #     self.view.ui.selectLabelTypeBtn.setEnabled(True)
+        #     return False
         elif not ('patient_id' in data):
             QMessageBox.information(self.view, '提示！', '未选择病人信息,请重新选择!!')
             return False
