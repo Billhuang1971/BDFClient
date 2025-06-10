@@ -1024,6 +1024,7 @@ class autoController(QWidget):
     def matchClassifierFileRes(self, REPData):
         try:
             if REPData[0] == '0':
+                self.view.ui.pushButton.setEnabled(True)
                 if REPData[1] == "当前服务器存在正在执行的训练、测试或扫描任务":
                     QMessageBox.information(self.view, '提示', '当前服务器存在正在执行的训练、测试或扫描任务',
                                             QMessageBox.Yes)
@@ -1041,7 +1042,7 @@ class autoController(QWidget):
                 if result == QMessageBox.AcceptRole:
                     self.on_btnScan_clicked()
                 else:
-                    self.client.scan_cancel([self.client.tUser[0]])
+                    self.scan_cancel()
         except Exception as e:
             print('matchClassifierFileRes', e)
 
@@ -1050,9 +1051,10 @@ class autoController(QWidget):
 
     def scan_cancel(self):
         print('start')
-        self.timer_2.stop()
         self.custom_msg_box.close()
         self.view.ui.pushButton.setEnabled(True)
+        self.timer_2.stop()
+        self.client.scan_cancel([self.client.tUser[0]])
 
     def getScanProgressRes(self, REPData):
         try:

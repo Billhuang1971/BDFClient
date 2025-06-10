@@ -449,7 +449,7 @@ class classifierController(QWidget):
             self.model_hash_right=None
             return True
         except Exception as result:
-            QMessageBox.information(self.import_view, '提示', "失败原因: %s" % result, QMessageBox.Yes)
+            QMessageBox.information(self, '提示', "失败原因: %s" % result, QMessageBox.Yes)
             return False
     def model_transmit_messageRes(self,REPData): #传输①返回
         if REPData[2][0]=='waiting': #6.1

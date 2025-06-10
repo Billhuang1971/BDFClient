@@ -3543,6 +3543,11 @@ class client(QObject, socketClient):
         msg = ["auto", 4, self.tUser[0], REQmsg]
         self.sendRequest(msg)
 
+    def scan_cancel(self, REQmsg):
+        REQmsg.insert(0, self.macAddr)
+        msg = ["auto", 10, self.tUser[0], REQmsg]
+        self.sendRequest(msg)
+
     def getFileChannelsRes(self, REPData):
         self.getFileChannelsResSig.emit(list(REPData[3]))
 
