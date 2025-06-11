@@ -621,7 +621,6 @@ class EEGView(QWidget):
         for span in self.axHscrollSpan:
             span.remove()
         self.axHscrollSpan = []
-
         l = 0
         while l <= self.nDotWin:
             if self.labelBit[l]:
@@ -1119,9 +1118,9 @@ class EEGView(QWidget):
         r = (wave[2] - (self.begin * self.sample_rate // self.dawnSample)) if wave[2] < (self.end * self.sample_rate // self.dawnSample) else (self.end - self.begin) * (self.sample_rate // self.dawnSample)
         label = str(wave[0]) + "|" + str(wave[1]) + "|" + str(wave[2]) + "|" + str(wave[3])
         self.paintAWave(l, r, wave[0], label, color)
-        lBit = (begin * self.dawnSample // self.sample_rate) * self.nDotWin // self.lenTime
-        rBit = (end * self.dawnSample // self.sample_rate) * self.nDotWin // self.lenTime
-        self.labelBit[lBit: rBit] = True
+        lBit = begin * self.dawnSample * self.nDotWin // (self.lenTime * self.sample_rate)
+        rBit = end * self.dawnSample * self.nDotWin // (self.lenTime * self.sample_rate)
+        self.labelBit[lBit: rBit + 1] = True
         self.resetPickLabels()
         self.focusLines()
         self.paintLabelBit()
@@ -1163,7 +1162,7 @@ class EEGView(QWidget):
             idx += 1
         self.labels.insert(idx, event)
         self.paintAEvent(self.lineposition / self.sample_rate, str(event[0]) + "|" + str(event[1]) + "|" + str(event[2]) + "|" + str(event[3]), 'blue')#eventcolor
-        lBit = (self.lineposition // self.sample_rate) * self.nDotWin // self.lenTime
+        lBit = self.lineposition * self.nDotWin // (self.lenTime * self.sample_rate)
         self.labelBit[lBit: lBit + 1] = True
         self.paintLabelBit()
         self.resetPickLabels()
