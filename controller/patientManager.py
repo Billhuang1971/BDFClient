@@ -306,6 +306,7 @@ class patientManagerController(QWidget):
                         if i == row:
                             # 设置第row行第j+1列的单元格为可编辑且启用状态
                             self.tableWidget.table.item(i, j).setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
+                            self.tableWidget.table.setItemDelegateForColumn(0, NoSpaceDelegate())
 
                         else:
                             # 设置第i行第j+1列的单元格不启用
@@ -370,6 +371,7 @@ class patientManagerController(QWidget):
                     self.clear(row)
                     self.itemIsEditable()
                     self.select_row = None
+                    self.client.patientPaging([self.curPageIndex, self.pageRows, '']) #取消修改时重置
                     # for i in range(0, self.col_num):
                     #     self.view.tableWidget.item(row, i + 1).setText(self.patient_info[row][i])
         except Exception as e:
@@ -512,6 +514,7 @@ class patientManagerController(QWidget):
                 return
             self.isEdit = True
             self.itemIsEditable(row)
+
 
             # 默认日期
             birth = self.tableWidget.table.item(row, self.col_num - 6).text()

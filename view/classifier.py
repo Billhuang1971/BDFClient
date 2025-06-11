@@ -526,10 +526,10 @@ class LabelSelectVew(QWidget):
             for i in range(item_count): #用于识别是否重复选中
                 a = self.ui.selected_listWidget.item(i)
                 selected_EEG_names.append(a.text())
-            text = item.text()
+            text = item.text()+self.REF_channel
             if text in selected_EEG_names:
                 return
-            text=text+self.REF_channel
+            # text=text+self.REF_channel
             item_clone = QListWidgetItem(text)
             # self.ui.selected_listWidget.takeItem(self.ui.selected_listWidget.row(item))
             self.ui.selected_listWidget.addItem(item_clone)
