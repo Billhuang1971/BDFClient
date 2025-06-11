@@ -459,11 +459,13 @@ class LabelSelectVew(QWidget):
         self.saved_EEG_names = saved_EEG_names
         self.EEG_lead = EEG_lead
         self.EEG_names = []
+        self.REF_channel=None #存储当前参考通道
         for name in EEG_lead:
             self.EEG_names.append(name)
         self.init_view()
         self.ui.pushButton_save.clicked.connect(self.onClicked_pushButton_save)
         self.ui.labelType_listWidget.itemDoubleClicked.connect(self.itemDoubleClicked_EEG_listWidget)  # 标签列表
+        self.ui.REF_listWidget.itemClicked.connect(self.itemclicked_REF_listWidget)
         self.ui.selected_listWidget.itemDoubleClicked.connect(self.itemDoubleClicked_selected_listWidget)  # 选中表格
         self.show()
 
@@ -474,11 +476,21 @@ class LabelSelectVew(QWidget):
 
     # 初始化标注信息列表
     def init_labelType_listWidget(self, EEG_names):
+        self.ui.REF_listWidget.clear()
         self.ui.labelType_listWidget.clear()
         if len(EEG_names) > 0:
             for names in EEG_names:
                 item = QListWidgetItem(names)
                 self.ui.labelType_listWidget.addItem(item)
+
+        if len(EEG_names) >0:
+            tempt = QListWidgetItem('-REF')
+            self.ui.REF_listWidget.addItem(tempt)
+            for names in EEG_names:
+                item = QListWidgetItem('-'+names)
+                self.ui.REF_listWidget.addItem(item) #初始化参考通道
+
+
 
     # 初始化被选中标注信息列表
     def init_selected_listWidget(self):
@@ -501,20 +513,26 @@ class LabelSelectVew(QWidget):
         if item.text() in selected_EEG_names:
             self.ui.selected_listWidget.takeItem(self.ui.selected_listWidget.row(item))
             return
-
+    def itemclicked_REF_listWidget(self,item):
+        self.REF_channel=item.text()
     def itemDoubleClicked_EEG_listWidget(self, item):
-        selected_EEG_names = []
-        item_count = self.ui.selected_listWidget.count()
-        # 按顺序获取每个选项
-        for i in range(item_count):
-            a = self.ui.selected_listWidget.item(i)
-            selected_EEG_names.append(a.text())
-        text = item.text()
-        if text in selected_EEG_names:
+        if self.REF_channel==None:
+            QMessageBox.information(self, '提示','未选择参考通道',QMessageBox.Yes)
             return
-        item_clone = QListWidgetItem(item.text())
-        # self.ui.selected_listWidget.takeItem(self.ui.selected_listWidget.row(item))
-        self.ui.selected_listWidget.addItem(item_clone)
+        else:
+            selected_EEG_names = []
+            item_count = self.ui.selected_listWidget.count()
+            # 按顺序获取每个选项
+            for i in range(item_count): #用于识别是否重复选中
+                a = self.ui.selected_listWidget.item(i)
+                selected_EEG_names.append(a.text())
+            text = item.text()
+            if text in selected_EEG_names:
+                return
+            text=text+self.REF_channel
+            item_clone = QListWidgetItem(text)
+            # self.ui.selected_listWidget.takeItem(self.ui.selected_listWidget.row(item))
+            self.ui.selected_listWidget.addItem(item_clone)
 
     def onClicked_pushButton_save(self):
         # 获取选项的数量

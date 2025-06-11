@@ -15,42 +15,71 @@ class Ui_labelSelectForm(object):
     def setupUi(self, label_select):
         label_select.setObjectName("label_select")
         label_select.resize(663, 611)
+
+        # 主垂直布局
         self.verticalLayout = QtWidgets.QVBoxLayout(label_select)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.widget = QtWidgets.QWidget(label_select)
-        self.widget.setObjectName("widget")
-        self.pushButton_save = QtWidgets.QPushButton(self.widget)
-        self.pushButton_save.setGeometry(QtCore.QRect(280, 550, 81, 31))
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        self.pushButton_save.setFont(font)
-        self.pushButton_save.setObjectName("pushButton_save")
-        self.label_3 = QtWidgets.QLabel(self.widget)
-        self.label_3.setGeometry(QtCore.QRect(360, 40, 71, 21))
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        self.label_3.setFont(font)
-        self.label_3.setObjectName("label_3")
-        self.labelType_listWidget = QtWidgets.QListWidget(self.widget)
-        self.labelType_listWidget.setGeometry(QtCore.QRect(40, 70, 256, 431))
-        self.labelType_listWidget.setObjectName("labelType_listWidget")
-        self.selected_listWidget = QtWidgets.QListWidget(self.widget)
-        self.selected_listWidget.setGeometry(QtCore.QRect(350, 70, 256, 431))
-        self.selected_listWidget.setObjectName("selected_listWidget")
-        self.label_4 = QtWidgets.QLabel(self.widget)
-        self.label_4.setGeometry(QtCore.QRect(40, 40, 71, 21))
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        self.label_4.setFont(font)
-        self.label_4.setObjectName("label_4")
-        self.verticalLayout.addWidget(self.widget)
+
+        # 使用QWidget作为容器（不再需要固定尺寸）
+        self.container = QtWidgets.QWidget(label_select)
+        self.verticalLayout.addWidget(self.container)
+
+        # 网格布局（替代固定坐标）
+        self.gridLayout = QtWidgets.QGridLayout(self.container)
+        self.gridLayout.setContentsMargins(10, 10, 10, 10)
+        self.gridLayout.setSpacing(15)
+
+        # 通道列表标签
+        self.label_4 = QtWidgets.QLabel(self.container)
+        self.label_4.setFont(QtGui.QFont("Arial", 12))
+        self.gridLayout.addWidget(self.label_4, 0, 0, 1, 1)
+
+        # 参考通道标签
+        self.label_REF = QtWidgets.QLabel(self.container)
+        self.label_REF.setFont(QtGui.QFont("Arial", 12))
+        self.gridLayout.addWidget(self.label_REF, 0, 1, 1, 1)
+
+        # 已选通道标签
+        self.label_3 = QtWidgets.QLabel(self.container)
+        self.label_3.setFont(QtGui.QFont("Arial", 12))
+        self.gridLayout.addWidget(self.label_3, 0, 2, 1, 1)
+
+        # 列表控件（设置大小策略）
+        self.labelType_listWidget = QtWidgets.QListWidget()
+        self.labelType_listWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.gridLayout.addWidget(self.labelType_listWidget, 1, 0, 1, 1)
+
+        self.REF_listWidget = QtWidgets.QListWidget()
+        self.REF_listWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.gridLayout.addWidget(self.REF_listWidget, 1, 1, 1, 1)
+
+        self.selected_listWidget = QtWidgets.QListWidget()
+        self.selected_listWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.gridLayout.addWidget(self.selected_listWidget, 1, 2, 1, 1)
+
+        # 按钮布局（水平居中）
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.addStretch()
+
+        self.pushButton_save = QtWidgets.QPushButton(self.container)
+        self.pushButton_save.setFont(QtGui.QFont("Arial", 12))
+        self.horizontalLayout.addWidget(self.pushButton_save)
+
+        self.horizontalLayout.addStretch()
+        self.gridLayout.addLayout(self.horizontalLayout, 2, 0, 1, 3)
+
+        # 设置列宽比例
+        self.gridLayout.setColumnStretch(0, 2)  # 通道列表
+        self.gridLayout.setColumnStretch(1, 2)  # 参考通道
+        self.gridLayout.setColumnStretch(2, 3)  # 已选通道
 
         self.retranslateUi(label_select)
         QtCore.QMetaObject.connectSlotsByName(label_select)
 
     def retranslateUi(self, label_select):
         _translate = QtCore.QCoreApplication.translate
-        label_select.setWindowTitle(_translate("label_select", "Dialog"))
+        label_select.setWindowTitle(_translate("label_select", "通道选择"))
         self.pushButton_save.setText(_translate("label_select", "保存"))
         self.label_3.setText(_translate("label_select", "已选通道"))
+        self.label_REF.setText(_translate("label_select", "参考通道"))
         self.label_4.setText(_translate("label_select", "通道列表"))

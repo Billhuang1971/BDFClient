@@ -67,9 +67,9 @@ class classifierController(QWidget):
         self.EEG_lead=['AF3','FP1','FPz','FP2','AF4',
                         'F7','F5','F3','F1','FZ','F2','F4','F6','F8',
                         'FT7','FC5','FC3','FC1','FCZ','FC2','FC4','FC6','FT8',
-                        'T7/T3','C5','C3','C1','CZ','C2','C4','C6','T8/T4',
+                        'T7','T3','C5','C3','C1','CZ','C2','C4','C6','T8','T4',
                         'M1','TP7','CP5','CP3','CP1','CPZ','CP2','CP4','CP6','TP8','M2',
-                        'A1','P7/T5','P5','P3','P1','PZ','P2','P4','P6','P8/T6','A2',
+                        'A1','P7','T5','P5','P3','P1','PZ','P2','P4','P6','P8','T6','A2',
                         'PO7','PO5','PO3','POZ','PO4','PO6','PO8',
                         'CB1','O1','OZ','O2','CB2']
         # header表格头 field数据库表属性
