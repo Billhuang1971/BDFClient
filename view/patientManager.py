@@ -1,7 +1,7 @@
 import sys
 
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QFont,QIntValidator
+from PyQt5.QtCore import Qt, pyqtSignal,QRegExp
+from PyQt5.QtGui import QFont,QIntValidator,QRegExpValidator
 from PyQt5 import QtCore
 from functools import partial
 from view.patientManager_form.form import Ui_Form
@@ -76,6 +76,12 @@ class patientManagerView(QWidget):
     #     except Exception as e:
     #         print('initTable', e)
 
+class NoSpaceDelegate(QItemDelegate):
+    def createEditor(self, parent, option, index):
+        editor = super().createEditor(parent, option, index)
+        if isinstance(editor, QLineEdit):
+            editor.setValidator(QRegExpValidator(QRegExp("[^\\s]+")))  # 禁止空格
+        return editor
 class TableWidget(QWidget):
     control_signal = pyqtSignal(list)
 
@@ -206,8 +212,6 @@ class TableWidget(QWidget):
     def showTotalPage(self):
         """返回当前总页数"""
         return int(self.totalPage.text()[1:-1])
-
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     view = patientManagerView()

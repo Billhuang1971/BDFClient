@@ -1,4 +1,4 @@
-from view.patientManager import patientManagerView, TableWidget
+from view.patientManager import patientManagerView, TableWidget,NoSpaceDelegate
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.Qt import *
@@ -246,6 +246,8 @@ class patientManagerController(QWidget):
                 # 设置字体格式
                 textItem.setFont(QFont('', 12))
                 self.tableWidget.table.setItem(row_num, i, textItem)
+            #禁用空格
+            self.tableWidget.table.setItemDelegateForColumn(0, NoSpaceDelegate())
             self.edit_widget(row_num)
             self.itemIsEditable(row_num)
             self.confirmBtn.clicked.connect(lambda: self.editConfirm(row_num))
@@ -304,6 +306,7 @@ class patientManagerController(QWidget):
                         if i == row:
                             # 设置第row行第j+1列的单元格为可编辑且启用状态
                             self.tableWidget.table.item(i, j).setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
+
                         else:
                             # 设置第i行第j+1列的单元格不启用
                             self.tableWidget.table.item(i, j).setFlags(Qt.ItemIsEditable)
@@ -372,6 +375,7 @@ class patientManagerController(QWidget):
         except Exception as e:
             print('editCancel', e)
 
+
     def edit_widget(self, row, default_sex=None, default_date=None):
         # print(row)
         # 设置日期控件
@@ -382,7 +386,6 @@ class patientManagerController(QWidget):
             self.cWidget.setDate(default_date)
         # 在给定行和列的单元格中显示给定小部件
         self.tableWidget.table.setCellWidget(row, self.col_num - 6, self.cWidget)
-
         # 添加性别选择
         self.check_box = QComboBox()
         self.check_box.addItem('男')
