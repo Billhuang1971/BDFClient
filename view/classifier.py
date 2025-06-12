@@ -528,7 +528,9 @@ class LabelSelectVew(QWidget):
                 selected_EEG_names.append(a.text())
             text = item.text()+self.REF_channel
             if text in selected_EEG_names:
-                return
+                reply=QMessageBox.information(self, '提示', '出现重复选择，是否确认加入？', QMessageBox.Yes)
+                if reply!=16384:
+                    return
             # text=text+self.REF_channel
             item_clone = QListWidgetItem(text)
             # self.ui.selected_listWidget.takeItem(self.ui.selected_listWidget.row(item))

@@ -392,9 +392,15 @@ class Ui_Form(object):
 
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
+        self.pushButton_return = QtWidgets.QPushButton(Form)
+        self.pushButton_return.setFont(font)
+        self.pushButton_return.setObjectName("pushButton_return")
+        self.horizontalLayout_5.addWidget(self.pushButton_return)
         spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem3)
-        self.horizontalLayout_5.setStretch(0, 1)
+        self.horizontalLayout_5.setStretch(1, 1)
+
+
         self.pushButton_1 = QtWidgets.QPushButton(Form)
         self.pushButton_1.setFont(font)
         self.pushButton_1.setObjectName("pushButton")
@@ -642,6 +648,7 @@ class Ui_Form(object):
 
         self.refChannel.setText(_translate("Form", "通道选择"))
         self.ECIC_Btn.setText(_translate("Form", "通道选择"))
+        self.pushButton_return.setText(_translate("Form", "返回"))
         self.pushButton.setText(_translate("Form", "构建数据集"))
         self.pushButton_1.setText(_translate("Form", "重置筛选"))
         self.pushButton_2.setText(_translate("Form", "集合导入"))

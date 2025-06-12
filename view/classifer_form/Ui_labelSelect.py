@@ -14,65 +14,91 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_labelSelectForm(object):
     def setupUi(self, label_select):
         label_select.setObjectName("label_select")
-        label_select.resize(663, 611)
+        label_select.resize(800, 650)  # 增加高度以容纳新控件
 
         # 主垂直布局
         self.verticalLayout = QtWidgets.QVBoxLayout(label_select)
         self.verticalLayout.setObjectName("verticalLayout")
 
-        # 使用QWidget作为容器（不再需要固定尺寸）
+        # 容器和网格布局
         self.container = QtWidgets.QWidget(label_select)
-        self.verticalLayout.addWidget(self.container)
-
-        # 网格布局（替代固定坐标）
         self.gridLayout = QtWidgets.QGridLayout(self.container)
         self.gridLayout.setContentsMargins(10, 10, 10, 10)
         self.gridLayout.setSpacing(15)
 
-        # 通道列表标签
-        self.label_4 = QtWidgets.QLabel(self.container)
+        # 标签行
+        self.label_4 = QtWidgets.QLabel("通道列表", self.container)
         self.label_4.setFont(QtGui.QFont("Arial", 12))
-        self.gridLayout.addWidget(self.label_4, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.label_4, 0, 0)
 
-        # 参考通道标签
-        self.label_REF = QtWidgets.QLabel(self.container)
+        self.label_REF = QtWidgets.QLabel("参考通道", self.container)
         self.label_REF.setFont(QtGui.QFont("Arial", 12))
-        self.gridLayout.addWidget(self.label_REF, 0, 1, 1, 1)
+        self.gridLayout.addWidget(self.label_REF, 0, 1)
 
-        # 已选通道标签
-        self.label_3 = QtWidgets.QLabel(self.container)
+        self.label_3 = QtWidgets.QLabel("已选通道", self.container)
         self.label_3.setFont(QtGui.QFont("Arial", 12))
-        self.gridLayout.addWidget(self.label_3, 0, 2, 1, 1)
+        self.gridLayout.addWidget(self.label_3, 0, 2)
 
-        # 列表控件（设置大小策略）
+        # 列表控件
         self.labelType_listWidget = QtWidgets.QListWidget()
-        self.labelType_listWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self.gridLayout.addWidget(self.labelType_listWidget, 1, 0, 1, 1)
+        self.gridLayout.addWidget(self.labelType_listWidget, 1, 0)
 
         self.REF_listWidget = QtWidgets.QListWidget()
-        self.REF_listWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self.gridLayout.addWidget(self.REF_listWidget, 1, 1, 1, 1)
+        self.gridLayout.addWidget(self.REF_listWidget, 1, 1)
 
         self.selected_listWidget = QtWidgets.QListWidget()
-        self.selected_listWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self.gridLayout.addWidget(self.selected_listWidget, 1, 2, 1, 1)
+        self.gridLayout.addWidget(self.selected_listWidget, 1, 2)
 
-        # 按钮布局（水平居中）
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.addStretch()
+        # === 新增配置管理区域（位于列表下方）===
+        # 创建水平布局放置配置控件
+        config_layout = QtWidgets.QHBoxLayout()
+        config_layout.setContentsMargins(0, 10, 0, 10)
 
-        self.pushButton_save = QtWidgets.QPushButton(self.container)
+        # 配置管理标签
+        config_label = QtWidgets.QLabel("配置管理:")
+        config_label.setFont(QtGui.QFont("Arial", 10))
+        config_layout.addWidget(config_label)
+
+        # 配置下拉框
+        self.config_combo = QtWidgets.QComboBox()
+        self.config_combo.setMinimumWidth(200)
+        self.config_combo.setFont(QtGui.QFont("Arial", 10))
+        config_layout.addWidget(self.config_combo)
+
+        # 操作按钮
+        self.save_config = QtWidgets.QPushButton("保存配置")
+        self.save_config.setFixedSize(100, 30)
+        config_layout.addWidget(self.save_config)
+
+        self.load_config = QtWidgets.QPushButton("加载配置")
+        self.load_config.setFixedSize(100, 30)
+        config_layout.addWidget(self.load_config)
+
+        self.delete_config = QtWidgets.QPushButton("删除配置")
+        self.delete_config.setFixedSize(100, 30)
+        config_layout.addWidget(self.delete_config)
+
+        # 添加到网格布局（第2行，跨3列）
+        self.gridLayout.addLayout(config_layout, 2, 0, 1, 3)
+
+        # === 保存按钮区域（位于配置区域下方）===
+        button_layout = QtWidgets.QHBoxLayout()
+        button_layout.addStretch()
+
+        self.pushButton_save = QtWidgets.QPushButton("保存选择")
         self.pushButton_save.setFont(QtGui.QFont("Arial", 12))
-        self.horizontalLayout.addWidget(self.pushButton_save)
+        self.pushButton_save.setFixedSize(150, 40)
+        button_layout.addWidget(self.pushButton_save)
 
-        self.horizontalLayout.addStretch()
-        self.gridLayout.addLayout(self.horizontalLayout, 2, 0, 1, 3)
+        button_layout.addStretch()
+        self.gridLayout.addLayout(button_layout, 3, 0, 1, 3)
 
         # 设置列宽比例
-        self.gridLayout.setColumnStretch(0, 2)  # 通道列表
+        self.gridLayout.setColumnStretch(0, 3)  # 通道列表
         self.gridLayout.setColumnStretch(1, 2)  # 参考通道
         self.gridLayout.setColumnStretch(2, 3)  # 已选通道
 
+        self.verticalLayout.addWidget(self.container)
         self.retranslateUi(label_select)
         QtCore.QMetaObject.connectSlotsByName(label_select)
 
@@ -83,3 +109,8 @@ class Ui_labelSelectForm(object):
         self.label_3.setText(_translate("label_select", "已选通道"))
         self.label_REF.setText(_translate("label_select", "参考通道"))
         self.label_4.setText(_translate("label_select", "通道列表"))
+
+        # 添加配置按钮的文本
+        self.save_config.setText(_translate("label_select", "保存配置"))
+        self.load_config.setText(_translate("label_select", "加载配置"))
+        self.delete_config.setText(_translate("label_select", "删除配置"))

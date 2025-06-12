@@ -52,7 +52,7 @@ class MainController(QWidget):
 
     # 定义模块切换信号
     dataImport_switch_signal = pyqtSignal(str)
-
+    setbuild_switch_signal = pyqtSignal(str)
     researchImport_switch_signal = pyqtSignal(str)
 
 
@@ -83,7 +83,7 @@ class MainController(QWidget):
 
         # 信号绑定切换操作
         self.dataImport_switch_signal.connect(self.switch_page)
-
+        self.setbuild_switch_signal.connect(self.switch_page)
         self.researchImport_switch_signal.connect(self.switch_page)
 
     def serverExcept(self):
@@ -379,7 +379,8 @@ class MainController(QWidget):
             self.controller = sampleStateController(client=self.client, cAppUtil=self.cAppUtil)
 
         elif controller_name == "setBuildController":
-            self.controller = setBuildController(client=self.client, cAppUtil=self.cAppUtil)
+            self.controller = setBuildController(client=self.client, cAppUtil=self.cAppUtil,mainMenubar=self.view.ui.menubar)
+            self.controller.switch_signal.connect(self.setbuild_switch_signal.emit)
 
         elif controller_name == "algorithmController":
             self.controller = algorithmController(client=self.client, cAppUtil=self.cAppUtil)

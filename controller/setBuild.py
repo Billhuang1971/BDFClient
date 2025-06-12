@@ -18,13 +18,14 @@ warnings.filterwarnings(action='ignore')
 class setBuildController(QWidget):
     is_reload_controller = QtCore.pyqtSignal(str)
     init_reverse_scheme = QtCore.pyqtSignal(list, list)
-
-    def __init__(self, client, cAppUtil):
+    switch_signal = pyqtSignal(str)
+    def __init__(self, client, cAppUtil,mainMenubar):
         super().__init__()
         try:
             self.client = client
             self.cAppUtil = cAppUtil
             self.view = setBulidView()
+            self.mainMenubar=mainMenubar
             # 进度条加载界面
             self.progressBarView = None
             # 当前添加的标注类型
@@ -91,6 +92,7 @@ class setBuildController(QWidget):
             self.client.getSetExportDataResSig.connect(self.getSetExportDataRes)
             self.view.ui.re_scheme.currentTextChanged.connect(self.on_reverse_scheme_changed)
             self.client.channel_matchResSig.connect(self.channel_matchRes)
+            self.view.ui.pushButton_return.clicked.connect(self.exit_setbuild)
 
             self.view.ui.refChannel.clicked.connect(self.init_ref) #头皮通道选择
             self.view.ui.ECIC_Btn.clicked.connect(self.init_ECIC) #颅内通道选择
@@ -172,7 +174,11 @@ class setBuildController(QWidget):
         yes_btn.clicked.connect(lambda: self.handle_scalp_dataset())
         no_btn.clicked.connect(lambda: self.handle_intracranial_dataset())
         msg_box.exec_()
-
+    def exit_setbuild(self):
+        # 发射切换信号，切换到 MainController
+        self.switch_signal.emit("MainController")
+        # 打开主菜单
+        self.mainMenubar.setEnabled(True)
     def handle_scalp_dataset(self):
         self.set_signal = 'EEG' #头皮
 
@@ -213,6 +219,7 @@ class setBuildController(QWidget):
                             "label_info as a left join classifier as b on a.mid=b.classifier_id"],
                            self.client.tUser[12],
                            [1, self.pageRows, 'home']]
+        self.mainMenubar.setDisabled(True)
         self.client.getSetInitData(setInitDataInfo)
 
     def dataSourceChange(self, isChecked):
