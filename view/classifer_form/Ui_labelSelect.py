@@ -78,6 +78,10 @@ class Ui_labelSelectForm(object):
         self.delete_config.setFixedSize(100, 30)
         config_layout.addWidget(self.delete_config)
 
+        self.clear_select=QtWidgets.QPushButton("清空已选")
+        self.clear_select.setFixedSize(100, 30)
+        config_layout.addWidget(self.clear_select)
+
         # 添加到网格布局（第2行，跨3列）
         self.gridLayout.addLayout(config_layout, 2, 0, 1, 3)
 
@@ -114,3 +118,4 @@ class Ui_labelSelectForm(object):
         self.save_config.setText(_translate("label_select", "保存配置"))
         self.load_config.setText(_translate("label_select", "加载配置"))
         self.delete_config.setText(_translate("label_select", "删除配置"))
+        self.clear_select.setText(_translate("label_select", "清空已选通道"))

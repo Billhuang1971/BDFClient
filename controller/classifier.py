@@ -319,7 +319,7 @@ class classifierController(QWidget):
         count=0
         for item in label_names:
             count+=1
-            if count <=6:
+            if count <=3:
                 content_label += item + '/'
         content_label+=f'……共{count}个'
         self.import_view.ui.label_label_select.setText(str(content_label))
