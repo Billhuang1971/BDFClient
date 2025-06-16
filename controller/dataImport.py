@@ -277,12 +277,24 @@ class dataImportController(QWidget):
             self.loading_dialog.close()
             self.loading_dialog = None
 
-    # 测下这里上传的edf文件
-    def on_btnAddFile_clicked(self, row):
-        if self.row == -1:
-            QMessageBox.information(self, ' ', '请先在病人诊断信息中选择一行')
-            return
+    def run_with_loading_dialog(self, message, task_func, post_callback=None):
+        self.loading_dialog = LoadingDialog(message, self)
+        self.loading_dialog.show()
+        QApplication.processEvents()  # 强制刷新 UI
 
+        def wrapper():
+            try:
+                task_func()
+                if post_callback:
+                    post_callback()
+            finally:
+                self.loading_dialog.close()
+                self.loading_dialog = None
+
+        QTimer.singleShot(100, wrapper)
+
+    # 测下这里上传的edf文件
+    def on_btnAddFile_clicked(self,row):
         get_filename_path, ok = QFileDialog.getOpenFileName(self,
                                                             "导入病人文件",
                                                             "C:/",
@@ -291,12 +303,21 @@ class dataImportController(QWidget):
             self.from_filepath = get_filename_path
             file_extension = os.path.splitext(self.from_filepath)[1].lower()
 
+            # if file_extension == '.bdf':
+            #     self.checkBasicConfig()
+
+            # elif file_extension == '.edf':
+            #     # 转换完成后再执行 checkBasicConfig
+            #     self.long_task_with_dialog(post_callback=self.checkBasicConfig)
+
             if file_extension == '.bdf':
-                self.checkBasicConfig()
+                self.run_with_loading_dialog("正在解析 BDF 文件，请稍候...",
+                                         self.checkBasicConfig)
 
             elif file_extension == '.edf':
-                # 转换完成后再执行 checkBasicConfig
-                self.long_task_with_dialog(post_callback=self.checkBasicConfig)
+                self.run_with_loading_dialog("正在转换 EDF 文件，请稍候...",
+                                         self.convert_edf_to_bdf,
+                                         post_callback=self.checkBasicConfig)
 
             else:
                 QMessageBox.information(self, "不支持的文件类型", "请上传有效的脑电文件格式 (.edf /.bdf).")
