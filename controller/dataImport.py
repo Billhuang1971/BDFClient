@@ -431,57 +431,55 @@ class dataImportController(QWidget):
 
     # 删除服务端已上传的所有文件 与该脑电检查相关的所有记录 删除与该脑电检查对应的所有待传任务
     def on_btnRemove_clicked(self,row):
-        if self.row != -1:
-            self.row = self.view.ui.tableWidget.currentRow()
-            # 找到当前检查信息的脑电上传医生
-            print("这里的patientCheckInfo:",self.patientCheck_info)
-            pdoctorname = self.patientCheck_info[self.row][3]
-            if pdoctorname == self.client.tUser[0]:
-                answer = QMessageBox.warning(
-                    self.view, '确认删除！', '您将进行删除操作！',
-                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-                if answer == QMessageBox.Yes:
-                    if self.row == -1:
-                        QMessageBox.information(self.view, ' ', '请先选中一行')
-                        return
-                    # 暂时只能选中一行删除
-                    print('row', self.row)
-                    check_id = self.patientCheck_info[self.row][0]
-                    account = self.client.tUser[1]
-                    REQmsg = [account, check_id, self.row]
-                    # 在这里删除了当前行 需要将ui界面上的待上传文件清空并将wait_file中属于该检查单号的文件删除
-                    # 清空客户端待上传文件列表
-                    self.view.ui.tableWidget_1.setRowCount(0)
-                    self.view.ui.tableWidget_1.clearContents()
-
-                    # 清空对应的wait_file中的任务和pending中对应的任务
-                    check_number = self.patientCheck_info[self.row][5]
-                    self.removeWaitFile(check_number)
-
-                    self.row = -1
-
-                    # 如果当前有上传到一半的任务进行检查单号的删除，upload/EEG中有文件残留
-                    # 这个残留如果要删除的话需要做判断，如果check_id相吻合，需要删除
-                    if not self.cAppUtil.isNull(self.dir_path):
-                        bdfFileNameList = self.findFile(self.dir_path, '.bdf')
-                        bdfFileName = bdfFileNameList[0]
-                        # 匹配 _ 之前的数字，并去掉前导零
-                        match = re.match(r"0*(\d+)_", bdfFileName)
-                        if match:
-                            check_id1 = int(match.group(1))
-                            if check_id1 == check_id:
-                                # 同时删除当前未上传完成的脑电文件
-                                self.cAppUtil.empty(self.dir_path, filename=bdfFileName)
-
-                    # 删除病人检查信息
-                    self.client.delPatientCheckInfo(REQmsg)
-                else:
-                    return
-            else:
-                QMessageBox.information(self.view, '提示', '你不是本次检查的脑电上传医生，你无权进行删除！！！')
-        else:
-            QMessageBox.information(self, ' ', '请先在病人诊断信息中选择一行')
+        if row < 0 or row >= len(self.patientCheck_info):
+            QMessageBox.information(self.view, ' ', '无效的操作行')
             return
+
+        # 找到当前检查信息的脑电上传医生
+        print("这里的patientCheckInfo:",self.patientCheck_info)
+        pdoctorname = self.patientCheck_info[row][3]
+        if pdoctorname == self.client.tUser[0]:
+            answer = QMessageBox.warning(
+                self.view, '确认删除！', '您将进行删除操作！',
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            if answer == QMessageBox.Yes:
+                if row == -1:
+                    QMessageBox.information(self.view, ' ', '请先选中一行')
+                    return
+                # 暂时只能选中一行删除
+                print('row', row)
+                check_id = self.patientCheck_info[row][0]
+                account = self.client.tUser[1]
+                REQmsg = [account, check_id, row]
+                # 在这里删除了当前行 需要将ui界面上的待上传文件清空并将wait_file中属于该检查单号的文件删除
+                # 清空客户端待上传文件列表
+                self.view.ui.tableWidget_1.setRowCount(0)
+                self.view.ui.tableWidget_1.clearContents()
+
+                # 清空对应的wait_file中的任务和pending中对应的任务
+                check_number = self.patientCheck_info[row][5]
+                self.removeWaitFile(check_number)
+
+                # 如果当前有上传到一半的任务进行检查单号的删除，upload/EEG中有文件残留
+                # 这个残留如果要删除的话需要做判断，如果check_id相吻合，需要删除
+                if not self.cAppUtil.isNull(self.dir_path):
+                    bdfFileNameList = self.findFile(self.dir_path, '.bdf')
+                    bdfFileName = bdfFileNameList[0]
+                    # 匹配 _ 之前的数字，并去掉前导零
+                    match = re.match(r"0*(\d+)_", bdfFileName)
+                    if match:
+                        check_id1 = int(match.group(1))
+                        if check_id1 == check_id:
+                            # 同时删除当前未上传完成的脑电文件
+                            self.cAppUtil.empty(self.dir_path, filename=bdfFileName)
+
+                # 删除病人检查信息
+                self.client.delPatientCheckInfo(REQmsg)
+            else:
+                return
+        else:
+            QMessageBox.information(self.view, '提示', '你不是本次检查的脑电上传医生，你无权进行删除！！！')
+
 
     # 删除指定的wait_file,会连带着删除Pending中对应的记录
     def removeWaitFile(self,check_number):
@@ -519,18 +517,32 @@ class dataImportController(QWidget):
         except Exception as e:
             print(f"从pending.json中删除task有误: {e}")
 
+    def is_last_uploaded(self):
+        """
+        判断 self.change_file 中唯一的列表最后一个状态是否是 'uploading'。
+        返回 True 表示最后一个是 'uploading'，否则 False。
+        """
+        if not self.change_file:
+            return False  # 没有数据
+
+        # 获取唯一的列表
+        file_list = next(iter(self.change_file.values()))
+        if not file_list:
+            return False  # 空列表
+
+        return file_list[-1][1] == 'uploaded'
+
     # 修改一下逻辑，先判断能否点击完成，再进行下列判断，也就是把当前两个提示的顺序修改一下，“是否上传完毕？”的提示放在最后
-    # fixme:多个检查单号，无法点击第二个”完成“ 暂未复现
     def on_btnComplete_clicked(self,row):
-        if self.row == -1:
-            QMessageBox.information(self, ' ', '请先在病人诊断信息中选择一行')
+        if row < 0 or row >= len(self.patientCheck_info):
+            QMessageBox.information(self.view, ' ', '无效的操作行')
             return
 
         # 先获取远程服务器是否存在已上传完成的脑电文件
         self.getFileInfo()
-        # 已上传文件不为空
-        if self.change_file:
-            check_number = self.patientCheck_info[self.row][5]
+        # 已上传文件不为空并未不存在状态为uploading的已上传文件
+        if self.is_last_uploaded():
+            check_number = self.patientCheck_info[row][5]
             # pending.json中含有文件未上传，无法正常更新状态
             # 若当前内存等待队列中存在未上传完成的文件，需要提醒用户进行上传后再点击完成按钮
             exists = any(task["check_number"] == check_number for task in self.wait_file)
@@ -538,22 +550,22 @@ class dataImportController(QWidget):
                     QMessageBox.information(self,"当前检查单号存在待上传文件",
                                             f"请正确上传后再点击完成按钮以完成上传或直接删除当前待上传文件！！",QMessageBox.Yes)
             else:
-                reply = QMessageBox.information(self, "检查id病人脑电上传状态",
-                                        f"当前检查单号为：{str(self.patientCheck_info[self.row][5])},脑电文件是否上传完毕？",
+                reply = QMessageBox.information(self, "检查病人脑电上传状态",
+                                        f"当前检查单号为：{str(self.patientCheck_info[row][5])},脑电文件是否上传完毕？",
                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if reply == 16384:
                     # 用户正常上传完成后正确更新状态
                     # 更新服务端状态
                     uid = self.client.tUser[0]
                     account = self.client.tUser[1]
-                    check_id = self.patientCheck_info[self.row][0]
+                    check_id = self.patientCheck_info[row][0]
                     state = 'uploaded'
                     REQmsg = [account, 'Send', [check_id, state, uid]]
                     self.client.updateCheckInfo(REQmsg)
-        # 已上传文件为空，提醒用户删除当前病人检查信息
+        # 已上传文件为空或存在正在上传的文件，提醒用户删除当前病人检查信息
         else:
-            QMessageBox.information(self, "当前检查单号无已上传文件",
-                                    f"无法完成当前病人检查信息状态的更新，请上传文件或删除当前信息！！", QMessageBox.Yes)
+            QMessageBox.information(self, "当前检查单号无已上传文件或存在上传中断的文件",
+                                    f"无法完成当前病人检查信息状态的更新，请上传文件、完成续传或删除当前信息！！", QMessageBox.Yes)
 
     # 更新病人检查信息返回
     def updateCheckInfoRes(self, REPData):
@@ -606,7 +618,7 @@ class dataImportController(QWidget):
 
         # 更新表格
         # 最好是把这个更新表格的操作给抽出来，另外，在wait_file中删除可以先不动那个内存等待队列文件，到时点击启动上传有更新操作
-        check_number = self.patientCheck_info[self.row][5]
+        check_number = self.patientCheck_info[row][5]
         if self.wait_file:
             filtered_data = [
                 [task["fileName"], "notUploaded"]  # 你需要展示的列数据
