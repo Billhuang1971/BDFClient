@@ -1524,7 +1524,7 @@ class dataImportController(QWidget):
     def on_btnUploadExit_clicked(self):
         """终止上传"""
         answer = QMessageBox.warning(
-            self.view, '确认退出上传！', '其他功能界面会被打开！',
+            self.view, '终止上传', '是否确认退出上传？',
             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if answer == QMessageBox.Yes:
             if hasattr(self, 'progressBarView') and self.progressBarView is not None:
