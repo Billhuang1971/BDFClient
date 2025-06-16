@@ -2453,7 +2453,7 @@ class dataImportController(QWidget):
             # # **检查文件时长**
             # print(f"EDF 时长: {raw.times[-1]} 秒")
             # print(f"BDF 时长: {raw_bdf.times[-1]} 秒")
-
+            self.from_filepath = self.convert_filepath
         except Exception as e:
             print('Error during EDF to BDF conversion:', e)
 
