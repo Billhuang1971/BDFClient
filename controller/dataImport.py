@@ -822,6 +822,7 @@ class dataImportController(QWidget):
         # 更新file_info展示
         self.getFileInfo()
 
+    # FIXME:处理时中断但bdf文件测试结果完整
     # 判断.bdf文件是否损坏
     def testEEGFile(self, testfile):
         try:
@@ -1596,10 +1597,11 @@ class dataImportController(QWidget):
 
     # 获取病人检查信息功能
     # 获取病人检查信息方法
-    def getPatientCheckInfo(self, value=''):
+    def getPatientCheckInfo(self):
         account = self.client.tUser[1]
         uid = self.client.tUser[0]
-        REQmsg = [account, uid, value]
+        mac = self.cAppUtil.getMacAddress()
+        REQmsg = [account, uid, mac]
         self.client.getPatientCheckInfo(REQmsg)
 
     # 处理客户端返回的查询标注类型的结果
@@ -1655,7 +1657,6 @@ class dataImportController(QWidget):
                 file_info_1 = REPData[3]
                 if len(file_info_1) != 0:
                     self.file_info = file_info_1
-                    # TODO:暂时这样修改
                     self.change_file = self.changeFileInfo(self.file_info)
                     if self.row != -1:
                         check_id = self.patientCheck_info[self.row][0]
@@ -2259,6 +2260,7 @@ class dataImportController(QWidget):
             # self.addFormView.close()
             strDate = self.view.ui.dateEdit.date().toString("yyyy-MM-dd")
             print(strDate)
+            mac = self.cAppUtil.getMacAddress()
             self.addInfo['measure_date'] = strDate
             self.addInfo['description'] = self.view.ui.checkInfo.toPlainText()
             self.addInfo['cUid'] = self.client.tUser[0]
@@ -2320,38 +2322,6 @@ class dataImportController(QWidget):
                     self.view.ui.btnConfirm.setEnabled(True)
         except Exception as e:
             print('addCheckInfo', e)
-
-
-    # 删除病人检查信息功能
-    # 删除病人检查信息方法
-    def on_btnDel_clicked(self):
-
-        if self.row!= -1:
-            self.row = self.view.ui.tableWidget.currentRow()
-            # 找到当前检查信息的脑电上传医生
-            pdoctorname = self.patientCheck_info[self.row][3]
-            if pdoctorname == self.client.tUser[0]:
-                answer = QMessageBox.warning(
-                    self.view, '确认删除！', '您将进行删除操作！',
-                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-                if answer == QMessageBox.Yes:
-                    if self.row == -1:
-                        QMessageBox.information(self.view, ' ', '请先选中一行')
-                        return
-                    # 暂时只能选中一行删除
-                    print('row', self.row)
-                    check_id = self.patientCheck_info[self.row][0]
-                    account = self.client.tUser[1]
-                    REQmsg = [account, check_id, self.row]
-                    self.row = -1
-                    self.client.delPatientCheckInfo(REQmsg)
-                else:
-                    return
-            else:
-                QMessageBox.information(self.view, '提示', '你不是本次检查的脑电上传医生，你无权进行删除！！！')
-        else:
-            QMessageBox.information(self, ' ', '请先在病人诊断信息中选择一行')
-            return
 
     # 处理客户端返回的删除病人检查信息结果
     def delPatientCheckInfoRes(self, REPData):
