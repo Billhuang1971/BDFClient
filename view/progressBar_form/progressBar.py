@@ -19,16 +19,32 @@ class Ui_progressbar(object):
         progressbar.setObjectName("processbar")
         progressbar.resize(470, 140)
         self.pb = progressbar
-        self.progressBar = QtWidgets.QProgressBar(progressbar)
-        self.progressBar.setGeometry(QtCore.QRect(20, 50, 441, 31))
+
+        # 使用垂直布局代替固定几何位置
+        layout = QtWidgets.QVBoxLayout(progressbar)
+        layout.setContentsMargins(20, 20, 20, 20)  # 设置边距
+
+        # 进度条
+        self.progressBar = QtWidgets.QProgressBar()
         font = QtGui.QFont()
         font.setPointSize(12)
         self.progressBar.setFont(font)
         self.progressBar.setProperty("value", 24)
         self.progressBar.setObjectName("progressBar")
-        self.stop_pushButton = QtWidgets.QPushButton(progressbar)
-        self.stop_pushButton.setGeometry(QtCore.QRect(190, 100, 75, 23))
+        layout.addWidget(self.progressBar)
+
+        # 信息标签 - 放在进度条下方
+        self.info_text = QtWidgets.QLabel()
+        self.info_text.setObjectName("info_text")
+        layout.addWidget(self.info_text)
+
+        # 添加弹性空间使按钮保持在底部
+        layout.addStretch(1)
+
+        # 停止按钮
+        self.stop_pushButton = QtWidgets.QPushButton()
         self.stop_pushButton.setObjectName("stop_pushButton")
+        layout.addWidget(self.stop_pushButton, 0, QtCore.Qt.AlignHCenter)  # 水平居中
 
         self.retranslateUi(progressbar)
         QtCore.QMetaObject.connectSlotsByName(progressbar)

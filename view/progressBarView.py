@@ -42,8 +42,13 @@ class ProgressBarView(QDialog):
             QApplication.processEvents()
             time.sleep(0.5)
 
+    def updateInfo(self, info):
+        self.ui.info_text.setText(info)
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     view = ProgressBarView(window_title="测试", maximum=50, hasStopBtn=False)
     view.updateProgressBar(120)
+    view.updateInfo("正在加载")
+    view.show()
     sys.exit(app.exec_())
