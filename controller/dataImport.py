@@ -2304,9 +2304,9 @@ class dataImportController(QWidget):
                 self.view.ui.checkInfo.clear()
                 self.view.ui.dateEdit.setDate(QDateTime.currentDateTime().date())
                 self.getPatientCheckInfo()
-                result = QMessageBox.information(self, "病人检查", REPData[2], QMessageBox.Yes)
-                if result == QMessageBox.Yes:
-                    self.view.ui.btnConfirm.setEnabled(True)
+                # result = QMessageBox.information(self, "病人检查", REPData[2], QMessageBox.Yes)
+                # if result == QMessageBox.Yes:
+                self.view.ui.btnConfirm.setEnabled(True)
             else:
                 self.view.ui.check_num.clear()
                 self.view.ui.patientBtn.setText('选择病人')
