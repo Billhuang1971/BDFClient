@@ -672,6 +672,7 @@ class dataImportController(QWidget):
         self.view.ui.groupBox_4.setEnabled(False)
         self.view.ui.groupBox.setEnabled(False)
         self.view.ui.startUploadButton.setEnabled(False)
+        self.view.ui.exitUploadButton.setEnabled(False)
 
         # 用内存等待队列更新内存等待队列文件
         self.updatePending()
@@ -718,6 +719,7 @@ class dataImportController(QWidget):
                 self.view.ui.groupBox_4.setEnabled(True)
                 self.view.ui.groupBox.setEnabled(True)
                 self.view.ui.startUploadButton.setEnabled(True)
+                self.view.ui.exitUploadButton.setEnabled(True)
 
         # client_root/upload/EEG不为空（被中断上传的文件只可能有一个）
         else:
@@ -810,6 +812,7 @@ class dataImportController(QWidget):
                 self.view.ui.groupBox_4.setEnabled(True)
                 self.view.ui.groupBox.setEnabled(True)
                 self.view.ui.startUploadButton.setEnabled(True)
+                self.view.ui.exitUploadButton.setEnabled(True)
 
     def delFileInfoRes(self,REPData):
         print("delFileInfoRes:",REPData)
@@ -1408,6 +1411,7 @@ class dataImportController(QWidget):
                     self.view.ui.groupBox_4.setEnabled(True)
                     self.view.ui.groupBox.setEnabled(True)
                     self.view.ui.startUploadButton.setEnabled(True)
+                    self.view.ui.exitUploadButton.setEnabled(True)
 
 
             # client_root/upload/EEG不为空（被中断上传的文件只可能有一个）
@@ -1495,6 +1499,7 @@ class dataImportController(QWidget):
                 self.view.ui.groupBox_4.setEnabled(True)
                 self.view.ui.groupBox.setEnabled(True)
                 self.view.ui.startUploadButton.setEnabled(True)
+                self.view.ui.exitUploadButton.setEnabled(True)
 
     def stop_upload(self):
         """终止上传"""
@@ -1526,14 +1531,15 @@ class dataImportController(QWidget):
             # 终止上传 把上传标志置为False
             print("终止上传逻辑被触发")
 
-            # 打开主菜单
-            self.mainMenubar.setEnabled(True)
+            # # 打开主菜单
+            # self.mainMenubar.setEnabled(True)
 
             # 打开所有功能键
             self.view.ui.groupBox_3.setEnabled(True)
             self.view.ui.groupBox_4.setEnabled(True)
             self.view.ui.groupBox.setEnabled(True)
             self.view.ui.startUploadButton.setEnabled(True)
+            self.view.ui.exitUploadButton.setEnabled(True)
 
             # 先把表格1清空 防止用户误触，等到点击之后再刷新
             self.view.ui.tableWidget_1.setRowCount(0)
