@@ -44,6 +44,36 @@ class Ui_AddForm(object):
         self.gridLayout_19.addWidget(self.pdoctorBtn, 9, 1, 1, 2)
 
 
+
+        # 标注类型标签
+        self.labelMarkType = QtWidgets.QLabel(self.gbSettings)
+        self.labelMarkType.setObjectName("labelMarkType")
+        self.labelMarkType.setFont(font)
+        self.gridLayout_19.addWidget(self.labelMarkType, 10, 0, 1, 1)
+
+        # 标注类型单选按钮区域
+        self.radioGroupWidget = QtWidgets.QWidget(self.gbSettings)
+        self.radioLayout = QtWidgets.QHBoxLayout(self.radioGroupWidget)
+        self.radioLayout.setContentsMargins(0, 0, 0, 0)
+        self.radioLayout.setSpacing(20)
+
+        self.radioEEG = QtWidgets.QRadioButton("EEG", self.radioGroupWidget)
+        self.radioEEG.setFont(font)
+        self.radioEEG.setChecked(True)  # 默认选中EEG
+        self.radioLayout.addWidget(self.radioEEG)
+
+        self.radioSEEG = QtWidgets.QRadioButton("sEEG", self.radioGroupWidget)
+        self.radioSEEG.setFont(font)
+        self.radioLayout.addWidget(self.radioSEEG)
+
+        # 限制按钮大小
+        self.radioEEG.setFixedHeight(25)
+        self.radioSEEG.setFixedHeight(25)
+
+        self.gridLayout_19.addWidget(self.radioGroupWidget, 10, 1, 1, 2)
+
+
+
         self.patientBtn = QPushButton('选择病人')
         # self.patientBtn.setStyleSheet('border: none;color:blue')
         self.patientBtn.setCursor(Qt.PointingHandCursor)
@@ -134,6 +164,11 @@ class Ui_AddForm(object):
         self.retranslateUi(Setting)
         QtCore.QMetaObject.connectSlotsByName(Setting)
 
+        # 控制左边列固定宽度，右边列可以伸缩
+        self.gridLayout_19.setColumnStretch(0, 0)  # 左列 label 不拉伸
+        self.gridLayout_19.setColumnStretch(1, 1)  # 中列适当拉伸（如果你用两列）
+        self.gridLayout_19.setColumnStretch(2, 2)  # 右列更拉伸
+
     def retranslateUi(self, Setting):
         _translate = QtCore.QCoreApplication.translate
         Setting.setWindowTitle(_translate("Setting", "添加诊断信息单"))
@@ -146,3 +181,5 @@ class Ui_AddForm(object):
         self.labelcheckNumInfo.setText(_translate("Setting", "检查单号："))
         self.btnConfirm.setText(_translate("Setting", "确认"))
         self.btnExit.setText(_translate("Setting", "取消"))
+        self.labelMarkType.setText(_translate("Setting", "标注类型："))
+

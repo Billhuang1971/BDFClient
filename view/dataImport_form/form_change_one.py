@@ -10,6 +10,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QDateTime, QDate
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QRadioButton
 
 
 class Ui_DataImportForm(object):
@@ -134,6 +135,52 @@ class Ui_DataImportForm(object):
         self.label_cdoctor.setSizePolicy(sizePolicy)
         self.label_cdoctor.setObjectName("label_cdoctor")
         self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.label_cdoctor)
+
+        # ——— 新增：标注类型 单选按钮 ———
+
+        # 标注类型 Label
+        self.labelMarkType = QtWidgets.QLabel(self.groupBox_4)
+        self.labelMarkType.setObjectName("labelMarkType")
+        self.labelMarkType.setFont(font)
+        self.formLayout.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.labelMarkType)
+
+        # 右侧 RadioButton 容器（一个 QWidget 包含 QHBoxLayout）
+        self.radioGroupWidget = QWidget(self.groupBox_4)
+
+        # 限制最大宽度，避免撑开formLayout右边列
+        self.radioGroupWidget.setMaximumWidth(200)  # 根据实际需要调整
+
+        self.radioLayout = QHBoxLayout(self.radioGroupWidget)
+        self.radioLayout.setContentsMargins(0, 0, 0, 0)
+        self.radioLayout.setSpacing(10)
+
+        self.radioEEG = QRadioButton("EEG", self.radioGroupWidget)
+        self.radioEEG.setFont(font)
+        self.radioEEG.setChecked(True)
+
+        self.radioSEEG = QRadioButton("sEEG", self.radioGroupWidget)
+        self.radioSEEG.setFont(font)
+
+        # 设置按钮尺寸策略为固定，避免按钮自动拉伸过大
+        self.radioEEG.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.radioSEEG.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+
+        self.radioLayout.addWidget(self.radioEEG)
+        self.radioLayout.addWidget(self.radioSEEG)
+
+        self.formLayout.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.radioGroupWidget)
+
+        # 限制 RadioGroup 容器高度
+        self.radioGroupWidget.setFixedHeight(30)
+
+        # 控件本身限高
+        self.radioEEG.setMinimumHeight(20)
+        self.radioSEEG.setMinimumHeight(20)
+
+        # 收紧整体 layout 行距
+        self.formLayout.setVerticalSpacing(6)
+
+        # ——————————————————————
 
         # 检查日期选项
         self.dateEdit = QtWidgets.QDateTimeEdit(QDateTime.currentDateTime(), self.groupBox_4)
@@ -313,6 +360,9 @@ class Ui_DataImportForm(object):
         self.label_5.setText(_translate("DataImportForm", "开单医生："))
         self.pdoctorBtn.setText(_translate("DataImportForm", "选择开单医生"))
         self.label_6.setText(_translate("DataImportForm", "上传脑电医生："))
+
+        self.labelMarkType.setText(_translate("DataImportForm", "标注类型："))
+
         self.label_cdoctor.setText(_translate("DataImportForm", "TextLabel"))
         self.label_2.setText(_translate("DataImportForm", "检查描述："))
         self.btnConfirm.setText(_translate("DataImportForm", "确认添加"))
