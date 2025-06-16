@@ -754,10 +754,11 @@ class dataImportController(QWidget):
                         mac = str(data['mac'])
                         # .txt文件完整
                         # 重启进度条
-                        self.progressBarView = ProgressBarView(window_title="上传过程出错，系统将从出错位置开始继续上传",
+                        self.progressBarView = ProgressBarView(window_title=f"上传过程出错，系统将从出错位置开始继续上传",
                                                                hasStopBtn=True,
                                                                maximum=100,
                                                                speed=100)
+                        self.progressBarView.updateInfo(f"当前上传文件检查单号为{self.check_id},文件号为{self.file_id}")
                         self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
                         self.progressBarView.show()
                         REQmsg = self.packMsg('continue', mac)
@@ -769,10 +770,11 @@ class dataImportController(QWidget):
                     except Exception as e:
                         # .txt文件不完整
                         # 重启进度条
-                        self.progressBarView = ProgressBarView(window_title="上传过程出错，系统将从出错位置开始继续上传",
+                        self.progressBarView = ProgressBarView(window_title=f"上传过程出错，系统将从出错位置开始继续上传",
                                                                hasStopBtn=True,
                                                                maximum=100,
                                                                speed=100)
+                        self.progressBarView.updateInfo(f"当前上传文件检查单号为{self.check_id},文件号为{self.file_id}")
                         self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
                         self.progressBarView.show()
                         # 将续传标志置为True
@@ -782,10 +784,11 @@ class dataImportController(QWidget):
                 # 不存在同名的txt文件
                 else:
                     # 重启进度条
-                    self.progressBarView = ProgressBarView(window_title="上传过程出错，系统将从出错位置开始继续上传",
+                    self.progressBarView = ProgressBarView(window_title=f"上传过程出错，系统将从出错位置开始继续上传",
                                                            hasStopBtn=True,
                                                            maximum=100,
                                                            speed=100)
+                    self.progressBarView.updateInfo(f"当前上传文件检查单号为{self.check_id},文件号为{self.file_id}")
                     self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
                     self.progressBarView.show()
                     # 转到步骤4开始上传 正在上传标志置为true
@@ -956,7 +959,7 @@ class dataImportController(QWidget):
 
     def process_bdf(self, userConfig_info, filename):
         # 初始化进度条
-        self.progressBarView = ProgressBarView(window_title="正在处理文件",
+        self.progressBarView = ProgressBarView(window_title=f"正在处理检查单号为{self.check_id},文件号为{self.file_id}的文件",
                                                hasStopBtn=True,
                                                maximum=100,
                                                speed=100)
@@ -1250,7 +1253,7 @@ class dataImportController(QWidget):
                             self.makeText(original_filepath)
                             # 开启进度条
                             # 初始化进度条
-                            self.progressBarView = ProgressBarView(window_title="正在上传文件",
+                            self.progressBarView = ProgressBarView(window_title=f"正在上传检查单号为{self.check_id},文件号为{self.file_id}的文件",
                                                                    hasStopBtn=True,
                                                                    maximum=100,
                                                                    speed=100)
@@ -1448,10 +1451,11 @@ class dataImportController(QWidget):
                             self.fileName = data['path']
                             # .txt文件完整
                             # 重启进度条
-                            self.progressBarView = ProgressBarView(window_title="上传过程出错，系统将从出错位置开始继续上传",
+                            self.progressBarView = ProgressBarView(window_title=f"上传过程出错，系统将从出错位置开始继续上传",
                                                                    hasStopBtn=False,
                                                                    maximum=100,
                                                                    speed=100)
+                            self.progressBarView.updateInfo(f"当前上传文件检查单号为{self.check_id},文件号为{self.file_id}")
                             self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
                             self.progressBarView.show()
                             REQmsg = self.packMsg('continue', mac)
@@ -1463,10 +1467,11 @@ class dataImportController(QWidget):
                         except Exception as e:
                             # .txt文件不完整
                             # 重启进度条
-                            self.progressBarView = ProgressBarView(window_title="上传过程出错，系统将从出错位置开始继续上传",
+                            self.progressBarView = ProgressBarView(window_title=f"上传过程出错，系统将从出错位置开始继续上传",
                                                                    hasStopBtn=False,
                                                                    maximum=100,
                                                                    speed=100)
+                            self.progressBarView.updateInfo(f"当前上传文件检查单号为{self.check_id},文件号为{self.file_id}")
                             self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
                             self.progressBarView.show()
                             # 这个位置，txt文件损坏，怎么获取check_id,file_id? 协议6.5的位置，存入check_id、file_id这个位置要再推敲一下，否则容易存入其他check_id和file_id
@@ -1477,10 +1482,11 @@ class dataImportController(QWidget):
                     else:
                         # 同样的道理，该情况下是存在完整bdf文件的，根据BDF文件的命名可以获取到check_id和file_id
                         # 重启进度条
-                        self.progressBarView = ProgressBarView(window_title="上传过程出错，系统将从出错位置开始继续上传",
+                        self.progressBarView = ProgressBarView(window_title=f"上传过程出错，系统将从出错位置开始继续上传",
                                                                hasStopBtn=False,
                                                                maximum=100,
                                                                speed=100)
+                        self.progressBarView.updateInfo(f"当前上传文件检查单号为{self.check_id},文件号为{self.file_id}")
                         self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
                         self.progressBarView.show()
                         # 转到步骤4开始上传
