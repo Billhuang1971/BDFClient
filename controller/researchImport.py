@@ -83,7 +83,6 @@ class researchImportController(QWidget):
         self.client.getChooseDoctorInfoResSig1.connect(self.get_choose_doctor_infoRes)
         self.client.getChooseLabelTypeInfoResSig1.connect(self.get_choose_labeltype_infoRes)
         self.client.insertSampleInfoBatchResSig.connect(self.insertSampleInfoBatchRes)
-        self.client.getCheckNumberByIDResSig.connect(self.getCheckNumberByIDRes)
         self.uploadFileSig.connect(self.upload_startCall)
 
 
@@ -178,6 +177,9 @@ class researchImportController(QWidget):
         self.addInfo = {}
         # 先将这个选定标志类型的属性置零
         self.addInfo['isChoose_labelType'] = 0
+
+        # 检索到的target_index,方便删除
+        self.target_index = None
 
         # 添加部分的槽函数链接
         # 设置选择医生
@@ -325,14 +327,6 @@ class researchImportController(QWidget):
 
 
     def on_btnAddFile_clicked(self, row):
-        if row < 0 or row >= len(self.patientCheck_info):
-            QMessageBox.information(self, ' ', '请先在病人诊断信息中选择一行')
-            return
-
-        if row >= len(self.patientCheck_info):
-            QMessageBox.information(self, ' ', '选中的行索引超出范围')
-            return
-
         get_filename_path, ok = QFileDialog.getOpenFileName(self,
                                                             "导入病人文件",
                                                             "C:/",
@@ -566,33 +560,43 @@ class researchImportController(QWidget):
         else:
             print(f"当前json文件中已不存在信息可以删除")
 
+    def is_last_uploaded(self):
+        """
+        判断 self.change_file 中唯一的列表最后一个状态是否是 'uploading'。
+        返回 True 表示最后一个是 'uploading'，否则 False。
+        """
+        if not self.change_file:
+            return False  # 没有数据
 
-    # fixme:多个检查单号，无法点击第二个”完成“ 暂未复现
-    def on_btnComplete_clicked(self, row):
+        # 获取唯一的列表
+        file_list = next(iter(self.change_file.values()))
+        if not file_list:
+            return False  # 空列表
+
+        return file_list[-1][1] == 'uploaded'
+
+
+    def on_btnComplete_clicked(self,row):
         if row < 0 or row >= len(self.patientCheck_info):
-            QMessageBox.information(self, ' ', '请先在实验信息中选择一行')
+            QMessageBox.information(self.view, ' ', '无效的操作行')
             return
 
-        if row >= len(self.patientCheck_info):
-            QMessageBox.information(self, ' ', '选中的行索引超出范围')
-            return
-
-        reply = QMessageBox.information(self, "实验id被试脑电上传状态",
-                                        f"当前实验单号为：{str(self.patientCheck_info[row][5])}被试：{self.patientCheck_info[row][self.view.field.index('pname') + 4]}脑电文件是否上传完毕？",
+        # 先获取远程服务器是否存在已上传完成的脑电文件
+        self.getFileInfo()
+        # 已上传文件不为空并且不存在状态为uploading的已上传文件
+        if self.is_last_uploaded():
+            check_number = self.patientCheck_info[row][5]
+            # pending.json中含有文件未上传，无法正常更新状态
+            # 若当前内存等待队列中存在未上传完成的文件，需要提醒用户进行上传后再点击完成按钮
+            exists = any(task["check_number"] == check_number for task in self.wait_file)
+            if exists:
+                    QMessageBox.information(self,"当前检查单号存在待上传文件",
+                                            f"请正确上传后再点击完成按钮以完成上传或直接删除当前待上传文件！！",QMessageBox.Yes)
+            else:
+                reply = QMessageBox.information(self, "检查病人脑电上传状态",
+                                        f"当前检查单号为：{str(self.patientCheck_info[row][5])},脑电文件是否上传完毕？",
                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-        if reply == 16384:
-            # 先获取远程服务器是否存在已上传完成的脑电文件
-            self.getFileInfo()
-            # 已上传文件不为空
-            if self.change_file:
-                check_number = self.patientCheck_info[row][5]
-                # pending.json中含有文件未上传，无法正常更新状态
-                # 若当前内存等待队列中存在未上传完成的文件，需要提醒用户进行上传后再点击完成按钮
-                exists = any(task["check_number"] == check_number for task in self.wait_file)
-                if exists:
-                        QMessageBox.information(self,"当前实验单号存在待上传文件",
-                                                f"请正确上传后再点击完成按钮以完成上传或直接删除当前待上传文件！！",QMessageBox.Yes)
-                else:
+                if reply == 16384:
                     # 用户正常上传完成后正确更新状态
                     # 完成上传将当前映射及样本信息都删除
                     # 删除映射信息
@@ -605,10 +609,48 @@ class researchImportController(QWidget):
                     state = 'uploaded'
                     REQmsg = [account, 'Send', [check_id, state, uid]]
                     self.client.updateCheckInfo1(REQmsg)
-            # 已上传文件为空，提醒用户删除当前病人检查信息
-            else:
-                QMessageBox.information(self, "当前实验单号无已上传文件",
-                                        f"无法完成当前实验信息状态的更新，请上传文件或删除当前信息！！", QMessageBox.Yes)
+        # 已上传文件为空或存在正在上传的文件，提醒用户删除当前病人检查信息
+        else:
+            QMessageBox.information(self, "当前检查单号无已上传文件或存在上传中断的文件",
+                                    f"无法完成当前病人检查信息状态的更新，请上传文件、完成续传或删除当前信息！！", QMessageBox.Yes)
+
+    # def on_btnComplete_clicked(self, row):
+    #     if row < 0 or row >= len(self.patientCheck_info):
+    #         QMessageBox.information(self.view, ' ', '无效的操作行')
+    #         return
+    #
+    #     reply = QMessageBox.information(self, "实验id被试脑电上传状态",
+    #                                     f"当前实验单号为：{str(self.patientCheck_info[row][5])}被试：{self.patientCheck_info[row][self.view.field.index('pname') + 4]}脑电文件是否上传完毕？",
+    #                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+    #     if reply == 16384:
+    #         # 先获取远程服务器是否存在已上传完成的脑电文件
+    #         self.getFileInfo()
+    #         # 已上传文件不为空
+    #         if self.change_file:
+    #             check_number = self.patientCheck_info[row][5]
+    #             # pending.json中含有文件未上传，无法正常更新状态
+    #             # 若当前内存等待队列中存在未上传完成的文件，需要提醒用户进行上传后再点击完成按钮
+    #             exists = any(task["check_number"] == check_number for task in self.wait_file)
+    #             if exists:
+    #                     QMessageBox.information(self,"当前实验单号存在待上传文件",
+    #                                             f"请正确上传后再点击完成按钮以完成上传或直接删除当前待上传文件！！",QMessageBox.Yes)
+    #             else:
+    #                 # 用户正常上传完成后正确更新状态
+    #                 # 完成上传将当前映射及样本信息都删除
+    #                 # 删除映射信息
+    #                 check_number = self.patientCheck_info[row][5]
+    #                 self.removeMapping(check_number)
+    #                 # 更新服务端状态
+    #                 uid = self.client.tUser[0]
+    #                 account = self.client.tUser[1]
+    #                 check_id = self.patientCheck_info[row][0]
+    #                 state = 'uploaded'
+    #                 REQmsg = [account, 'Send', [check_id, state, uid]]
+    #                 self.client.updateCheckInfo1(REQmsg)
+    #         # 已上传文件为空，提醒用户删除当前病人检查信息
+    #         else:
+    #             QMessageBox.information(self, "当前实验单号无已上传文件",
+    #                                     f"无法完成当前实验信息状态的更新，请上传文件或删除当前信息！！", QMessageBox.Yes)
 
 
     def isJsonListEmpty(self,file_path):
@@ -778,6 +820,7 @@ class researchImportController(QWidget):
         self.view.ui.groupBox_4.setEnabled(False)
         self.view.ui.groupBox.setEnabled(False)
         self.view.ui.startUploadButton.setEnabled(False)
+        self.view.ui.exitUploadButton.setEnabled(False)
 
         # 用内存等待队列更新内存等待队列文件
         self.updatePending()
@@ -824,6 +867,7 @@ class researchImportController(QWidget):
                 self.view.ui.groupBox_4.setEnabled(True)
                 self.view.ui.groupBox.setEnabled(True)
                 self.view.ui.startUploadButton.setEnabled(True)
+                self.view.ui.exitUploadButton.setEnabled(True)
 
         # client_root/upload/EEG不为空（被中断上传的文件只可能有一个）
         else:
@@ -862,6 +906,7 @@ class researchImportController(QWidget):
                                                                hasStopBtn=True,
                                                                maximum=100,
                                                                speed=100)
+                        self.progressBarView.updateInfo(f"当前上传文件检查单号为{self.check_id},文件号为{self.file_id}")
                         self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
                         self.progressBarView.show()
                         REQmsg = self.packMsg('continue', mac)
@@ -877,6 +922,7 @@ class researchImportController(QWidget):
                                                                hasStopBtn=True,
                                                                maximum=100,
                                                                speed=100)
+                        self.progressBarView.updateInfo(f"当前上传文件检查单号为{self.check_id},文件号为{self.file_id}")
                         self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
                         self.progressBarView.show()
                         # 将续传标志置为True
@@ -890,13 +936,14 @@ class researchImportController(QWidget):
                                                            hasStopBtn=True,
                                                            maximum=100,
                                                            speed=100)
+                    self.progressBarView.updateInfo(f"当前上传文件检查单号为{self.check_id},文件号为{self.file_id}")
                     self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
                     self.progressBarView.show()
                     # 转到步骤4开始上传 正在上传标志置为true
                     self.is_uploading = True
                     self.block_num = math.ceil((os.stat(self.file_path).st_size) / self.block_size)
                     # 这个地方虽然是需要存入原始路径，但由于数据库中没有这个字段并且这是重新上传，其实不传也没关系
-                    self.makeText(original_filepath="")
+                    self.makeText(original_filepath="",check_number="")
                     REQmsg = self.packMsg(state='start')
                     self.client.writeEEG1(REQmsg)
             else:
@@ -916,6 +963,7 @@ class researchImportController(QWidget):
                 self.view.ui.groupBox_4.setEnabled(True)
                 self.view.ui.groupBox.setEnabled(True)
                 self.view.ui.startUploadButton.setEnabled(True)
+                self.view.ui.exitUploadButton.setEnabled(True)
 
     def delFileInfoRes(self,REPData):
         print("delFileInfoRes:",REPData)
@@ -1048,7 +1096,7 @@ class researchImportController(QWidget):
 
     def process_bdf(self, userConfig_info, filename):
         # 初始化进度条
-        self.progressBarView = ProgressBarView(window_title="正在处理文件",
+        self.progressBarView = ProgressBarView(window_title=f"正在处理检查单号为{self.check_id},文件号为{self.file_id}的文件",
                                                hasStopBtn=True,
                                                maximum=100,
                                                speed=100)
@@ -1294,25 +1342,27 @@ class researchImportController(QWidget):
                     print(f"Removed task: {removed_task}")
                     # 获取被删除记录中的 fileName
                     original_filepath = removed_task.get("fileName")
+                    # 获取被删除记录中的check_number
+                    check_number = removed_task.get("check_number")
                     # 写回 JSON 文件
                     with open(json_path, 'w', encoding='utf-8') as file:
                         json.dump(data, file, indent=4, ensure_ascii=False)
-                    return original_filepath
+                    return original_filepath, check_number
                     print("第一条记录被成功删除")
                 else:
-                    return None
+                    return None, None
                     print("没有记录可以删除")
             except Exception as e:
-                return None
+                return None, None
                 print("delPending:", e)
 
-    def makeText(self,original_filepath):
+    def makeText(self,original_filepath, check_number):
         # 创建上传的文件记录
         uploading_name = self.filename + '.txt'
         uploading_path = os.path.join(self.dir_path, uploading_name)
         mac = self.cAppUtil.getMacAddress()
-        title = ['check_id', 'file_id', 'mac','path']
-        fileMsg = [self.check_id, self.file_id, mac ,original_filepath]
+        title = ['check_id', 'file_id', 'mac','path','check_number']
+        fileMsg = [self.check_id, self.file_id, mac, original_filepath, check_number]
         writeMsg = dict(zip(title, fileMsg))
         with open(uploading_path, 'wb') as f:
             pickle.dump(writeMsg, f)
@@ -1337,11 +1387,11 @@ class researchImportController(QWidget):
                         # uploading.txt不存在
                         if not self.findFile(self.dir_path,'txt'):
                             # 删除第一条记录并创建txt文件
-                            original_filepath = self.delPending(self.queue_file_path)
-                            self.makeText(original_filepath)
+                            original_filepath, check_number = self.delPending(self.queue_file_path)
+                            self.makeText(original_filepath, check_number)
                             # 开启进度条
                             # 初始化进度条
-                            self.progressBarView = ProgressBarView(window_title="正在上传文件",
+                            self.progressBarView = ProgressBarView(window_title=f"正在上传检查单号为{self.check_id},文件号为{self.file_id}的文件",
                                                                    hasStopBtn=True,
                                                                    maximum=100,
                                                                    speed=100)
@@ -1412,9 +1462,11 @@ class researchImportController(QWidget):
 
                 # 脑电文件传输协议6.4情况
                 elif state == 'uploaded':
-                    if os.path.exists(self.sample_path) or not self.isJsonListEmpty(self.sample_path):
+                    target_index, check_number = self.isNeedExtract()
+                    # 需要进行提取
+                    if target_index != -1:
                         # 有 sample_info，走异步数据写入流程
-                        self.prepareSampleInfoInsert()
+                        self.prepareSampleInfoInsert(target_index)
                     else:
                         print("未发现需要上传的 sample_info 文件")
                         # 无需插入，直接清理和 UI 更新
@@ -1430,7 +1482,7 @@ class researchImportController(QWidget):
                     if fileName:
                         self.cAppUtil.empty(self.dir_path, fullname = fileName + str('.txt'))
                     # 这个地方虽然是需要存入原始路径，但由于数据库中没有这个字段并且这是recover，其实不传也没关系
-                    self.makeText(original_filepath="")
+                    self.makeText(original_filepath="",check_number = "")
                     REQmsg = self.packMsg('continue')
                     self.client.writeEEG1(REQmsg)
 
@@ -1444,20 +1496,48 @@ class researchImportController(QWidget):
         except Exception as e:
             print('writeEEGRes', e)
 
-    def prepareSampleInfoInsert(self):
-        """
-        准备插入 sample_info 的第一步：获取 check_number。
-        """
-        account = self.client.tUser[1]
-        REQmsg = [account, self.check_id]
-        self.client.getCheckNumberByID(REQmsg)
+    def isNeedExtract(self):
+        # 把target_index置为-1
+        target_index = -1
+        # 直接读取txt文件，查看是否需要提取sample_info
+        # 读取上传记录文件，获得原始 file path
+        fileNameList = self.findFile(self.dir_path, 'txt')
+        upload_record_path = os.path.join(self.dir_path, fileNameList[0] + str('.txt'))
+        if not os.path.exists(upload_record_path):
+            raise FileNotFoundError(f"上传记录文件不存在: {upload_record_path}")
+        with open(upload_record_path, 'rb') as f:
+            upload_record = pickle.load(f)
+        original_file_path = os.path.abspath(upload_record.get("path", "")).replace("\\", "/")
+        if not original_file_path:
+            raise ValueError("上传记录中没有找到有效的文件路径")
 
-    # getCheckNumberByID 的回调
-    def getCheckNumberByIDRes(self, REPData):
+        check_number = upload_record.get("check_number")
+
+        if not os.path.exists(self.sample_path):
+            return target_index, check_number
+        else:
+            # 读取 sample_info.json
+            with open(self.sample_path, 'r', encoding='utf-8') as f:
+                all_sample_info = json.load(f)
+            if not all_sample_info:
+                # raise ValueError("sample_info 列表为空，无法构建")
+                # sample_info 列表为空，无法构建
+                return target_index,check_number
+            else:
+                # 精确匹配 check_number + fileName
+                for i, entry in enumerate(all_sample_info):
+                    entry_check = str(entry.get("check_number"))
+                    entry_file = os.path.abspath(entry.get("fileName", "")).replace("\\", "/")
+                    if entry_check == str(check_number) and entry_file == original_file_path:
+                        target_index = i
+                        break
+                return target_index,check_number
+
+    def prepareSampleInfoInsert(self,target_index):
+        # 在这里调用buildSampleInfo比较好 再给个if判断
         try:
-            user_id = self.client.tUser[0]
-            check_number = REPData[3][0][0]
-            REQmsg = self.buildSampleInfo(check_number, self.sample_path, self.check_id, self.file_id, user_id)
+            REQmsg = self.buildSampleInfo(target_index, self.sample_path, self.check_id, self.file_id, self.client.tUser[0])
+            REQmsg.insert(0, target_index)
             if REQmsg:
                 self.client.insertSampleInfoBatch(REQmsg)
             else:
@@ -1465,17 +1545,58 @@ class researchImportController(QWidget):
                 # 继续执行后续
                 self.finalizeUpload()
         except Exception as e:
-            print('getCheckNumberByIDRes 错误:', e)
-            self.finalizeUpload()  # 即便出错，也要完成清理
+            print('prepareSampleInfoInsert 错误:', e)
+            self.finalizeUpload()   # 即便出错，也要完成清理
+
+    # 如果还没有创建sample.json(第一个上传的文件是为选取标注类型的文件)，会报找不到路径的错误
+    # 不用担心找不到sample.json了，本身就是根据isNeedExtract()判断存在需要提取的文件才会走到buildSampleInfo这一步
+    def buildSampleInfo(self, target_index, sample_json_path, check_id, file_id, uid, channel="all"):
+        # 读取 sample_info.json
+        with open(sample_json_path, 'r', encoding='utf-8') as f:
+            all_sample_info = json.load(f)
+
+        if not all_sample_info:
+            raise ValueError("sample_info 列表为空，无法构建")
+
+        # 这里entry还不能删
+        target_entry = all_sample_info[target_index]
+        current_sample_info = target_entry.get("sample_info", [])
+
+        if not current_sample_info:
+            raise ValueError("sample_info 数据为空")
+
+        # 构建 messages
+        messages = []
+        for item in current_sample_info:
+            begin = int(item["begin"])
+            type_id = int(item["type_id"])
+            msg = [check_id, file_id, begin, channel, begin, uid, type_id]
+            messages.append(msg)
+        return messages
 
     #  插入 sample_info 的最终回调
     def insertSampleInfoBatchRes(self, REPData):
         if REPData[0]:
             print("样本信息插入:批量插入样本信息成功。")
+            target_index = REPData[4]
+            # 样本信息插入成功才执行删除操作
+            self.delSampleInfo(target_index)
         else:
             print("样本信息插入:批量插入样本信息失败。")
         # 不管成功失败，都继续执行后续
         self.finalizeUpload()
+
+    def delSampleInfo(self,target_index):
+        with open(self.sample_path, 'r', encoding='utf-8') as f:
+            all_sample_info = json.load(f)
+        all_sample_info.pop(target_index)
+
+        # 写回 sample_info.json
+        with open(self.sample_path, 'w', encoding='utf-8') as f:
+            json.dump(all_sample_info, f, ensure_ascii=False, indent=2)
+
+        print("成功删除样本信息。")
+
 
     # 所有上传流程结束后统一执行清理和 UI 更新
     def finalizeUpload(self):
@@ -1503,61 +1624,6 @@ class researchImportController(QWidget):
         self.is_uploading = False
         self.upload_finished.emit()
 
-    def buildSampleInfo(self, check_number, sample_json_path, check_id, file_id, uid,channel="all"):
-        # 读取上传记录文件，获得原始 file path
-        fileNameList = self.findFile(self.dir_path, 'txt')
-        upload_record_path = os.path.join(self.dir_path, fileNameList[0]+str('.txt'))
-        if not os.path.exists(upload_record_path):
-            raise FileNotFoundError(f"上传记录文件不存在: {upload_record_path}")
-
-        with open(upload_record_path, 'rb') as f:
-            upload_record = pickle.load(f)
-
-        original_file_path = os.path.abspath(upload_record.get("path", "")).replace("\\", "/")
-        if not original_file_path:
-            raise ValueError("上传记录中没有找到有效的文件路径")
-
-        # 读取 sample_info.json
-        with open(sample_json_path, 'r', encoding='utf-8') as f:
-            all_sample_info = json.load(f)
-
-        if not all_sample_info:
-            raise ValueError("sample_info 列表为空，无法构建")
-
-        # 精确匹配 check_number + fileName
-        target_index = -1
-        for i, entry in enumerate(all_sample_info):
-            entry_check = str(entry.get("check_number"))
-            entry_file = os.path.abspath(entry.get("fileName", "")).replace("\\", "/")
-            if entry_check == str(check_number) and entry_file == original_file_path:
-                target_index = i
-                break
-
-        if target_index == -1:
-            # 未获取到对应条目
-            return None
-            # raise ValueError(f"未找到 check_number={check_number} 且 fileName={original_file_path} 的 sample_info")
-
-        # 提取并删除这条 entry
-        target_entry = all_sample_info.pop(target_index)
-        current_sample_info = target_entry.get("sample_info", [])
-
-        if not current_sample_info:
-            raise ValueError("sample_info 数据为空")
-
-        # 构建 messages
-        messages = []
-        for item in current_sample_info:
-            begin = int(item["begin"])
-            type_id = int(item["type_id"])
-            msg = [check_id, file_id, begin, channel, begin, uid, type_id]
-            messages.append(msg)
-
-        # 写回 sample_info.json
-        with open(sample_json_path, 'w', encoding='utf-8') as f:
-            json.dump(all_sample_info, f, ensure_ascii=False, indent=2)
-
-        return messages
 
     def upload_finishedCall(self):
         with self.lock:  # 加锁以保护队列访问
@@ -1605,6 +1671,7 @@ class researchImportController(QWidget):
                     self.view.ui.groupBox_4.setEnabled(True)
                     self.view.ui.groupBox.setEnabled(True)
                     self.view.ui.startUploadButton.setEnabled(True)
+                    self.view.ui.exitUploadButton.setEnabled(True)
 
 
             # client_root/upload/EEG不为空（被中断上传的文件只可能有一个）
@@ -1645,6 +1712,7 @@ class researchImportController(QWidget):
                                                                    hasStopBtn=False,
                                                                    maximum=100,
                                                                    speed=100)
+                            self.progressBarView.updateInfo(f"当前上传文件检查单号为{self.check_id},文件号为{self.file_id}")
                             self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
                             self.progressBarView.show()
                             REQmsg = self.packMsg('continue', mac)
@@ -1660,6 +1728,7 @@ class researchImportController(QWidget):
                                                                    hasStopBtn=False,
                                                                    maximum=100,
                                                                    speed=100)
+                            self.progressBarView.updateInfo(f"当前上传文件检查单号为{self.check_id},文件号为{self.file_id}")
                             self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
                             self.progressBarView.show()
                             # 这个位置，txt文件损坏，怎么获取check_id,file_id? 协议6.5的位置，存入check_id、file_id这个位置要再推敲一下，否则容易存入其他check_id和file_id
@@ -1674,6 +1743,7 @@ class researchImportController(QWidget):
                                                                hasStopBtn=False,
                                                                maximum=100,
                                                                speed=100)
+                        self.progressBarView.updateInfo(f"当前上传文件检查单号为{self.check_id},文件号为{self.file_id}")
                         self.progressBarView.ui.stop_pushButton.clicked.connect(self.on_btnUploadExit_clicked)
                         self.progressBarView.show()
                         # 转到步骤4开始上传
@@ -1692,6 +1762,7 @@ class researchImportController(QWidget):
                 self.view.ui.groupBox_4.setEnabled(True)
                 self.view.ui.groupBox.setEnabled(True)
                 self.view.ui.startUploadButton.setEnabled(True)
+                self.view.ui.exitUploadButton.setEnabled(True)
 
     def stop_upload(self):
         """终止上传"""
@@ -1731,6 +1802,7 @@ class researchImportController(QWidget):
             self.view.ui.groupBox_4.setEnabled(True)
             self.view.ui.groupBox.setEnabled(True)
             self.view.ui.startUploadButton.setEnabled(True)
+            self.view.ui.exitUploadButton.setEnabled(True)
 
             # 先把表格1清空 防止用户误触，等到点击之后再刷新
             self.view.ui.tableWidget_1.setRowCount(0)
@@ -1780,10 +1852,11 @@ class researchImportController(QWidget):
 
     # 获取病人检查信息功能
     # 获取病人检查信息方法
-    def getPatientCheckInfo(self, value=''):
+    def getPatientCheckInfo(self):
         account = self.client.tUser[1]
         uid = self.client.tUser[0]
-        REQmsg = [account, uid, value]
+        mac = self.cAppUtil.getMacAddress()
+        REQmsg = [account, uid, mac]
         self.client.getPatientCheckInfo1(REQmsg)
 
     # 处理客户端返回的查询标注类型的结果
@@ -1900,7 +1973,6 @@ class researchImportController(QWidget):
             # 显示界面
             self.labeltype_view.show()
 
-    # fixme:直接叉掉labeltype_view无法二次选择 另外在输入字段后未强制要求在数据库中选择标注类型
     def confirm_mappings(self):
         check_number = self.view.ui.check_num.text()
         field_configs = self.labeltype_view.get_all_field_configs(check_number)
@@ -2565,6 +2637,8 @@ class researchImportController(QWidget):
         # 点击添加检查信息后禁用防止用户多次点击
         self.view.ui.btnConfirm.setEnabled(False)
         self.addInfo['check_num'] = self.view.ui.check_num.text()
+        # 获取文件类型
+        self.addInfo['file_type'] = 'EEG' if self.view.ui.radioEEG.isChecked() else 'sEEG'
         # 检查单号是否为空
         result = self.check_item_pattern(self.addInfo)
         if not result:
@@ -2574,12 +2648,14 @@ class researchImportController(QWidget):
             # self.addFormView.close()
             strDate = self.view.ui.dateEdit.date().toString("yyyy-MM-dd")
             print(strDate)
+            mac = self.cAppUtil.getMacAddress()
             self.addInfo['measure_date'] = strDate
             self.addInfo['description'] = self.view.ui.checkInfo.toPlainText()
             self.addInfo['cUid'] = self.client.tUser[0]
             account = self.client.tUser[1]
             REQmsg = [account, self.addInfo['check_num'], self.addInfo['patient_id'], self.addInfo['description'],
-                      self.addInfo['pUid'], self.addInfo['measure_date'], self.addInfo['cUid']]
+                      self.addInfo['pUid'], self.addInfo['cUid'], self.addInfo['measure_date'],
+                      self.addInfo['file_type'], mac]
             print(self.addInfo)
             self.client.addCheckInfo1(REQmsg)
 
@@ -2622,9 +2698,9 @@ class researchImportController(QWidget):
                 self.view.ui.checkInfo.clear()
                 self.view.ui.dateEdit.setDate(QDateTime.currentDateTime().date())
                 self.getPatientCheckInfo()
-                result = QMessageBox.information(self, "病人检查", REPData[2], QMessageBox.Yes)
-                if result == QMessageBox.Yes:
-                    self.view.ui.btnConfirm.setEnabled(True)
+                # result = QMessageBox.information(self, "病人检查", REPData[2], QMessageBox.Yes)
+                # if result == QMessageBox.Yes:
+                self.view.ui.btnConfirm.setEnabled(True)
             else:
                 self.view.ui.check_num.clear()
                 self.view.ui.patientBtn.setText('选择被试')
@@ -2641,41 +2717,6 @@ class researchImportController(QWidget):
         except Exception as e:
             print('addCheckInfo', e)
 
-
-    # 删除病人检查信息功能
-    # 删除病人检查信息方法
-    def on_btnDel_clicked(self):
-
-        if self.row!= -1:
-            self.row = self.view.ui.tableWidget.currentRow()
-            # 找到当前检查信息的脑电上传医生
-            pdoctorname = self.patientCheck_info[self.row][3]
-            if pdoctorname == self.client.tUser[0]:
-                answer = QMessageBox.warning(
-                    self.view, '确认删除！', '您将进行删除操作！',
-                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-                if answer == QMessageBox.Yes:
-                    if self.row == -1:
-                        QMessageBox.information(self.view, ' ', '请先选中一行')
-                        return
-                    # 暂时只能选中一行删除
-                    print('row', self.row)
-                    check_id = self.patientCheck_info[self.row][0]
-                    account = self.client.tUser[1]
-                    REQmsg = [account, check_id, self.row]
-
-                    # 删除对应配置项
-                    self.delete_from_json(check_id)
-
-                    self.row = -1
-                    self.client.delPatientCheckInfo1(REQmsg)
-                else:
-                    return
-            else:
-                QMessageBox.information(self.view, '提示', '你不是本次检查的脑电上传医生，你无权进行删除！！！')
-        else:
-            QMessageBox.information(self, ' ', '请先在病人诊断信息中选择一行')
-            return
 
     # 处理客户端返回的删除病人检查信息结果
     def delPatientCheckInfoRes(self, REPData):
@@ -2840,8 +2881,6 @@ class researchImportController(QWidget):
             pass
 
 
-
-
     def convert_dat_to_bdf(self):
         # 生成转换后的 BDF 文件名
         directory, filename = os.path.split(self.from_filepath)
@@ -2979,4 +3018,3 @@ class researchImportController(QWidget):
         self.client.getChooseDoctorInfoResSig1.disconnect()
         self.client.getChooseLabelTypeInfoResSig1.disconnect()
         self.client.insertSampleInfoBatchResSig.disconnect()
-        self.client.getCheckNumberByIDResSig.disconnect()

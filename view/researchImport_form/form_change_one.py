@@ -153,6 +153,34 @@ class Ui_ResearchImportForm(object):
         # 将水平布局添加到表单布局中
         self.formLayout.setLayout(4, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_label)
 
+        # 第5行：添加“文件类型”标签
+        self.label_filetype = QtWidgets.QLabel(self.groupBox_4)
+        self.label_filetype.setText("文件类型：")
+        self.label_filetype.setObjectName("label_filetype")
+        self.formLayout.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.label_filetype)
+
+        # 第5行：添加“文件类型”单选按钮（EEG / sEEG）
+        self.horizontalLayout_filetype = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_filetype.setObjectName("horizontalLayout_filetype")
+
+        self.radioEEG = QtWidgets.QRadioButton("EEG", self.groupBox_4)
+        self.radioEEG.setObjectName("radio_eeg")
+        self.radioEEG.setChecked(True)  # 默认选择 EEG
+        self.horizontalLayout_filetype.addWidget(self.radioEEG)
+
+        self.radioSEEG = QtWidgets.QRadioButton("sEEG", self.groupBox_4)
+        self.radioSEEG.setObjectName("radioradioEEG")
+        self.horizontalLayout_filetype.addWidget(self.radioSEEG)
+
+        # 添加按钮组以实现互斥选择
+        self.filetype_group = QtWidgets.QButtonGroup(self.groupBox_4)
+        self.filetype_group.setObjectName("filetype_group")
+        self.filetype_group.addButton(self.radioEEG)
+        self.filetype_group.addButton(self.radioSEEG)
+
+        self.formLayout.setLayout(5, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_filetype)
+
+
 
         # 检查日期选项
         self.dateEdit = QtWidgets.QDateTimeEdit(QDateTime.currentDateTime(), self.groupBox_4)
@@ -333,6 +361,7 @@ class Ui_ResearchImportForm(object):
         self.pdoctorBtn.setText(_translate("ResearchImportForm", "选择研究员"))
         self.label_6.setText(_translate("ResearchImportForm", "上传研究员："))
         self.selectLabelTypeBtn.setText(_translate("ResearchImportForm", "选定标注类型"))
+        self.label_filetype.setText(_translate("ResearchImportForm", "文件类型："))
         self.label_cdoctor.setText(_translate("ResearchImportForm", "TextLabel"))
         self.label_2.setText(_translate("ResearchImportForm", "实验描述："))
         self.btnConfirm.setText(_translate("ResearchImportForm", "确认添加"))
@@ -347,3 +376,6 @@ class Ui_ResearchImportForm(object):
         self.startUploadButton.setText(_translate("ResearchImportForm","启动上传"))
         self.exitUploadButton.setText(_translate("ResearchImportForm", "返回"))
         # self.sendMsgButton.setText(_translate("ResearchImportForm", "完成"))
+
+
+
