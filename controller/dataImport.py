@@ -540,7 +540,7 @@ class dataImportController(QWidget):
 
         # 先获取远程服务器是否存在已上传完成的脑电文件
         self.getFileInfo()
-        # 已上传文件不为空并未不存在状态为uploading的已上传文件
+        # 已上传文件不为空并且不存在状态为uploading的已上传文件
         if self.is_last_uploaded():
             check_number = self.patientCheck_info[row][5]
             # pending.json中含有文件未上传，无法正常更新状态
@@ -2249,8 +2249,8 @@ class dataImportController(QWidget):
         self.view.ui.btnConfirm.setEnabled(False)
         self.addInfo['check_num'] = self.view.ui.check_num.text()
 
-        # 获取标注类型
-        self.addInfo['mark_type'] = 'EEG' if self.view.ui.radioEEG.isChecked() else 'sEEG'
+        # 获取文件类型
+        self.addInfo['file_type'] = 'EEG' if self.view.ui.radioEEG.isChecked() else 'sEEG'
 
         # 检查单号是否为空
         result = self.check_item_pattern(self.addInfo)
@@ -2266,7 +2266,7 @@ class dataImportController(QWidget):
             self.addInfo['cUid'] = self.client.tUser[0]
             account = self.client.tUser[1]
             REQmsg = [account, self.addInfo['check_num'], self.addInfo['patient_id'], self.addInfo['description'],
-                      self.addInfo['pUid'], self.addInfo['cUid'],self.addInfo['measure_date'], self.addInfo['mark_type'], mac]
+                      self.addInfo['pUid'], self.addInfo['cUid'],self.addInfo['measure_date'], self.addInfo['file_type'], mac]
             print(self.addInfo)
             self.client.addCheckInfo(REQmsg)
 
