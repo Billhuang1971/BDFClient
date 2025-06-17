@@ -136,13 +136,13 @@ class Ui_DataImportForm(object):
         self.label_cdoctor.setObjectName("label_cdoctor")
         self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.label_cdoctor)
 
-        # ——— 新增：标注类型 单选按钮 ———
+        # ——— 新增：文件类型 单选按钮 ———
 
-        # 标注类型 Label
-        self.labelMarkType = QtWidgets.QLabel(self.groupBox_4)
-        self.labelMarkType.setObjectName("labelMarkType")
-        self.labelMarkType.setFont(font)
-        self.formLayout.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.labelMarkType)
+        # 文件类型
+        self.fileType = QtWidgets.QLabel(self.groupBox_4)
+        self.fileType.setObjectName("fileType")
+        self.fileType.setFont(font)
+        self.formLayout.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.fileType)
 
         # 右侧 RadioButton 容器（一个 QWidget 包含 QHBoxLayout）
         self.radioGroupWidget = QWidget(self.groupBox_4)
@@ -361,7 +361,7 @@ class Ui_DataImportForm(object):
         self.pdoctorBtn.setText(_translate("DataImportForm", "选择开单医生"))
         self.label_6.setText(_translate("DataImportForm", "上传脑电医生："))
 
-        self.labelMarkType.setText(_translate("DataImportForm", "标注类型："))
+        self.fileType.setText(_translate("DataImportForm", "文件类型："))
 
         self.label_cdoctor.setText(_translate("DataImportForm", "TextLabel"))
         self.label_2.setText(_translate("DataImportForm", "检查描述："))
